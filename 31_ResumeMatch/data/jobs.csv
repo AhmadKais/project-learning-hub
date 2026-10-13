@@ -1,0 +1,6 @@
+job_id,title,text,relevant_ids
+J1,Backend Python developer,We are looking for a backend developer with strong Python and Django experience. You will design REST APIs and work with PostgreSQL. Docker and Redis are an advantage.,R000 R010 R020 R030 R040 R050 R060 R070 R080 R090 R100 R110 R120 R130 R140 R150 R160 R170 R180 R190
+J2,Data scientist,"Join our data team as a data scientist. Required: Python, Machine Learning, pandas and scikit-learn. Experience with statistics and SQL is an advantage.",R002 R012 R022 R032 R042 R052 R062 R072 R082 R092 R102 R112 R122 R132 R142 R152 R162 R172 R182 R192
+J3,DevOps engineer,DevOps engineer to own our Kubernetes clusters and CI/CD pipelines. Docker and Linux are a must; Terraform and AWS are an advantage.,R003 R013 R023 R033 R043 R053 R063 R073 R083 R093 R103 R113 R123 R133 R143 R153 R163 R173 R183 R193
+J4,Embedded software engineer,Embedded software engineer: C++ on microcontrollers with an RTOS. Embedded systems experience required; debugging with UART and SPI is an advantage.,R005 R015 R025 R035 R045 R055 R065 R075 R085 R095 R105 R115 R125 R135 R145 R155 R165 R175 R185 R195
+J5,C# .NET developer,Full stack C# developer for ASP.NET applications on .NET with SQL Server. Azure and Angular are an advantage.,R006 R016 R026 R036 R046 R056 R066 R076 R086 R096 R106 R116 R126 R136 R146 R156 R166 R176 R186 R196

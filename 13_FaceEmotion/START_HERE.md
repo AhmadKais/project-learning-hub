@@ -1,0 +1,82 @@
+# 13 · FaceEmotion — start here
+
+**Student:** Ryan Raed  ·  **Field:** deep learning and computer vision  ·  **Core algorithms:** a convolutional network with residual blocks (EmotionNet), its training loop, Haar-cascade face detection, temporal smoothing
+
+## The problem in one paragraph
+
+The camera sees a face; your program says which of 7 emotions it shows — **live, at 15–25 frames per second**.
+Three parts: **find the face** (Haar cascade — a 2001 algorithm that is still fast enough for real time),
+**prepare it exactly as in training** (grey, equalise, 48×48, normalise with the training numbers — any
+difference silently ruins accuracy), and **classify it** with EmotionNet — a mini-ResNet of 4,900,551 weights
+that you build and train yourself on FER-2013. Then make it pleasant: smooth the probabilities over a few frames
+so the label does not flicker, and keep the camera in its own thread so the window never freezes.
+
+## What is in this folder
+
+| Folder | What it is | How to use it |
+|---|---|---|
+| `01_theory/` | Images, neural networks from zero, CNNs and ResNet, data and training, detection | Read one chapter before each notebook |
+| `02_examples/` | Runnable notebooks — they run on any laptop (CPU); notebook 03 trains a small net in a few minutes | Run every cell, then change things and run again. **Run 03 before 04** (it saves the model) |
+| `03_exercises/` | 12 exercises (17 tests) + `solutions.py` | Write, run `pytest`, only then look at the solution |
+| `04_build/` | Architecture, the two build chapters, debugging | Use it next to `TASKS.md` in your project |
+| `05_defence/` | Exam-style questions, answers, resources | Before the defence — and test yourself every few weeks |
+| `data/fer2013/` | **You put FER-2013 here** (same layout as your project) — see `data/README.md` | It is not in Git: we may not redistribute it |
+
+## Setup (once)
+
+From the repo's root folder:
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate            # Windows   (Linux/macOS: source .venv/bin/activate)
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121     # your GPU build first
+pip install -r requirements.txt
+```
+
+Check: `python -c "import torch; print(torch.cuda.is_available())"` should print `True` on your laptop. Then copy
+FER-2013 into `13_FaceEmotion/data/fer2013/` (see `data/README.md`), open a notebook from `02_examples/`, choose
+the `.venv` kernel, **Run All**.
+
+## Where to start — the learning path
+
+Do the rows **in order**. Each row ends with something you can show your supervisor.
+
+| # | Read (`01_theory/`) | Run (`02_examples/`) | Solve (`03_exercises/`) | Then in your project |
+|---|---|---|---|---|
+| 0 | `00_intro`, `02_ml_basics` | — | — | install (GPU!), open the skeleton, run `pytest` (red — normal) |
+| 1 | `03_images_nn` §3, `06_data_training` §6.1–6.2 | `01_images_and_data` | ex01 – ex03 | stages 1–2 — camera, face detection |
+| 2 | `03_images_nn` §4, `05_cnn` — count the 4,900,551 by hand | `02_neurons_to_resnet` | ex04 – ex07 | stage 3 — dataset and `EmotionNet` |
+| 3 | `06_data_training` | `03_training_loop` | ex08 – ex10 | stage 4 — full training on the GPU, evaluation |
+| 4 | `07_detection_realtime` | `04_detection_and_realtime` | ex11 – ex12 | stage 5 — real time, smoothing |
+| 5 | `04_build/*` | — | — | stages 6–7 — database, UI, Haar vs DNN, the book |
+| 6 | `05_defence/*` | re-run the notebooks and explain every number aloud | — | the defence |
+
+## How to work with the exercises
+
+```bash
+cd 13_FaceEmotion/03_exercises
+pytest test_exercises.py -k ex07 -v      # one exercise
+pytest test_exercises.py -v              # everything
+```
+
+ex06 (your own convolution in numpy) must match PyTorch's `conv2d` for every stride and padding. ex07 (the
+residual block) must have exactly the parameter counts of theory §5.6: 73,984 and 230,144.
+
+## The rule
+
+The notebooks show **one** way to write each piece. Your project has its own structure (detector classes,
+predictor, controller, views) — **type your project code yourself, do not paste from the notebooks.** In the
+defence you will be asked to explain and change any line, and you can only do that with code you wrote.
+
+## The numbers you should be able to explain
+
+| | |
+|---|---|
+| FER-2013 pixel mean / std (training set) | 0.5077 / 0.2550 — measured in notebook 01 |
+| class weights (mean 1) | disgust highest (~16× happy) |
+| EmotionNet parameters | 4,900,551 — 75% of them in block4 |
+| convolution by hand | 570 for the vertical-edge example |
+| a small CPU network (390k parameters), 8 epochs, ~70 s each | 41% test accuracy — your GPU EmotionNet target is ≥ 65% |
+| …and its disgust class | recall 0.83 but precision 0.04: the ×4.4 class weight makes a young model over-call it |
+| Haar on FER faces | 71 of 120 found as tight crops, 95 of 120 with a 30% border |
+| smoothing over 5 frames | half the label flips, still follows a real change within a few frames |

@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.pytest_cache/
+
+# FER-2013 is not ours to redistribute - each student downloads it (see 13_FaceEmotion/data/README.md)
+13_FaceEmotion/data/fer2013/
+
+# files the notebooks write while running
+*/data/_*

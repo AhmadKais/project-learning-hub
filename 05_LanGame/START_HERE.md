@@ -1,0 +1,79 @@
+# 05 · LanGame — start here
+
+**Student:** Liraz Dakseh  ·  **Field:** networks and concurrency  ·  **Core topics:** TCP sockets, message framing, a JSON protocol, threads and locks, a game state machine, time-based scoring
+
+## The problem in one paragraph
+
+A multiplayer trivia game for the classroom network: one computer runs the server, every player runs a
+client, the teacher has an admin tool. Simple to describe, and full of real computer-science problems:
+**TCP is a stream, not messages** — so you must frame them yourself; **the server talks to 8 players at
+once** — so it needs one thread per player, and threads that share data need a lock or points silently
+disappear; **the other side cannot be trusted** — garbage must never crash the server; and **the game has
+rules in time** — a state machine decides what is legal when, and a timer closes each question.
+
+## What is in this folder
+
+| Folder | What it is | How to use it |
+|---|---|---|
+| `01_theory/` | Networks, sockets, the protocol, threads, the state machine, the database | Read one chapter before each notebook |
+| `02_examples/` | Runnable notebooks — real sockets and threads on your own computer (`127.0.0.1`) | Run every cell, then change things and run again |
+| `03_exercises/` | 12 exercises (34 tests) + `solutions.py` | Write, run `pytest`, only then look at the solution |
+| `04_build/` | Architecture and the two build chapters for your skeleton | Use it next to `TASKS.md` in your project |
+| `05_defence/` | Exam-style questions, answers, resources | Before the defence — and test yourself every few weeks |
+
+No dataset needed — everything uses the standard library.
+
+## Setup (once)
+
+From the repo's root folder:
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate            # Windows   (Linux/macOS: source .venv/bin/activate)
+pip install -r requirements.txt
+```
+
+Open the repo in VS Code, open a notebook from `02_examples/`, choose the `.venv` kernel, **Run All**.
+If Windows Firewall asks about Python the first time a notebook opens a socket, allow it (private networks).
+
+## Where to start — the learning path
+
+Do the rows **in order**. Each row ends with something you can show your supervisor.
+
+| # | Read (`01_theory/`) | Run (`02_examples/`) | Solve (`03_exercises/`) | Then in your project |
+|---|---|---|---|---|
+| 0 | `00_intro` | — | — | install, open the skeleton, run `pytest` (red — normal) |
+| 1 | `02_networks` (§2.5!), `03_sockets_protocol` | `01_tcp_stream_and_framing` | ex01 – ex03 | stage 1 — protocol and the echo test |
+| 2 | `04_threads` | `02_threads_and_locks` | ex04 – ex06 | stage 2 — server, handlers, lobby |
+| 3 | `05_state_machine_scoring`, `06_database` | `03_game_engine` | ex07 – ex10 | stages 3–4 — questions, state machine, scoring |
+| 4 | `04_build/07_architecture` | `04_mini_server` | ex11 – ex12 | stages 5–6 — the GUI client, the admin tool |
+| 5 | `04_build/*` | Wireshark on the mini server | — | stage 7 — load test, capture, the book |
+| 6 | `05_defence/*` | re-run the notebooks and explain every output aloud | — | the defence |
+
+## How to work with the exercises
+
+```bash
+cd 05_LanGame/03_exercises
+pytest test_exercises.py -k ex03 -v      # one exercise (framing, cut at every possible byte)
+pytest test_exercises.py -v              # everything
+```
+
+ex05 starts 6 threads that close the same round at the same instant, 20 times — it only passes if exactly one
+of them scores the round.
+
+## The rule
+
+The notebooks show **one** way to write each piece, as plain functions and small classes. Your project has
+its own structure (server, handler, engine, client, views) — **type your project code yourself, do not paste
+from the notebooks.** In the defence you will be asked to explain and change any line, and you can only do
+that with code you wrote.
+
+## What you should be able to show and explain
+
+| | |
+|---|---|
+| 3 separate `sendall` calls | arrive in **1** `recv` — framing with `\n` fixes it at any cut |
+| 8 threads × 200 unsafe `score += 10` | ~2,000 instead of 16,000 — with a lock, always 16,000 |
+| `Lock` vs `RLock` | `record_answer` → `close_question` deadlocks with `Lock` |
+| broadcast holding the lock with one slow client | a JOIN waits ~0.5 s; copy-under-lock → 0 ms |
+| scoring | 0 s → 1000 · 3 s → 800 · 7.5 s → 500 · 14.9 s → 100 · wrong → 0 |
