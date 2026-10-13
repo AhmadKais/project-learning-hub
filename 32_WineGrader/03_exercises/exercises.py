@@ -20,6 +20,7 @@ def ex01_to_grade(score):
     score: 1-D int array.  Returns a 1-D int array of the same length.
     >>> ex01_to_grade(np.array([3, 5, 6, 7, 9]))
     array([0, 0, 1, 2, 2])
+
     Theory 3.2
     """
     raise NotImplementedError("TODO ex01")
@@ -63,6 +64,7 @@ def ex05_minkowski(a, b, p=2, w=None):
     w=None means all weights are 1.
     >>> ex05_minkowski(np.array([0., 0.]), np.array([3., 4.]))
     5.0
+
     Theory 4.2
     """
     raise NotImplementedError("TODO ex05")

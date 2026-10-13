@@ -32,6 +32,7 @@ def ex01_split_host(host):
     - a host with only one label (e.g. "localhost") -> ([], host, "")
     >>> ex01_split_host("paypal.com.secure-login.xyz")
     (['paypal', 'com'], 'secure-login', 'xyz')
+
     Theory 3.1
     """
     raise NotImplementedError("TODO ex01")
@@ -99,6 +100,7 @@ def ex09_gini_gain(parent, left, right):
     (weights = share of the parent's items in each child).
     >>> round(ex09_gini_gain([5, 5], [4, 1], [1, 4]), 2)
     0.18
+
     Theory 4.5
     """
     raise NotImplementedError("TODO ex09")

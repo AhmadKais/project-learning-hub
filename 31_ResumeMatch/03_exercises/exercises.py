@@ -24,6 +24,7 @@ def ex01_scrub(text):
     email: something@something.something        phone: 9 or more digits, may contain '-' or spaces, may start with '+'
     >>> ex01_scrub("Mail noa@x.com or 054-1234567, thanks")
     'Mail   or  , thanks'
+
     Theory 04_pipeline "Scrubbing personal data"
     """
     raise NotImplementedError("TODO ex01")
@@ -35,6 +36,7 @@ def ex02_tokenize(text):
     C++, C#, Node.js must survive. Tokens that become empty are dropped.
     >>> ex02_tokenize("I know C++, C# and Node.js. I love Python.")
     ['i', 'know', 'c++', 'c#', 'and', 'node.js', 'i', 'love', 'python']
+
     Theory 04_pipeline "Tokenizing"
     """
     raise NotImplementedError("TODO ex02")

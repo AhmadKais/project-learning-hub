@@ -25,6 +25,7 @@ def ex01_caps_ratio(text):
     No letters at all -> 0.0.
     >>> ex01_caps_ratio("FREE money 100!")
     0.4444444444444444
+
     Theory 3.7 - 3.8
     """
     raise NotImplementedError("TODO ex01")
@@ -35,6 +36,7 @@ def ex02_strip_html(text):
     and strip the ends.
     >>> ex02_strip_html("<b>free</b><i>offer</i>  now")
     'free offer now'
+
     Theory 3.9
     """
     raise NotImplementedError("TODO ex02")
@@ -57,6 +59,7 @@ def ex04_ngrams(tokens, n_min=1, n_max=2):
     All the 1-grams first (in order), then all the 2-grams (in order), and so on.
     >>> ex04_ngrams(["click", "here", "now"], 1, 2)
     ['click', 'here', 'now', 'click here', 'here now']
+
     Theory 3.6
     """
     raise NotImplementedError("TODO ex04")

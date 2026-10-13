@@ -1,7 +1,7 @@
 # %% [markdown]
 # # 04 · Putting it together — a mini lobby server with real sockets
 #
-# **Read first:** `01_theory/07_architecture.md` (`04_build/`), and notebooks 01–03
+# **Read first:** `04_build/07_architecture.md`, and notebooks 01–03
 #
 # A small but complete server: a listening socket, **one thread per client**, framing, the protocol, a shared
 # lobby protected by a lock, broadcast with copy-under-lock, and a bad client that sends garbage. Three clients
