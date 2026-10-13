@@ -23,10 +23,11 @@ So before the picture enters the network:
 📄 **Normalization**
 ```text
 pixel / 255.0                     -> range 0..1
-(x - 0.5077) / 0.2550             -> mean ~0, standard deviation ~1
+(x - 0.5013) / 0.2916             -> mean ~0, standard deviation ~1
 ```
 
-0.5077 and 0.2550 are the mean and standard deviation of all pixels in FER-2013. They are in
+0.5013 and 0.2916 are the mean and standard deviation of all FER-2013 training pixels **after
+histogram equalization** (section 3.3 — the network only ever sees equalized faces). They are in
 `config.py`. **The same two numbers must be used in training and in real time** — if you
 normalize one way in training and another way with the camera, the network gets numbers in a
 range it never saw, and accuracy collapses with no error message. This is called
@@ -37,6 +38,12 @@ range it never saw, and accuracy collapses with no error message. This is called
 `cv2.equalizeHist` stretches the brightness range: if all pixels of a dark face are between 20
 and 90, after equalization they spread over 0–255. The face "looks" to the network more like a
 well-lit face. One line of code that raises real-time accuracy by a few percent.
+
+⚠️ It is part of the pre-processing, so the train/serve rule of section 3.2 applies to it too: if the
+camera path equalizes, the **training** path must equalize as well. That is why `dataset.py` has an
+`EqualizeHist` transform used by both `build_train_transform` and `build_eval_transform`, and why
+`test_eval_transform_matches_realtime_preprocessing` checks that a face becomes the same numbers on both
+paths. Equalize only in real time and the network sees high-contrast faces it was never trained on.
 
 # Chapter 4 — A neural network from zero
 
@@ -300,7 +307,7 @@ Number of parameters of Dropout: 0. It is only a random mask.
 
 ## ✅ Check yourself — Chapters 3–4
 
-1. A 48×48 picture where every pixel is 128. After `/255` and after `(x-0.5077)/0.2550` — what is the value of every pixel?
+1. A 48×48 picture where every pixel is 128. After `/255` and after `(x-0.5013)/0.2916` — what is the value of every pixel?
 2. In the tiny network of section 4.7, change the input to x = −1 (everything else the same). Compute z1, h, y, L,
    and dL/dw1. What is special about the result and why?
 3. logits = [0, 0, 0, 0, 0, 0, 0]. What is the Softmax? What is the cross-entropy for any label? What does this say about a network before training?

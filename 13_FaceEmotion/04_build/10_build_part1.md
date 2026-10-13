@@ -97,6 +97,11 @@ The order from chapter 3: grayscale → `resize` to 48×48 with `INTER_AREA` (be
 `equalizeHist` → `/255` → `(x-mean)/std` → `reshape(1, 1, 48, 48)`.
 `astype(np.float32)` **before** the division — otherwise numpy divides in uint8 and gets zeros.
 
+`build_eval_transform()` in `dataset.py` must do the very same steps (Grayscale → Resize → `EqualizeHist`
+→ ToTensor → Normalize), and `build_train_transform()` must equalize too. The new test
+`test_eval_transform_matches_realtime_preprocessing` feeds one face through both paths and demands the
+same numbers — it is your protection against train/serve skew (section 3.2).
+
 ## 12.2 `dataset.py` — the class-order trap
 
 `torchvision.datasets.ImageFolder` numbers folders alphabetically:

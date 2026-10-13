@@ -72,10 +72,10 @@ has_ip_host                        0                                0
 has_at_symbol                      0                                0
 has_https                          1                                0
 has_port                           0                                0
-suspicious_word_count              0                                4   (secure, login, verify, account)
+suspicious_word_count              0                                5   (paypal, secure, login, verify, account)
 suspicious_tld                     0   (com)                        1   (xyz)
 is_shortener                       0                                0
-entropy                            4.19                             4.41
+entropy                            4.19                             4.40
 brand_in_subdomain                 0                                1   ("paypal" in subdomains, not in domain)
 ```
 

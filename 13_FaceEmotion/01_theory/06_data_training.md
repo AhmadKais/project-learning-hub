@@ -46,7 +46,7 @@ more training would only cause overfitting. So we never use a model that "went b
 torch.save({
     "model_state": model.state_dict(),     # the weights themselves
     "epoch": epoch, "val_acc": val_acc,
-    "config": {"image_size": 48, "mean": 0.5077, "std": 0.2550},
+    "config": {"image_size": 48, "mean": 0.5013, "std": 0.2916},
 }, path)
 ```
 
@@ -117,12 +117,14 @@ showed this also improves calibration: if the model says 80% — it is right abo
 
 ## 6.8 Computing the mean and standard deviation of the dataset
 
-The numbers 0.5077 and 0.2550 in `config.py` did not come from thin air. This is how to compute
-them (on the training set only — section 2.7):
+The numbers 0.5013 and 0.2916 in `config.py` did not come from thin air. This is how to compute
+them (on the training set only — section 2.7, and on **equalized** images, because that is what the
+network receives):
 
 📄 **Computing mean/std — one-time script**
 ```python
-loader = DataLoader(FER2013Dataset(train_dir, transform=ToTensorOnly()), batch_size=512)
+stats_transform = Compose([Grayscale(1), EqualizeHist(), ToTensor()])      # no Normalize, no augmentation
+loader = DataLoader(FER2013Dataset(train_dir, transform=stats_transform), batch_size=512)
 total, total_sq, count = 0.0, 0.0, 0
 for images, _ in loader:                 # images: (B, 1, 48, 48) in range 0..1
     total += images.sum().item()
@@ -130,7 +132,7 @@ for images, _ in loader:                 # images: (B, 1, 48, 48) in range 0..1
     count += images.numel()
 mean = total / count
 std = (total_sq / count - mean ** 2) ** 0.5
-print(mean, std)                         # ~0.5077  ~0.2550
+print(mean, std)                         # ~0.5013  ~0.2916   (without equalizeHist: ~0.5077 ~0.2551)
 ```
 
 Run it once and make sure you get the same numbers. If your dataset is different (another version

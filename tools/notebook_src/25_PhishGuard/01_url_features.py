@@ -135,12 +135,9 @@ for name in FEATURE_NAMES:
     print(f"{name:24s} {a[name]:8.2f} {b[name]:13.2f}")
 
 # %% [markdown]
-# Compare every number with the table in theory §3.3 (url_length 33 and 49, entropy 4.19 and ~4.40, …). If you
-# can fill that table by hand, you understand the extractor.
-#
-# ⚠️ One difference: the code gives `suspicious_word_count` = **5** for the phishing URL, the theory table says 4
-# (secure, login, verify, account). The fifth is **paypal** — it is in `SUSPICIOUS_WORDS` too. The code follows the
-# word list, so 5 is what your project will produce. Good catch to mention if the examiner asks.
+# Compare every number with the table in theory §3.3 (url_length 33 and 49, entropy 4.19 and 4.40, …). If you
+# can fill that table by hand, you understand the extractor. Careful with `suspicious_word_count` = **5**: besides
+# secure, login, verify and account, **paypal** is in `SUSPICIOUS_WORDS` too — the count searches the whole URL.
 #
 # ## 4. On real URLs — before any model
 #

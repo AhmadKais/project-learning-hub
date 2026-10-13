@@ -13,7 +13,7 @@ from collections import deque
 
 import numpy as np
 
-MEAN, STD = 0.5077, 0.2550
+MEAN, STD = 0.5013, 0.2916          # FER-2013 train pixels after equalizeHist
 
 
 # ---------------------------------------------------------------- images and data (notebook 01)

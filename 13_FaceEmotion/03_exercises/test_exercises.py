@@ -18,8 +18,8 @@ def test_ex01_normalize():
     img = np.array([[0, 255], [130, 65]], dtype=np.uint8)
     out = ex.ex01_normalize(img)
     assert out.dtype == np.float32 and out.shape == (2, 2)
-    assert out[0, 0] == pytest.approx(-0.5077 / 0.2550, abs=1e-5)
-    assert out[0, 1] == pytest.approx((1 - 0.5077) / 0.2550, abs=1e-5)
+    assert out[0, 0] == pytest.approx(-0.5013 / 0.2916, abs=1e-5)
+    assert out[0, 1] == pytest.approx((1 - 0.5013) / 0.2916, abs=1e-5)
 
 
 def test_ex02_class_weights():

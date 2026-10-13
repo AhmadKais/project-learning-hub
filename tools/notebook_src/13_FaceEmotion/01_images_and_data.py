@@ -4,7 +4,7 @@
 # **Read first:** `01_theory/02_ml_basics.md`, `01_theory/03_images_nn.md` (§3.1–3.3), `01_theory/06_data_training.md` (§6.1–6.2)
 #
 # 1. a face as a 48×48 matrix
-# 2. normalisation — and **measuring** the two magic numbers 0.5077 and 0.2550 yourself
+# 2. normalisation — and **measuring** the two magic numbers 0.5013 and 0.2916 yourself
 # 3. histogram equalisation for bad light
 # 4. the imbalance (436 disgust vs 7,215 happy) and the class weights
 # 5. augmentation — only on the training set
@@ -49,16 +49,18 @@ for a in axes: a.axis("off")
 plt.show()
 
 # %% [markdown]
-# ## 2. Normalisation — where do 0.5077 and 0.2550 come from?
+# ## 2. Normalisation — where do 0.5013 and 0.2916 come from?
 #
 # `pixel / 255` → 0..1, then `(x − mean) / std` → mean ≈ 0, std ≈ 1. The two numbers are the mean and standard
-# deviation of all **training** pixels. Measure them:
+# deviation of all **training** pixels — **after histogram equalisation** (section 3), because in your project every
+# face is equalised, in training and in real time, so that is what the network sees. Measure them both ways:
 
 # %%
-pixels = X_train.astype(np.float32) / 255.0
-mean, std = pixels.mean(), pixels.std()
-print(f"mean {mean:.4f}   std {std:.4f}     (your config.py: 0.5077 and 0.2550)")
-z = (pixels - 0.5077) / 0.2550
+raw = X_train.astype(np.float32) / 255.0
+equalised = np.stack([cv2.equalizeHist(img) for img in X_train]).astype(np.float32) / 255.0
+print(f"raw pixels      : mean {raw.mean():.4f}   std {raw.std():.4f}")
+print(f"after equalising: mean {equalised.mean():.4f}   std {equalised.std():.4f}     (your config.py: 0.5013 and 0.2916)")
+z = (equalised - 0.5013) / 0.2916
 print(f"after normalising: mean {z.mean():.3f}, std {z.std():.3f}")
 
 # %% [markdown]
@@ -79,6 +81,10 @@ plt.tight_layout(); plt.show()
 # %% [markdown]
 # The dark face uses only a narrow band of grey values; `equalizeHist` spreads them over 0–255 again.
 #
+# ⚠️ Equalisation is part of the pre-processing, so the train/serve rule applies: your project equalises in real time
+# (`to_model_input`) **and** in training (the `EqualizeHist` transform in `dataset.py`). Equalise on one side only and
+# the network sees high-contrast faces it was never trained on.
+#
 # ## 4. The imbalance and the class weights
 #
 # $$ w_i = \frac{\text{total}}{K \cdot \text{count}_i} $$
@@ -98,17 +104,21 @@ for e, c, w in zip(EMOTIONS, counts, weights):
 # %%
 import torch
 from torchvision import transforms
+from PIL import Image
+
+equalise = transforms.Lambda(lambda img: Image.fromarray(cv2.equalizeHist(np.array(img))))   # = EqualizeHist in dataset.py
 
 train_tf = transforms.Compose([
     transforms.ToPILImage(),
+    equalise,
     transforms.RandomHorizontalFlip(),
     transforms.RandomRotation(10),
     transforms.RandomResizedCrop(48, scale=(0.85, 1.0)),
     transforms.ToTensor(),
-    transforms.Normalize([0.5077], [0.2550]),
+    transforms.Normalize([0.5013], [0.2916]),
     transforms.RandomErasing(p=0.5, scale=(0.02, 0.1)),
 ])
-eval_tf = transforms.Compose([transforms.ToPILImage(), transforms.ToTensor(), transforms.Normalize([0.5077], [0.2550])])
+eval_tf = transforms.Compose([transforms.ToPILImage(), equalise, transforms.ToTensor(), transforms.Normalize([0.5013], [0.2916])])
 
 torch.manual_seed(0)
 fig, axes = plt.subplots(1, 8, figsize=(13, 2))

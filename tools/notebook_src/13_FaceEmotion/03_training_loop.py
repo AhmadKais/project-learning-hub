@@ -59,13 +59,14 @@ print(f"train {len(y_tr)}   validation {len(y_va)}   test {len(y_test)}")
 # On the GPU your project uses the torchvision transforms of notebook 01 inside the `Dataset`, with
 # `num_workers=4` loading in parallel. On a CPU every millisecond counts, so here we normalise all images once,
 # wrap them in a `TensorDataset`, and augment **whole batches** at once (random horizontal flip + a random shift of
-# up to 4 pixels) — the same idea, 50× cheaper.
+# up to 4 pixels) — the same idea, 50× cheaper. Every face is histogram-equalised first, exactly as in real time.
 
 # %%
 from torch.utils.data import TensorDataset
 
 def to_tensor(X):
-    return torch.tensor((X.astype(np.float32) / 255.0 - 0.5077) / 0.2550)[:, None]   # (N, 1, 48, 48)
+    X = np.stack([cv2.equalizeHist(img) for img in X])                    # same as the real-time path
+    return torch.tensor((X.astype(np.float32) / 255.0 - 0.5013) / 0.2916)[:, None]   # (N, 1, 48, 48)
 
 train_loader = DataLoader(TensorDataset(to_tensor(X_tr), torch.tensor(y_tr)), batch_size=128, shuffle=True)
 val_loader = DataLoader(TensorDataset(to_tensor(X_va), torch.tensor(y_va)), batch_size=512)

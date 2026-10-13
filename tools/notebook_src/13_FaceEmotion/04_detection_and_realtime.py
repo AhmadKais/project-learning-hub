@@ -94,7 +94,7 @@ plt.figure(figsize=(9, 5)); plt.imshow(shown); plt.axis("off"); plt.title("Haar,
 # ## 4. Crop with a margin → the SAME pre-processing as training
 #
 # The detector's box is tight; FER faces include a bit of forehead and chin. Add a margin, clip to the image, then
-# grey → 48×48 → /255 → normalise with the training mean and std — **every step identical to training**.
+# grey → 48×48 → equalise → /255 → normalise with the training mean and std — **every step identical to training**.
 
 # %%
 def with_margin(box, margin, shape):
@@ -105,11 +105,11 @@ def with_margin(box, margin, shape):
     return x0, y0, x1, y1
 
 def preprocess(gray_crop):
-    # MUST be exactly what the model saw in training. Notebook 03 trained on plain FER images, so no equalizeHist
-    # here. If your project's training transform equalises, then equalise here too - and if it does not, do not.
+    # MUST be exactly what the model saw in training: notebook 03 equalised every face, so we do too.
     face = cv2.resize(gray_crop, (48, 48), interpolation=cv2.INTER_AREA)
+    face = cv2.equalizeHist(face)
     x = face.astype(np.float32) / 255.0
-    x = (x - 0.5077) / 0.2550                               # the TRAINING numbers - never recompute here
+    x = (x - 0.5013) / 0.2916                               # the TRAINING numbers - never recompute here
     return torch.from_numpy(x)[None, None]                  # (1, 1, 48, 48)
 
 # the small model trained in notebook 03
@@ -242,7 +242,7 @@ print("the GUI never fell behind: it always took the newest frame and skipped th
 #
 # 1. Compute the integral image of a 4×4 matrix by hand and the sum of the central 2×2 with 4 reads.
 # 2. Change `minNeighbors` to 1, 3, 8 and `scaleFactor` to 1.3. What do you gain and what do you lose?
-# 3. Normalise the camera crop with the crop's **own** mean and std instead of 0.5077 / 0.2550. Do the predictions
+# 3. Normalise the camera crop with the crop's **own** mean and std instead of 0.5013 / 0.2916. Do the predictions
 #    change? This is train/serve skew.
 # 4. In the measurement cell, try margins 0.0, 0.1, 0.2. Which gives the most correct answers via the pipeline?
 #

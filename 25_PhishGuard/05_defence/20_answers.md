@@ -38,7 +38,7 @@ For the student: try first.
 2. `url_length` 42 · `host_length` 12 (`203.0.113.55`) · `path_length` 12 (`/prize/claim`) ·
    `num_dots` 4 · `num_hyphens` 0 · `num_underscores` 0 · `num_slashes` 2 · `num_digits` 9 ·
    `digit_ratio` 0.214 · `num_subdomains` 0 (IP host) · `num_query_params` 0 · `has_ip_host` 1 ·
-   `has_at_symbol` 1 · `has_https` 0 · `has_port` 0 · `suspicious_word_count` 1 (`prize`) ·
+   `has_at_symbol` 1 · `has_https` 0 · `has_port` 0 · `suspicious_word_count` 2 (`amazon`, `prize` — the count searches the whole URL) ·
    `suspicious_tld` 0 (no TLD) · `is_shortener` 0 · `entropy` 4.31 · `brand_in_subdomain` 0 —
    note: "amazon" sits *before* the `@` (the user-info part), which our subdomain feature does not
    see; `has_at_symbol` catches this case instead. A "brand in user-info" feature would be a fine addition.

@@ -75,6 +75,4 @@ wrote.
 | random forest (grid-searched), validation accuracy | 0.87, AUC 0.94 on test |
 | threshold for recall ≥ 0.95 (chosen on validation) | ≈ 0.21 → test recall 0.96, precision 0.75 |
 
-This dataset is harder than the Kaggle file — expect higher numbers in your project. Two small differences
-from the guide: `suspicious_word_count` for the PayPal example is 5 (the word list includes "paypal"), and
-its entropy is 4.405 (the guide rounds to 4.41).
+This dataset is harder than the Kaggle file — expect higher numbers in your project.

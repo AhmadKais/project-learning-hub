@@ -26,7 +26,7 @@ you tried. A wrong answer you understood is worth more than a right answer you c
 
 ## Chapters 3–4
 
-1. 128/255 = 0.502; (0.502 − 0.5077)/0.2550 = **−0.022**. A "middle" pixel becomes almost zero —
+1. 128/255 = 0.502; (0.502 − 0.5013)/0.2916 = **+0.002**. A "middle" pixel becomes almost zero —
    exactly the goal of normalization.
 2. z1 = 0.5·(−1)+0 = −0.5; h = ReLU(−0.5) = **0**; y = −1·0+1 = **1**; L = (1−1)² = **0**.
    dL/dz1 = dL/dh · ReLU′(−0.5) = (dL/dy·w2)·**0** = 0 ⇒ dL/dw1 = **0**. Special twice: the loss

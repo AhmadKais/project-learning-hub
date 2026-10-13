@@ -72,11 +72,11 @@ defence you will be asked to explain and change any line, and you can only do th
 
 | | |
 |---|---|
-| FER-2013 pixel mean / std (training set) | 0.5077 / 0.2550 — measured in notebook 01 |
+| FER-2013 pixel mean / std (training set, after equalizeHist) | 0.5013 / 0.2916 — measured in notebook 01 (raw: 0.5077 / 0.2551) |
 | class weights (mean 1) | disgust highest (~16× happy) |
 | EmotionNet parameters | 4,900,551 — 75% of them in block4 |
 | convolution by hand | 570 for the vertical-edge example |
-| a small CPU network (390k parameters), 8 epochs, ~70 s each | 41% test accuracy — your GPU EmotionNet target is ≥ 65% |
-| …and its disgust class | recall 0.83 but precision 0.04: the ×4.4 class weight makes a young model over-call it |
+| a small CPU network (390k parameters), 8 epochs, ~65 s each | 42% test accuracy — your GPU EmotionNet target is ≥ 65% |
+| …and its disgust class | recall 0.75 but precision 0.05: the ×4.4 class weight makes a young model over-call it |
 | Haar on FER faces | 71 of 120 found as tight crops, 95 of 120 with a 30% border |
 | smoothing over 5 frames | half the label flips, still follows a real change within a few frames |
