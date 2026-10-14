@@ -22,6 +22,10 @@ repo is where you **learn** what goes into it.
 **Start with [`00_common/`](00_common/README.md)** (30 minutes: clone, install, run a notebook, run the tests), then open your
 folder's `START_HERE.md`.
 
+**New: [`lessons/`](lessons/README.md)** — 33 illustrated lessons, one per algorithm of all seven projects: animations,
+diagrams and charts made from the projects' own data, worked examples, class activities and check questions. Open
+[`lessons/LESSONS.html`](lessons/LESSONS.html) to see them all in one page. Your `START_HERE.md` lists your lessons in order.
+
 ## What every project folder contains
 
 ```
@@ -38,6 +42,7 @@ NN_Project/
 
 The learning loop, for every topic:
 
+0. **See** it — the matching lesson in `lessons/` (pictures and animations first).
 1. **Read** the theory chapter — do the hand examples on paper.
 2. **Run** the notebook — every cell, top to bottom. Then change numbers and run again.
 3. **Solve** the matching exercises until `pytest` is green. Only then look at `solutions.py`.
@@ -57,6 +62,7 @@ wrote and understood.
 |---|---|
 | `tools/notebook_src/<project>/*.py` | the notebook sources (plain Python with `# %%` cells) — edit these, not the `.ipynb` |
 | `python tools/build_notebooks.py [project]` | converts the sources to `.ipynb`, **runs** them and saves the outputs |
+| `python tools/build_lessons.py` | redraws every lesson's pictures / animations / videos and rebuilds `lessons/LESSONS.html` |
 | `python tools/sync_guides.py` | re-copies the theory / build / defence chapters from the students' study guides |
 | `python tools/make_resume_data.py` | regenerates the synthetic CVs for ResumeMatch |
 | `python tools/make_checklists.py` | regenerates every `06_solve/CHECKLIST.md` from the students' skeletons (run after a skeleton changes) |

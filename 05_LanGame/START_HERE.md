@@ -37,6 +37,18 @@ pip install -r requirements.txt
 Open the repo in VS Code, open a notebook from `02_examples/`, choose the `.venv` kernel, **Run All**.
 If Windows Firewall asks about Python the first time a notebook opens a socket, allow it (private networks).
 
+## Your lessons — see it before you build it
+
+Illustrated lessons with animations and pictures from your own data (all of them: [`lessons/`](../lessons/README.md),
+or open `lessons/LESSONS.html` in a browser). Watch the lesson **before** the stage it belongs to.
+
+| # | Lesson | Before your skeleton's … |
+|---|---|---|
+| 1 | [Lesson 31 — TCP is a stream: sockets, the protocol and message framing](../lessons/31_tcp_framing/LESSON.md) | stages 1-2 |
+| 2 | [Lesson 32 — Threads, race conditions and locks](../lessons/32_threads_locks/LESSON.md) | stage 2 |
+| 3 | [Lesson 33 — The database: constraints, transactions, indexes, parameters](../lessons/33_databases/LESSON.md) | stage 3 |
+| 4 | [Lesson 30 — Finite state machines: making illegal moves impossible](../lessons/30_state_machines/LESSON.md) | stage 4 |
+
 ## Where to start — the learning path
 
 Do the rows **in order**. Each row ends with something you can show your supervisor.

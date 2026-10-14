@@ -35,6 +35,19 @@ pip install -r requirements.txt
 
 Open the repo in VS Code, open a notebook from `02_examples/`, choose the `.venv` kernel, **Run All**.
 
+## Your lessons — see it before you build it
+
+Illustrated lessons with animations and pictures from your own data (all of them: [`lessons/`](../lessons/README.md),
+or open `lessons/LESSONS.html` in a browser). Watch the lesson **before** the stage it belongs to.
+
+| # | Lesson | Before your skeleton's … |
+|---|---|---|
+| 1 | [Lesson 27 — Do two stays collide? Half-open intervals and a two-comparison rule](../lessons/27_intervals_overlap/LESSON.md) | stage 1 |
+| 2 | [Lesson 33 — The database: constraints, transactions, indexes, parameters](../lessons/33_databases/LESSON.md) | stage 2 |
+| 3 | [Lesson 28 — Which free room to give? First-Fit, Best-Fit, Preference — and the Strategy pattern](../lessons/28_allocation_strategies/LESSON.md) | stage 3 |
+| 4 | [Lesson 29 — What does the stay cost, and why? A chain of pricing rules](../lessons/29_rule_chain_pricing/LESSON.md) | stage 4 |
+| 5 | [Lesson 30 — Finite state machines: making illegal moves impossible](../lessons/30_state_machines/LESSON.md) | stage 5 |
+
 ## Where to start — the learning path
 
 Do the rows **in order**. Each row ends with something you can show your supervisor.

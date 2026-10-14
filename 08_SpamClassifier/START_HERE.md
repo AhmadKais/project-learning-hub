@@ -36,6 +36,24 @@ pip install -r requirements.txt
 
 Open the repo in VS Code, open a notebook from `02_examples/`, choose the `.venv` kernel, **Run All**.
 
+## Your lessons — see it before you build it
+
+Illustrated lessons with animations and pictures from your own data (all of them: [`lessons/`](../lessons/README.md),
+or open `lessons/LESSONS.html` in a browser). Watch the lesson **before** the stage it belongs to.
+
+| # | Lesson | Before your skeleton's … |
+|---|---|---|
+| 1 | [Lesson 01 — What "learning" means: data, splits and overfitting](../lessons/01_what_is_learning/LESSON.md) | before you start |
+| 2 | [Lesson 06 — Cleaning text: from a message to a list of terms](../lessons/06_text_preprocessing/LESSON.md) | stage 2 |
+| 3 | [Lesson 07 — TF-IDF: turning text into numbers that mean something](../lessons/07_tfidf/LESSON.md) | stage 3 |
+| 4 | [Lesson 11 — Naive Bayes from scratch: counting your way to a spam filter](../lessons/11_naive_bayes/LESSON.md) | stage 4 |
+| 5 | [Lesson 02 — Feature scaling: making every feature speak the same language](../lessons/02_feature_scaling/LESSON.md) | stage 5 |
+| 6 | [Lesson 05 — Honest evaluation: cross-validation, nested CV and leakage](../lessons/05_cross_validation_leakage/LESSON.md) | stage 5 |
+| 7 | [Lesson 14 — The SVM, calibration, and comparing two models honestly](../lessons/14_svm_calibration/LESSON.md) | stage 5 |
+| 8 | [Lesson 03 — Measuring a classifier: confusion matrix, precision, recall, F1](../lessons/03_confusion_matrix_metrics/LESSON.md) | stage 6 |
+| 9 | [Lesson 04 — The threshold is a decision: ROC, AUC and choosing where to cut](../lessons/04_threshold_roc/LESSON.md) | stage 6 |
+| 10 | [Lesson 33 — The database: constraints, transactions, indexes, parameters](../lessons/33_databases/LESSON.md) | stage 7 |
+
 ## Where to start — the learning path
 
 Do the rows **in order**. Each row ends with something you can show your supervisor.

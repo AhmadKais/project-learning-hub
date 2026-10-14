@@ -36,6 +36,23 @@ pip install -r requirements.txt
 
 Open the repo in VS Code, open a notebook from `02_examples/`, choose the `.venv` kernel, **Run All**.
 
+## Your lessons — see it before you build it
+
+Illustrated lessons with animations and pictures from your own data (all of them: [`lessons/`](../lessons/README.md),
+or open `lessons/LESSONS.html` in a browser). Watch the lesson **before** the stage it belongs to.
+
+| # | Lesson | Before your skeleton's … |
+|---|---|---|
+| 1 | [Lesson 01 — What "learning" means: data, splits and overfitting](../lessons/01_what_is_learning/LESSON.md) | before you start |
+| 2 | [Lesson 18 — A URL as numbers: feature engineering and Shannon entropy](../lessons/18_url_features_entropy/LESSON.md) | stages 1-2 |
+| 3 | [Lesson 02 — Feature scaling: making every feature speak the same language](../lessons/02_feature_scaling/LESSON.md) | stage 3 |
+| 4 | [Lesson 12 — Logistic regression and gradient descent: a weighted vote with a squash](../lessons/12_logistic_regression/LESSON.md) | stage 3 |
+| 5 | [Lesson 13 — Decision trees and random forests: a flow chart learned from data](../lessons/13_trees_forests/LESSON.md) | stage 4 |
+| 6 | [Lesson 05 — Honest evaluation: cross-validation, nested CV and leakage](../lessons/05_cross_validation_leakage/LESSON.md) | stage 4 |
+| 7 | [Lesson 03 — Measuring a classifier: confusion matrix, precision, recall, F1](../lessons/03_confusion_matrix_metrics/LESSON.md) | stage 4 |
+| 8 | [Lesson 04 — The threshold is a decision: ROC, AUC and choosing where to cut](../lessons/04_threshold_roc/LESSON.md) | stage 4 |
+| 9 | [Lesson 33 — The database: constraints, transactions, indexes, parameters](../lessons/33_databases/LESSON.md) | stage 6 |
+
 ## Where to start — the learning path
 
 Do the rows **in order**. Each row ends with something you can show your supervisor.

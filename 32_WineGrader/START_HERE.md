@@ -36,6 +36,22 @@ pip install -r requirements.txt
 Open the repo in VS Code, open a notebook from `02_examples/`, choose the `.venv` kernel when asked,
 and press **Run All**.
 
+## Your lessons — see it before you build it
+
+Illustrated lessons with animations and pictures from your own data (all of them: [`lessons/`](../lessons/README.md),
+or open `lessons/LESSONS.html` in a browser). Watch the lesson **before** the stage it belongs to.
+
+| # | Lesson | Before your skeleton's … |
+|---|---|---|
+| 1 | [Lesson 01 — What "learning" means: data, splits and overfitting](../lessons/01_what_is_learning/LESSON.md) | before you start |
+| 2 | [Lesson 02 — Feature scaling: making every feature speak the same language](../lessons/02_feature_scaling/LESSON.md) | stage 3 |
+| 3 | [Lesson 03 — Measuring a classifier: confusion matrix, precision, recall, F1](../lessons/03_confusion_matrix_metrics/LESSON.md) | stage 4 |
+| 4 | [Lesson 15 — k-nearest neighbours: "tell me who your neighbours are"](../lessons/15_knn/LESSON.md) | stage 4 |
+| 5 | [Lesson 16 — The kd-tree: skipping work, and when skipping stops working](../lessons/16_kdtree/LESSON.md) | stage 5 |
+| 6 | [Lesson 05 — Honest evaluation: cross-validation, nested CV and leakage](../lessons/05_cross_validation_leakage/LESSON.md) | stage 6 |
+| 7 | [Lesson 17 — Learning a weight per feature: coordinate search and the incremental update](../lessons/17_feature_weights/LESSON.md) | stage 6 |
+| 8 | [Lesson 33 — The database: constraints, transactions, indexes, parameters](../lessons/33_databases/LESSON.md) | stage 7 |
+
 ## Where to start — the learning path
 
 Do the rows **in order**. Each row ends with something you can show your supervisor.

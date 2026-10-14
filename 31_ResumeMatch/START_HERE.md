@@ -39,6 +39,20 @@ pip install -r requirements.txt
 
 Open the repo in VS Code, open a notebook from `02_examples/`, choose the `.venv` kernel, **Run All**.
 
+## Your lessons — see it before you build it
+
+Illustrated lessons with animations and pictures from your own data (all of them: [`lessons/`](../lessons/README.md),
+or open `lessons/LESSONS.html` in a browser). Watch the lesson **before** the stage it belongs to.
+
+| # | Lesson | Before your skeleton's … |
+|---|---|---|
+| 1 | [Lesson 06 — Cleaning text: from a message to a list of terms](../lessons/06_text_preprocessing/LESSON.md) | stage 2 |
+| 2 | [Lesson 07 — TF-IDF: turning text into numbers that mean something](../lessons/07_tfidf/LESSON.md) | stage 3 |
+| 3 | [Lesson 08 — Documents as arrows: dot product and cosine similarity](../lessons/08_vectors_cosine/LESSON.md) | stage 4 |
+| 4 | [Lesson 09 — BM25 and the inverted index: how search engines rank](../lessons/09_bm25_inverted_index/LESSON.md) | stage 5 |
+| 5 | [Lesson 10 — Is the ranking good? Precision@k and MRR](../lessons/10_ranking_metrics/LESSON.md) | stage 6 |
+| 6 | [Lesson 33 — The database: constraints, transactions, indexes, parameters](../lessons/33_databases/LESSON.md) | stage 8 |
+
 ## Where to start — the learning path
 
 Do the rows **in order**. Each row ends with something you can show your supervisor.

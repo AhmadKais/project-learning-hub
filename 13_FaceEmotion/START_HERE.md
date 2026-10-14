@@ -38,6 +38,26 @@ Check: `python -c "import torch; print(torch.cuda.is_available())"` should print
 FER-2013 into `13_FaceEmotion/data/fer2013/` (see `data/README.md`), open a notebook from `02_examples/`, choose
 the `.venv` kernel, **Run All**.
 
+## Your lessons — see it before you build it
+
+Illustrated lessons with animations and pictures from your own data (all of them: [`lessons/`](../lessons/README.md),
+or open `lessons/LESSONS.html` in a browser). Watch the lesson **before** the stage it belongs to.
+
+| # | Lesson | Before your skeleton's … |
+|---|---|---|
+| 1 | [Lesson 01 — What "learning" means: data, splits and overfitting](../lessons/01_what_is_learning/LESSON.md) | before you start |
+| 2 | [Lesson 19 — How a computer sees a picture: pixels, normalisation, equalisation](../lessons/19_images_as_numbers/LESSON.md) | stage 2 |
+| 3 | [Lesson 25 — Finding the face: Haar features, the integral image and the cascade](../lessons/25_face_detection_haar/LESSON.md) | stage 2 |
+| 4 | [Lesson 20 — A neural network from zero: neurons, layers, softmax, cross-entropy](../lessons/20_neurons_softmax/LESSON.md) | stage 3 |
+| 5 | [Lesson 22 — Convolution: a small filter that slides over the picture](../lessons/22_convolution_pooling/LESSON.md) | stage 3 |
+| 6 | [Lesson 23 — EmotionNet: residual blocks, BatchNorm, Dropout, and `train()` vs `eval()`](../lessons/23_resnet_batchnorm/LESSON.md) | stage 3 |
+| 7 | [Lesson 21 — How a network learns: backpropagation, optimisers, the learning-rate schedule](../lessons/21_backprop_optimizers/LESSON.md) | stage 4 |
+| 8 | [Lesson 24 — Training in practice: augmentation, class weights, label smoothing, early stopping](../lessons/24_training_in_practice/LESSON.md) | stage 4 |
+| 9 | [Lesson 03 — Measuring a classifier: confusion matrix, precision, recall, F1](../lessons/03_confusion_matrix_metrics/LESSON.md) | stage 4 |
+| 10 | [Lesson 26 — Real time: the frame budget, the camera thread, and a label that doesn't flicker](../lessons/26_realtime_smoothing/LESSON.md) | stage 5 |
+| 11 | [Lesson 32 — Threads, race conditions and locks](../lessons/32_threads_locks/LESSON.md) | stage 5 |
+| 12 | [Lesson 33 — The database: constraints, transactions, indexes, parameters](../lessons/33_databases/LESSON.md) | stage 6 |
+
 ## Where to start — the learning path
 
 Do the rows **in order**. Each row ends with something you can show your supervisor.
