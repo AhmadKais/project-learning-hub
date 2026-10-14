@@ -1,121 +1,191 @@
-# Lesson 15 — k-nearest neighbours: "tell me who your neighbours are"
+# Lesson 15 — k-nearest neighbours: "tell me who your neighbours are, and I'll tell you who you are"
 
-> **For:** Seif (WineGrader stage 4 — the heart of the project) &nbsp;·&nbsp; **Time:** 2 × 45 min
-> **Before:** Lessons 02, 03, 05 &nbsp;·&nbsp; **After this:** Lesson 16 (kd-tree), Lesson 17 (feature weights)
+> **For:** Seif (WineGrader stage 4 — the heart of the project) &nbsp;·&nbsp; **Time:** 3 × 45 min
+> **Before:** Lesson 00 §6, §10; Lessons 02, 03, 05 &nbsp;·&nbsp; **After this:** Lessons 16, 17
+
+## The story
+
+> A wine lab sends Sami a new wine with its measurements (alcohol, acidity, sugar …) but no grade. Sami has **5,000 wines
+> that experts already graded**. His idea: *"Find the wines in my list whose measurements are most similar to this one,
+> and look at their grades. If most of the 15 closest wines are 'high', this one probably is too."* That is the whole
+> k-NN algorithm. The interesting questions are the details: how to measure "similar", how many neighbours (k), whether a
+> very close neighbour should count more, and what to do because "high" wines are rare.
 
 ## 🎯 By the end, the student can
 
 1. Explain k-NN in one sentence and run it by hand on a small table.
-2. Compute a weighted Minkowski distance (p = 1 and p = 2), and explain why the root can be skipped for ranking.
-3. Compute the **weighted vote** and its confidence, and apply the **imbalance correction** with alpha.
-4. Explain with pictures what a small and a large k do.
+2. Compute a Minkowski distance (p = 1 and p = 2) step by step, and explain why the root can be skipped.
+3. Compute the weighted vote and its confidence.
+4. Apply the imbalance correction with alpha.
+5. Explain with pictures what a small and a large k do.
+
+## Words you need
+
+| word | meaning |
+|---|---|
+| **neighbour** | a known (graded) wine close to the new one |
+| **k** | how many neighbours vote |
+| **distance** | how different two wines are, from all their numbers (Lessons 00 §10, 02) |
+| **Manhattan distance (p = 1)** | add the differences — like walking city blocks |
+| **Euclidean distance (p = 2)** | Pythagoras — the straight line |
+| **weighted vote** | closer neighbours get a louder vote: 1 / distance |
+| **confidence** | the winning grade's share of all the votes |
+| **prior** | how common each grade is: low 37 %, medium 44 %, high 19 % |
+| **alpha** | how strongly we correct for "medium is everywhere" |
+| **lazy learner** | a model that stores the examples and does the work only when asked |
 
 ---
 
-## 1. The idea
+## 1. The idea, on paper first
 
-To grade a new wine, find the **k most similar wines** we already graded and let them vote. There is no training — the
-"model" *is* the stored data (a **lazy** learner). All the work happens at prediction time.
+Four graded wines, two features (already scaled — Lesson 02), and a new wine X = (0.5, 0.2):
+
+```
+wine    alcohol   acidity   grade
+W1        0.6       0.1     high
+W2        0.4       0.5     medium
+W3       −0.3       0.0     low
+W4        1.5       0.3     high
+```
+
+**Distances to X (Euclidean):**
+
+```
+W1: differences 0.1, −0.1  → squares 0.01 + 0.01 = 0.02  → √0.02 = 0.14
+W2: −0.1, 0.3              → 0.01 + 0.09 = 0.10           → √0.10 = 0.32
+W3: −0.8, −0.2             → 0.64 + 0.04 = 0.68           → √0.68 = 0.82
+W4: 1.0, 0.1               → 1.00 + 0.01 = 1.01           → √1.01 = 1.00
+```
+
+**k = 3:** the 3 nearest are W1 (high), W2 (medium), W3 (low). One vote each → a tie! (§5 deals with ties — and with
+weights the tie disappears.)
+
+There is **no training** — the "model" *is* the table of graded wines. All the work happens when a new wine arrives. That's
+called a **lazy** learner.
 
 ![k-NN on the real wines](figs/knn_query.gif)
 
-Two of the 11 features (alcohol and volatile acidity, z-scored). The star is a new wine; the dashed circle grows as k
-grows; on the right, the weighted vote. **Watch the answer change with k**: k = 1 says *high* (one very close high wine),
-k = 15 says *medium*.
+On real wines (two features shown): the star is the new wine, the dashed circle grows with k, and on the right the vote.
+**Watch the answer change:** k = 1 says *high* (one very close high wine), k = 15 says *medium*.
 
-## 2. Distance
+## 2. Distance — Minkowski
 
-$$d(a,b)=\Big(\sum_i w_i\,|a_i-b_i|^p\Big)^{1/p}\qquad p=1\text{ Manhattan},\ p=2\text{ Euclidean},\ w_i=\text{feature weight}$$
+$$d(a,b) = \Big(\sum_i w_i\,|a_i - b_i|^p\Big)^{1/p}$$
+
+Read it slowly: for each feature i, take the difference, make it positive (|…|), raise it to the power p, multiply by the
+feature's weight wᵢ (normally 1; Lesson 17); add them all up (Σ); finally take the p-th root.
 
 ![Minkowski circles](figs/minkowski.png)
 
-By hand, p = 2, weights 1: a = (0, 0), b = (3, 4) → (9 + 16)^½ = **5**. With p = 1: 3 + 4 = **7**.
+By hand, a = (0, 0), b = (3, 4), weights 1:
 
-**Skip the root** for the search: if 25 < 36 then 5 < 6 — the order is the same. Seif's `minkowski_power` ranks;
-`minkowski` (with the root) is only computed for the k winners (`test_skipping_the_root_keeps_the_order`).
+```
+p = 2 (Euclidean):   (3² + 4²)^(1/2) = (9 + 16)^0.5 = √25 = 5
+p = 1 (Manhattan):   (3¹ + 4¹)^(1/1) = 3 + 4 = 7          (walking the blocks)
+```
 
-⚠️ Scale first (Lesson 02) — otherwise total SO₂ decides every distance.
+**Skip the root while searching.** If 25 < 36 then √25 < √36 (5 < 6): the root never changes **which** wine is closer. So
+the search compares the sums without the root ("power distance") and takes the root only for the k winners
+(`test_skipping_the_root_keeps_the_order`).
 
 ## 3. The weighted vote
 
+A neighbour almost identical to the new wine should count more than one far away:
+
+$$\text{vote} = \frac{1}{\text{distance} + \varepsilon}\qquad(\varepsilon = \text{a billionth, only to avoid dividing by 0})$$
+
 ![vote examples](figs/vote_examples.png)
 
-$$\text{vote}=\frac{1}{d+\varepsilon}\qquad\text{confidence}=\frac{\text{winner's votes}}{\text{all votes}}$$
+The guide's example (left), k = 3:
 
-The guide's example (left): one *high* wine at 0.10 votes 10.0; two *medium* wines at 0.90 and 1.00 vote 1.1 + 1.0 = 2.1
-→ **HIGH**, confidence 10.0 / 12.1 = **0.83**. Without weights, the two far wines would outvote the almost identical one.
+```
+neighbour 1:  high,    distance 0.10  → vote 1 / 0.10 = 10.0
+neighbour 2:  medium,  distance 0.90  → vote 1 / 0.90 =  1.1
+neighbour 3:  medium,  distance 1.00  → vote 1 / 1.00 =  1.0
+
+high: 10.0      medium: 1.1 + 1.0 = 2.1      total: 12.1
+winner: HIGH,   confidence = 10.0 / 12.1 = 0.83
+```
+
+Without weights, the two far medium wines would out-vote the almost identical high wine 2 to 1.
+
+Our paper example with weights: W1 1/0.14 = 7.1 (high), W2 1/0.32 = 3.1 (medium), W3 1/0.82 = 1.2 (low) → **high**,
+confidence 7.1 / 11.4 = 0.62.
 
 ## 4. The imbalance correction (alpha)
 
-44 % of wines are medium, 19 % high: in a mixed neighbourhood, *medium* wins by numbers alone. Divide each vote by its
-grade's share raised to alpha:
+44 % of wines are medium, only 19 % are high. Any random neighbour is 2.3× more likely to be medium than high — before we
+even look at the wine. So in a mixed neighbourhood, medium wins "by population". The correction divides each vote by how
+common its grade is, raised to a power alpha:
 
-$$\text{vote}=\frac{1/(d+\varepsilon)}{\text{prior}[\text{grade}]^{\alpha}}$$
+$$\text{vote} = \frac{1/(d+\varepsilon)}{\text{prior}[\text{grade}]^{\alpha}}$$
 
-Right panel: neighbours medium, medium, high (all at distance 1). alpha = 0 → medium 2.0 vs high 1.0. alpha = 1 → medium
-2/0.44 = 4.5 vs high 1/0.19 = **5.3 → HIGH**.
+Right panel of the picture: neighbours medium, medium, high, all at distance 1 (each vote = 1):
 
-## 5. Choosing k and alpha — the real curves
+```
+alpha = 0:    prior^0 = 1 for everyone →  medium 1 + 1 = 2.0      high 1.0           → MEDIUM
+alpha = 1:    medium: 1/0.44 = 2.27 each → 4.5      high: 1/0.19 = 5.3            → HIGH
+alpha = 0.5:  √0.44 = 0.66 → medium 2 × 1/0.66 = 3.0;   √0.19 = 0.44 → high 1/0.44 = 2.3   → MEDIUM
+```
+
+Too much correction and medium wines get called high; too little and high wines are never found.
+
+## 5. Ties
+
+With equal votes, `np.argmax` would always pick the first grade (low) — an arbitrary bias. The project's rule: **the grade of
+the nearest neighbour among the tied grades wins**. In the paper example without weights (k = 3, one vote each), W1 (high)
+is the nearest → **high**.
+
+## 6. Choosing k and alpha — the real curves
 
 ![k regions](figs/k_regions.png)
 
-| k | behaviour |
-|---|---|
-| 1 | islands around single wines — one mislabelled wine causes an error every time |
-| 15–25 | local and smooth |
-| 151 | not local any more — almost everything becomes medium |
+Each colour region = the grade a new wine at that spot would get. k = 1: islands around single wines (one mislabelled wine
+causes errors around it). k = 15: smooth. k = 151: not local any more — mostly medium.
 
 ![tuning curves](figs/tuning_curves.png)
 
-On the real data (5,320 unique wines, 11 features, 5-fold): macro-F1 rises from 0.54 (k = 1) to ≈ 0.58 around k = 21 and
-then stays flat. alpha trades: macro-F1 stays about the same up to ≈ 0.4–0.5 while the recall of *high* wines rises from
-0.45 to ≈ 0.6 — which is why Seif's tuning rule prefers alpha = 0.5 (theory §4.5: 0.585 vs 0.586, recall 0.45 → 0.61).
-
-## 6. Ties
-
-Two grades with exactly the same votes: `np.argmax` would always pick the lower grade number — an arbitrary bias toward
-*low*. The project's rule: **the grade of the nearest neighbour among the tied grades wins** — deterministic and meaningful.
+Real data (5,320 wines, all 11 features, 5-fold CV): macro-F1 (Lesson 03) rises from 0.54 at k = 1 to ≈ 0.58 around
+k = 21, then stays flat. Alpha: macro-F1 stays about the same up to ≈ 0.4–0.5 while the recall of *high* wines rises from
+0.45 to ≈ 0.6 — so Seif's tuning rule prefers alpha = 0.5.
 
 ## 7. Proving it is right
 
-`test_knn_matches_sklearn` runs your k-NN and `KNeighborsClassifier(weights="distance")` on the same 400 training points
-and 200 queries, for p = 1 and p = 2, and demands **identical** answers. If it fails, compare the **neighbours** first (the
-index), then the votes.
+`test_knn_matches_sklearn` runs your k-NN and scikit-learn's `KNeighborsClassifier(weights="distance")` on the same data
+and demands **identical** answers. If it fails: compare the neighbours first, then the votes.
 
-## 8. Misconceptions
+## 8. Common mistakes
 
-| Student says | Truth |
+| student says | the truth |
 |---|---|
-| "k-NN trains a model" | It stores the data. `fit` = remember (and the scaler). |
-| "k = 1 is the most accurate, it uses the closest wine" | It is the most **noisy**. Tasters disagree; one wine is not evidence. |
-| "Bigger k is safer" | Too big = the majority class everywhere. |
-| "The prior of a missing class is 0" | 1.0 — `0 ** alpha` would divide by zero. (Seif's FAQ in theory §4.5.) |
+| "k-NN trains a model" | It stores the wines (and the scaler). The work happens at prediction time. |
+| "k = 1 is the most accurate" | The most **noisy**: one mislabelled wine decides. |
+| "Bigger k is safer" | Too big = the most common grade everywhere. |
+| "Forget scaling, k-NN will manage" | SO₂ would decide everything (Lesson 02). |
 
 ## 9. Activities
 
-1. **Human k-NN (15 min).** Tape a grid on the floor (alcohol × acidity). 15 students hold "wine cards" with a grade and
-   stand at their position. A new student enters — the class counts the 1, 3, 5 nearest. Change k, change the answer.
-2. **Vote by hand (10 min).** Distances 0.2 (high), 0.5 (medium), 0.6 (medium), 1.0 (low), 1.1 (medium). k = 5,
-   weighted. → high 5.0, medium 2.0 + 1.67 + 0.91 = 4.58, low 1.0 → HIGH, confidence 5.0 / 10.58 = 0.47.
-3. **Live slider.** `python visualize.py --live` — drag k from 1 to 60.
+1. **Human k-NN (15 min).** Tape an alcohol × acidity grid on the floor. 15 students hold "wine cards" with a grade and
+   stand at their spot. A new student enters; the class counts the 1, 3, 5 nearest. Change k, change the answer.
+2. **Vote by hand (10 min).** §10 question 2.
+3. **Slider:** `python visualize.py --live` — drag k from 1 to 60.
 
-## 10. Check yourself
+## 10. Do it yourself
 
 <details><summary>1. p = 1, weights (1, 2): distance between (1, 5) and (4, 3)?</summary>
 
-1·|1−4| + 2·|5−3| = 3 + 4 = **7**.
+1 × |1 − 4| + 2 × |5 − 3| = 3 + 4 = **7**.
 </details>
 
-<details><summary>2. Why is k-NN slow at prediction time, and what does Seif try against it?</summary>
+<details><summary>2. k = 5, distances 0.2 (high), 0.5 (medium), 0.6 (medium), 1.0 (low), 1.1 (medium). Weighted vote and confidence.</summary>
 
-It computes the distance to every training wine (~4,250). Lesson 16: the kd-tree, which tries to skip regions — and the
-measurement that shows when it doesn't help.
+high 1/0.2 = 5.0 · medium 2.0 + 1.67 + 0.91 = 4.58 · low 1.0 · total 10.58 → **high**, confidence 5.0 / 10.58 = **0.47**.
 </details>
 
-<details><summary>3. Centroid baseline 0.49, k-NN 0.58. Why does k-NN win?</summary>
+<details><summary>3. Why does k-NN beat the "centroid" baseline (one average wine per grade)?</summary>
 
-One average point per grade can't describe a grade spread over several regions (high reds and high whites differ). k-NN
-keeps every wine and can follow any shape.
+One average point can't describe a grade spread over several regions (high reds and high whites differ). k-NN keeps every
+wine and can follow any shape.
 </details>
 
 ## 11. In your project
@@ -127,5 +197,4 @@ keeps every wine and can follow any shape.
 ## 🎬 Watch & explore
 
 * StatQuest — *K-nearest neighbors, Clearly Explained* — [search on YouTube](https://www.youtube.com/results?search_query=StatQuest+K-nearest+neighbors+clearly+explained)
-* MIT 6.034 (Winston) — *Learning: Nearest Neighbors* — [search on YouTube](https://www.youtube.com/results?search_query=MIT+6.034+nearest+neighbors+Winston)
 * scikit-learn — [Nearest Neighbors Classification example](https://scikit-learn.org/stable/auto_examples/neighbors/plot_classification.html)

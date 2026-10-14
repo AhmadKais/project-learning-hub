@@ -1,14 +1,38 @@
 # Lesson 26 — Real time: the frame budget, the camera thread, and a label that doesn't flicker
 
-> **For:** Ryan (FaceEmotion stage 5) · the threading part also for Liraz (Lesson 32) &nbsp;·&nbsp; **Time:** 45 min
-> **Before:** Lessons 23, 25 &nbsp;·&nbsp; **After this:** the real-time chapter of the book
+> **For:** Ryan (FaceEmotion stage 5) · the thread part also for Liraz (Lesson 32) &nbsp;·&nbsp; **Time:** 45 – 60 min
+> **Before:** Lesson 00 §2; Lessons 23, 25 &nbsp;·&nbsp; **After this:** the real-time chapter of the book
+
+## The story
+
+> Ryan's app finally runs with the camera. Two things look bad in the demo:
+>
+> 1. The picture **stutters** — the window freezes for a moment every second.
+> 2. When the student half-smiles, the label **flickers**: happy, neutral, happy, happy, neutral … eight times a second.
+>    It looks broken, although each single answer is reasonable.
+>
+> Think of a TV news ticker that jumped every time one viewer's opinion changed — unreadable. This lesson fixes both:
+> a separate **camera thread** with "latest frame only", and **temporal smoothing** — averaging the last few answers.
 
 ## 🎯 By the end, the student can
 
-1. Draw the time budget of one frame and say why the camera read must be in its own thread.
-2. Explain "latest frame only" and why the shared frame needs a Lock and a copy.
-3. Explain temporal smoothing and why it averages **probabilities**, not labels.
-4. Compute the delay smoothing adds, and defend N = 5.
+1. Draw the time budget of one frame and say why reading the camera needs its own thread.
+2. Explain "latest frame only", and why the shared frame needs a lock and a copy.
+3. Compute a moving average of probability vectors by hand, and explain why we average probabilities, not labels.
+4. Compute the delay smoothing adds, and defend the window size 5.
+
+## Words you need
+
+| word | meaning |
+|---|---|
+| **frame** | one picture from the camera |
+| **fps** | frames per second; 25 fps → 1000 / 25 = **40 ms** per frame |
+| **thread** | a part of the program that runs at the same time as the rest (Lesson 32) |
+| **blocking** | a call that waits: `cap.read()` waits until the camera delivers a frame |
+| **lock** | a token so two threads don't touch the same variable at once (Lesson 32) |
+| **probability vector** | the 7 probabilities, one per emotion, for one frame |
+| **moving average** | the average of the last N values; when a new one arrives, the oldest drops out |
+| **delay / lag** | how late the smoothed label reacts to a real change |
 
 ---
 
@@ -16,80 +40,101 @@
 
 ![frame budget](figs/budget.png)
 
-25 fps = **40 ms per frame** for everything: detection, pre-processing, inference, drawing. The biggest cost is not on the
-list: `cap.read()` **blocks** 30–40 ms until the camera delivers. In the GUI thread that alone would eat the budget — so it
-runs in **its own thread**.
+At 25 fps everything for one frame must fit in **40 ms**: face detection (~14 ms), preparation (~1 ms), the network (~3 ms
+on a GPU), drawing (~5 ms) = about 23 ms. Fine. But reading the camera, `cap.read()`, **waits 30–40 ms** for the next frame.
+In the same thread as the window, that alone eats the whole budget → stutter. So the camera gets **its own thread**.
 
 ## 2. Latest frame only
 
 ![latest frame vs queue](figs/latest_frame.png)
 
-The camera thread overwrites **one** slot with the newest frame; the GUI takes whatever is there. A queue would fill up
-when the GUI is slower, and the screen would show the **past**. Two threads, one variable → a `threading.Lock`, and
-`read()` returns `frame.copy()` (drawing on the shared buffer would corrupt it).
+The camera thread reads frames non-stop and overwrites **one** slot with the newest one. The window takes whatever is in
+the slot. If the window is slower than the camera, some frames are simply skipped — and that's correct: a **queue** would
+fill up and the screen would show the **past**, further and further behind.
 
-Tkinter is single-threaded: no `while True` in the GUI. Use `root.after(30, process_frame)` — process one frame, schedule
-the next, and the window stays responsive.
+Two threads touch the same slot → a `threading.Lock` around it, and `read()` returns `frame.copy()` (if the window drew
+rectangles on the shared frame while the camera writes into it → corrupted pictures).
+
+Tkinter (the window library) runs everything in one thread: no `while True` loop in the window code. Use
+`root.after(30, process_frame)`: "run this again in 30 ms" — between calls the window stays responsive.
 
 ## 3. Why the label flickers — and the fix
 
 ![flicker](figs/flicker.gif)
 
-Each frame is classified on its own. In a borderline expression (51 % happy / 49 % neutral) one pixel of noise flips the
-label. Simulation, 100 frames: the raw label changes **20 times** (8 per second — flicker); a moving average over the last
-5 probability vectors changes it **4 times**.
+Each frame is judged alone. With a borderline expression (51 % happy / 49 % neutral), one pixel of noise flips the label.
+In the simulation: the raw label changes **20 times** in 100 frames (4 seconds) — flicker; the smoothed one **4 times**.
+
+**Moving average, step by step (window N = 5).** P(happy) in frames 1–7:
+
+```
+frame:      1     2     3     4     5     6     7
+P(happy):  0.6   0.4   0.6   0.5   0.7   0.3   0.6
+
+after frame 5:  average of frames 1–5 = (0.6 + 0.4 + 0.6 + 0.5 + 0.7) / 5 = 2.8 / 5 = 0.56   → happy
+after frame 6:  drop frame 1, add frame 6: (0.4 + 0.6 + 0.5 + 0.7 + 0.3) / 5 = 2.5 / 5 = 0.50   → exactly on the edge
+after frame 7:  (0.6 + 0.5 + 0.7 + 0.3 + 0.6) / 5 = 2.7 / 5 = 0.54   → happy
+raw labels would be: happy, neutral, happy, tie, happy, neutral, happy  — flickering
+```
+
+In the real app we average the **whole vector** of 7 probabilities, then take the biggest:
 
 ```python
 class TemporalSmoother:
     def __init__(self, window=5):
-        self._history = deque(maxlen=window)    # the oldest drops out by itself
+        self._history = deque(maxlen=window)    # the oldest frame drops out by itself
     def update(self, probs):
         self._history.append(probs)
-        return np.mean(self._history, axis=0)   # average the VECTORS, then argmax
+        return np.mean(self._history, axis=0)   # average each emotion over the frames, then argmax
 ```
 
-## 4. Average the probabilities, don't vote
+## 4. Average the probabilities — don't vote on the labels
 
 ![average vs vote](figs/average_vs_vote.png)
 
-Three frames: (0.6 happy, 0.4 sad), (0.6, 0.4), (0.0, 1.0). Voting: happy 2 – 1. Averaging: happy 0.4, sad **0.6**. The
-third frame was very sure; the average respects confidence, voting throws it away. That's
-`test_probabilities_are_averaged_not_voted`.
+Three frames: (0.6 happy, 0.4 sad), (0.6, 0.4), (0.0, 1.0).
+
+```
+voting on the labels:   happy, happy, sad       → happy wins 2 to 1
+averaging:              happy (0.6 + 0.6 + 0.0) / 3 = 0.4      sad (0.4 + 0.4 + 1.0) / 3 = 0.6   → SAD
+```
+
+The third frame was **very** sure; averaging respects how sure each frame was, voting throws that away
+(`test_probabilities_are_averaged_not_voted`).
 
 ## 5. The price: delay
 
 ![delay](figs/delay.png)
 
-A moving average over N frames reacts about N/2 frames late. N = 5 at 25 fps → ≈ 100 ms (people don't notice below
-~150 ms). N = 15 → ≈ 300 ms — noticeable. If the success metric ("≤ 2 label changes per second") fails, go to 7, not 15.
+A moving average over N frames reacts about N / 2 frames late. N = 5 at 25 fps: 2.5 × 40 ms ≈ **100 ms** — people don't
+notice delays below ~150 ms. N = 15: 7.5 × 40 ms = **300 ms** — noticeable. If the label still changes more than twice a
+second, go to 7, not to 15.
 
-## 6. Misconceptions
+## 6. Common mistakes
 
-| Student says | Truth |
+| student says | the truth |
 |---|---|
-| "Threads make Python run things in parallel" | The GIL lets one thread run Python at a time — but `cap.read()` waits on the camera and releases the GIL, so the GUI can work meanwhile. |
-| "Smoothing makes the model more accurate" | It makes the display stable. The model is the same. |
-| "A bigger window is always better" | Bigger = slower to react. |
-| "Process every frame from a queue to be correct" | Then the screen lags further and further behind. Skip frames instead. |
+| "Python threads don't run at the same time (the GIL)" | Only one runs Python at a time — but `cap.read()` *waits* on the camera and lets the other thread work meanwhile. |
+| "Smoothing makes the model more accurate" | It makes the display stable; the model is the same. |
+| "Process every frame in a queue to be correct" | Then the screen falls behind. Skip frames. |
 
 ## 7. Activities
 
-1. **Flicker game (5 min).** One student shows a "half smile"; 5 others each shout their label every second — then shout
-   the majority of the last 3 seconds.
-2. **Compute (5 min).** Probabilities of happy over 5 frames: 0.7, 0.4, 0.6, 0.2, 0.9 → average 0.56 → happy.
-3. **Measure (10 min).** In the app, show the FPS counter and the number of label changes per second with N = 1, 5, 15.
+1. **The flicker game (5 min).** One student keeps a half smile; 5 others shout their label every second; then shout the
+   majority of the last 3 seconds.
+2. **Compute (5 min).** §8 question 1.
+3. **Measure (10 min).** In the app, show the FPS counter and count label changes per second with N = 1, 5, 15.
 
-## 8. Check yourself
+## 8. Do it yourself
 
-<details><summary>1. 25 fps and N = 7. About how much delay?</summary>
+<details><summary>1. P(happy) over 5 frames: 0.7, 0.4, 0.6, 0.2, 0.9. Smoothed P(happy)?</summary>
 
-3.5 frames × 40 ms = **140 ms** — borderline noticeable.
+(0.7 + 0.4 + 0.6 + 0.2 + 0.9) / 5 = 2.8 / 5 = **0.56** → happy.
 </details>
 
-<details><summary>2. Why must `CameraService.read()` return a copy?</summary>
+<details><summary>2. 25 fps and N = 7. About how much delay?</summary>
 
-The GUI draws rectangles and text on the frame. Without a copy it would draw on the buffer the camera thread is writing
-into — corrupted frames, races.
+3.5 frames × 40 ms = **140 ms** — borderline noticeable.
 </details>
 
 <details><summary>3. The face leaves the picture. What should the smoother do?</summary>
@@ -101,9 +146,9 @@ into — corrupted frames, races.
 
 | Project | Where |
 |---|---|
-| FaceEmotion | `app/vision/camera.py` → `CameraService.start`, `_reader_loop`, `read`, `stop` · `app/ml/smoothing.py` → `TemporalSmoother.update/reset/current` · `app/controllers/app_controller.py` → `start_capture`, `_on_frame` (`root.after`) · `app/utils/fps.py` · config `SMOOTHING_WINDOW = 5` · theory `13_FaceEmotion/01_theory/07_detection_realtime.md` §8 · notebook `04_detection_and_realtime.ipynb` |
+| FaceEmotion | `app/vision/camera.py` → `CameraService.start`, `_reader_loop`, `read`, `stop` · `app/ml/smoothing.py` → `TemporalSmoother.update/reset/current` · `app/controllers/app_controller.py` → `start_capture`, `_on_frame` · `app/utils/fps.py` · config `SMOOTHING_WINDOW = 5` · theory `13_FaceEmotion/01_theory/07_detection_realtime.md` §8 · notebook `04_detection_and_realtime.ipynb` |
 
 ## 🎬 Watch & explore
 
-* *Moving average filter explained* — [search on YouTube](https://www.youtube.com/results?search_query=moving+average+filter+smoothing+explained)
-* Python docs — [`collections.deque(maxlen=...)`](https://docs.python.org/3/library/collections.html#collections.deque) and [`threading.Lock`](https://docs.python.org/3/library/threading.html#lock-objects)
+* *Moving average explained* — [search on YouTube](https://www.youtube.com/results?search_query=moving+average+filter+smoothing+explained)
+* Python docs — [`collections.deque`](https://docs.python.org/3/library/collections.html#collections.deque) · [`threading.Lock`](https://docs.python.org/3/library/threading.html#lock-objects)

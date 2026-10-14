@@ -1,8 +1,14 @@
 # Lessons — every algorithm of the seven projects, taught with pictures
 
-Thirty-three lessons, one per algorithm or idea the projects need. Each lesson is built **around pictures and
+Thirty-four lessons: a maths toolkit (Lesson 00) and one lesson per algorithm or idea the projects need. They assume the
+students **know no machine learning and are weak in maths**: every lesson starts from a **story** (a person with a real
+problem), defines every word before using it, and does every calculation step by step, saying *why* each step is done. Each lesson is built **around pictures and
 animations**: the text only explains what you are looking at. Use them to teach in class (projector), and give the
 students the same pages to revise from.
+
+**Two helpers for every lesson:** [Lesson 00 — the maths toolkit](00_math_toolkit/LESSON.md) (percentages, averages,
+probability, Σ, powers, logarithms, eˣ, slope, distance — with pictures) and the [glossary](GLOSSARY.md) (every term in plain
+words).
 
 **The quickest way in:** open [`LESSONS.html`](LESSONS.html) in a browser (all 33 lessons in one page, the animations
 play) and press F11. Or open any lesson's `LESSON.md` on GitHub / in VS Code.
@@ -11,6 +17,8 @@ play) and press F11. Or open any lesson's `LESSON.md` on GitHub / in VS Code.
 
 | Part | What it is for |
 |---|---|
+| **The story** | a person with a real problem (a shop owner, a recruiter, a bank clerk …) that the algorithm solves |
+| **Words you need** | every new term defined *before* it is used, with the story's example |
 | 🎯 **Goals** | 3–5 things the student can do at the end — check them in the defence-style questions |
 | **The picture** | every lesson starts from an illustration, never from a formula |
 | **Animations** (`figs/*.gif`) | the algorithm *moving*: a filter sliding, a tree growing, a threshold sweeping, a race between threads |
@@ -32,6 +40,7 @@ Most pictures use the **projects' real data** (the SMS corpus, the PhishGuard UR
 
 | # | Lesson | For | The pictures that carry it |
 |---|---|---|---|
+| 00 | [The maths toolkit](00_math_toolkit/LESSON.md) | everyone, first | percentages, average, spread, probability, logs, slope, distance |
 | | **Unit 1 — machine-learning foundations** | | |
 | 01 | [What "learning" means: data, splits, overfitting](01_what_is_learning/LESSON.md) | Laith · Ryan · Dani · Seif | overfitting animation, bias/variance dartboards |
 | 02 | [Feature scaling](02_feature_scaling/LESSON.md) | Seif · Dani · Laith · Ryan | neighbours before/after, z-score animation, zig-zag gradient descent |
@@ -85,11 +94,11 @@ Teach the lesson **before** the student starts that stage of the skeleton (`TASK
 | Seif | WineGrader | 01 → 02 (st. 3) → 03, 15 (st. 4) → 16 (st. 5) → 05, 17 (st. 6) → 33 (st. 7) |
 | Liraz | LanGame | 31 (st. 1–2) → 32 (st. 2) → 33 (st. 3) → 30 (st. 4) |
 
-Lessons 01, 02, 03, 05 and 33 are shared by four or more students — teach them to the whole group together.
+Start every student with Lesson 00 (or the sections of it their lessons point to). Lessons 01, 02, 03, 05 and 33 are shared by four or more students — teach them to the whole group together.
 
 ## How to teach a lesson (a 45-minute plan that works for all of them)
 
-1. **Hook (3 min)** — the question at the top of the lesson, or the first picture with no explanation: *"what do you see?"*
+1. **Story (3 min)** — tell the lesson's story; ask the class how *they* would solve it before any algorithm.
 2. **Predict (2 min)** — before playing the animation, students guess on paper what will happen.
 3. **Watch (10 min)** — play the GIF / MP4; pause at each step and let a student say the numbers aloud.
 4. **By hand (10 min)** — the worked example on the board, then a second one in pairs (in *Activities*).

@@ -1,127 +1,196 @@
-# Lesson 04 — The threshold is a decision: ROC, AUC and choosing where to cut
+# Lesson 04 — Where to draw the line: the threshold, ROC and AUC
 
-> **For:** Laith (precision floor) · Dani (ROC, recall target) · Ryan, Seif (reading curves) &nbsp;·&nbsp; **Time:** 45 min
-> **Before:** Lesson 03 &nbsp;·&nbsp; **After this:** the threshold stage of Spam (stage 6) and PhishGuard (stage 4)
+> **For:** Laith (precision floor) · Dani (ROC, recall target) &nbsp;·&nbsp; **Time:** 2 × 45 min
+> **Before:** Lesson 03 &nbsp;·&nbsp; **After this:** Spam stage 6, PhishGuard stage 4
+
+## The story
+
+> **Rana works at a bank's help desk.** Customers forward her links they got by SMS: "Is this really the bank?". The
+> bank buys a program that gives each link a **phishing score** from 0 to 1. Rana's boss asks: *"At what score do we
+> block a link?"* If they block at 0.9, some phishing gets through and a customer may lose their savings. If they block
+> at 0.1, half of the normal sites are blocked and customers call angrily. The program can't decide this — **people**
+> must. This lesson is how to decide well.
 
 ## 🎯 By the end, the student can
 
-1. Explain that a classifier outputs a **score**, and the **threshold** turns it into a decision.
-2. Read and draw a ROC curve; say what AUC = 0.5 and AUC = 1 mean; explain AUC as "the chance a random positive
-   outranks a random negative".
-3. Apply their project's rule for choosing the threshold, **on the validation set only**, and defend it.
+1. Explain that a classifier gives a **score**, and a **threshold** turns the score into a yes/no.
+2. Compute the true-positive rate and false-alarm rate for one threshold, and draw a ROC curve by hand.
+3. Explain AUC in one sentence, with numbers between 0.5 and 1.
+4. Apply their project's rule for choosing the threshold — on the validation set — and defend it.
+
+## Words you need
+
+| word | meaning |
+|---|---|
+| **score / probability** | the model's number for one example, 0 … 1: "how phishing-like" |
+| **threshold** | the cut: score ≥ threshold → "phishing" |
+| **TPR (true-positive rate) = recall** | of all phishing links, the share we block — Lesson 03 |
+| **FPR (false-positive rate) = false-alarm rate** | of all **good** links, the share we block by mistake |
+| **ROC curve** | the line of (FPR, TPR) points for every possible threshold |
+| **AUC** | "area under the curve": one number for the whole ROC curve, 0.5 … 1 |
 
 ---
 
-## 1. Every threshold is one point of the ROC curve
+## 1. Score + threshold = decision
+
+Ten links, sorted by the model's score (P = phishing, G = good):
+
+```
+link:    1     2     3     4     5     6     7     8     9     10
+score:  0.95  0.90  0.80  0.70  0.60  0.45  0.40  0.30  0.20  0.10
+truth:   P     P     G     P     P     G     P     G     G     G
+```
+
+Count first: 5 phishing (links 1, 2, 4, 5, 7) and 5 good (links 3, 6, 8, 9, 10).
+
+**Threshold 0.65** → block links with score ≥ 0.65 → links 1, 2, 3, 4.
+
+```
+blocked phishing (TP) = 1, 2, 4      → 3        TPR = 3 / 5 phishing = 0.6
+blocked good     (FP) = 3            → 1        FPR = 1 / 5 good     = 0.2
+```
+
+**Threshold 0.35** → block 1–7.
+
+```
+TP = 1, 2, 4, 5, 7 → 5     TPR = 5/5 = 1.0
+FP = 3, 6          → 2     FPR = 2/5 = 0.4
+```
+
+Lower threshold → more phishing caught **and** more false alarms. Every threshold is a **trade**.
+
+## 2. The ROC curve — every threshold at once
+
+Do it for **every** threshold, from very strict (block nothing) to very loose (block everything), and put each
+(FPR, TPR) pair as a point on a chart. Connect the points: that's the **ROC curve**.
+
+Our 10 links, threshold moving down one link at a time:
+
+```
+block down to link:  none  1    2    3    4    5    6    7    8    9    10
+TP:                   0    1    2    2    3    4    4    5    5    5    5
+FP:                   0    0    0    1    1    1    2    2    3    4    5
+TPR = TP/5:           0   .2   .4   .4   .6   .8   .8   1.0  1.0  1.0  1.0
+FPR = FP/5:           0    0    0   .2   .2   .2   .4   .4   .6   .8   1.0
+```
+
+Every phishing link moves the point **up**; every good link moves it **right**. A perfect model would go straight up
+first (all phishing have higher scores than all good), then right.
 
 ![ROC being built](figs/roc_build.gif)
 
-Real PhishGuard URLs, a simple model. Left: the scores of legitimate URLs (blue) and phishing URLs (orange). The
-black line is the threshold; everything to its right is blocked. Right: for that threshold we plot
+The same thing on the **real** PhishGuard URLs. Left: scores of good URLs (blue) and phishing URLs (orange); the black
+line is the threshold. Right: the point for that threshold. As the line slides down, the point draws the curve.
 
-* **x = false-alarm rate** (FPR) = FP / all legitimate — "how many good sites did I block?"
-* **y = recall** (TPR) = TP / all phishing — "how many attacks did I catch?"
-
-At threshold 1.0 nothing is blocked → (0, 0). At 0.0 everything is blocked → (1, 1). In between the line slides,
-and the dot draws the curve. **The area under it is the AUC.**
-
-## 2. Shapes of ROC curves
+## 3. Shapes of ROC curves
 
 ![ROC shapes](figs/roc_shapes.png)
 
-| AUC | Meaning |
-|---|---|
-| 1.0 | the two piles do not overlap at all — some threshold is perfect |
-| 0.9 – 0.99 | good: little overlap (PhishGuard target ≥ 0.97) |
-| 0.5 | the diagonal — the scores carry no information, a coin flip |
-| < 0.5 | worse than a coin… flip the model's answers and it becomes good (a bug, usually swapped labels) |
+The small histograms show the two piles of scores. **The less they overlap, the closer the curve hugs the top-left
+corner.** If the scores of both classes are mixed together (useless model), every threshold blocks good and bad
+equally → the diagonal.
 
-## 3. What AUC means, in one sentence
+## 4. AUC — one number for the whole curve
+
+**AUC** = the area under the ROC curve (the coloured area). The square is 1 × 1, so AUC is between 0 and 1:
+
+| AUC | meaning |
+|---|---|
+| 1.0 | perfect: some threshold separates them completely |
+| 0.9 – 0.99 | good (PhishGuard's target: ≥ 0.97) |
+| 0.5 | coin flip: the diagonal |
+
+**AUC in plain words:**
 
 ![AUC as pairs](figs/auc_pairs.png)
 
-Take one random phishing URL and one random legitimate URL. **AUC is the probability that the phishing one gets
-the higher score.** Green lines are pairs in the right order, red ones are wrong. That is why AUC does not
-depend on any threshold — it is about the **ranking**, which makes it the fairest single number to compare two
-models (Dani: logistic regression vs random forest).
+> Pick one random phishing link and one random good link. AUC = the probability that the **phishing one got the higher
+> score**.
 
-## 4. Choosing the threshold — two projects, two opposite rules
+On our 10 links: 5 phishing × 5 good = 25 pairs. Count the pairs where the phishing link scored higher:
+
+```
+phishing 1 (0.95): beats all 5 good                         → 5
+phishing 2 (0.90): beats all 5 good                         → 5
+phishing 4 (0.70): beats good 6, 8, 9, 10 (not good 3, 0.80) → 4
+phishing 5 (0.60): beats 6, 8, 9, 10                        → 4
+phishing 7 (0.40): beats 8, 9, 10 (not 3 or 6)              → 3
+total 21 of 25 pairs  →  AUC = 21 / 25 = 0.84
+```
+
+Because AUC only looks at the **order** of the scores, it doesn't depend on any threshold — the fairest single number to
+compare two models (Dani: logistic regression vs random forest).
+
+## 5. Choosing the threshold — the cost of each mistake
 
 ![the two rules](figs/rules.png)
 
 | | Spam (Laith) | PhishGuard (Dani) |
 |---|---|---|
-| expensive mistake | **FP** — real mail hidden | **FN** — phishing let through |
-| constraint | precision ≥ **0.98** | recall ≥ **0.95** |
-| then | the threshold with the **highest recall** | the **highest threshold** (fewest false alarms) |
-| nothing meets the constraint | **raise an error** (never fall back to 0.5) | fall back to `config.DEFAULT_THRESHOLD` |
-| function | `choose_threshold` in `ml/threshold.py` | `ModelEvaluator.choose_threshold` |
+| the expensive mistake | **FP**: a real message hidden | **FN**: a phishing site let through |
+| so we demand | precision ≥ **0.98** | recall ≥ **0.95** |
+| and then take | the threshold with the **highest recall** | the **highest** threshold (fewest false alarms) |
+| if nothing reaches the demand | **raise an error** (never silently use 0.5) | fall back to `config.DEFAULT_THRESHOLD` |
 
-Both are scanned **on the validation split**. The test split only measures the chosen threshold, once.
-
-Algorithm (Laith's version) — write it on the board:
+Laith's algorithm, step by step:
 
 ```
-best = none
-for t from START to STOP in steps of STEP:
-    P, R = precision and recall when "spam" means p >= t
-    if P >= 0.98 and (best is none or R > best.R):
+best = nothing
+for t = 0.50, 0.51, 0.52, … 0.99:
+    P, R = precision and recall on the VALIDATION set, when "spam" means score ≥ t
+    if P ≥ 0.98 and (best is nothing or R > best.R):
         best = (t, P, R)
-if best is none: raise ValueError("no threshold reaches precision 0.98; best was ...")
+if best is nothing: raise an error saying the best precision reached
 return best
 ```
 
-## 5. Why not just 0.5 or "best F1"?
+**Why validation and not test?** Choosing the threshold is a decision made from data — the test set must stay unseen
+(Lesson 01).
 
 ![cost curves](figs/cost.png)
 
-Give each mistake a price. When a missed phish costs the same as a false alarm, the cheapest threshold is in the
-middle. When it costs 20×, the cheapest threshold moves **left** — block more, accept more false alarms. 0.5 and
-max-F1 both secretly assume the two mistakes cost the same.
+Give each mistake a price and add up the cost at every threshold. If a missed phish costs 20× a false alarm, the
+cheapest threshold moves **left** (block more). 0.5 and "best F1" both pretend the two mistakes cost the same.
 
-## 6. Misconceptions
+## 6. Common mistakes
 
-| Student says | Truth |
+| student says | the truth |
 |---|---|
-| "The model decides spam or not" | The model gives a score; **you** decide where to cut. |
-| "AUC 0.97 means 97 % accuracy" | AUC is about ranking, accuracy about one threshold. Different things. |
-| "I'll tune the threshold on the test set — it's just one number" | It is a decision → leakage. Validation only. |
-| "Lower threshold = better model" | It is the same model; you are only moving along its curve. |
+| "The model decides phishing or not" | The model gives a score; **people** choose the threshold. |
+| "AUC 0.97 means 97 % accuracy" | AUC is about the order of scores; accuracy is about one threshold. |
+| "I'll pick the threshold on the test set" | A decision made with the test set → leakage. |
 
 ## 7. Activities
 
-1. **Human ROC (15 min).** Give each student 10 cards with a score and a hidden label (6 good, 4 phishing). Sort
-   by score. Walk the threshold down card by card; after each card plot the point (FP/6, TP/4) on squared paper.
-   They have drawn a ROC curve by hand. Count the squares under it → AUC.
-2. **Pick for the client (5 min).** Show the table of the PhishGuard theory (§5.1: thresholds 0.70 / 0.50 / 0.30).
-   Role-play: one student is the bank, one is a newspaper site. Which threshold does each want?
-3. `python visualize.py --live` — slide the threshold and watch the dot.
+1. **Human ROC (15 min).** Hand out the 10 link cards above (score + hidden truth). Sort, walk the threshold down card by
+   card, and plot each (FP/5, TP/5) on squared paper. Count the squares under the curve → AUC.
+2. **Bank vs newspaper (5 min).** Role-play: the bank wants to block more; a news site wants fewer false alarms. Which
+   threshold does each choose from the table in `25_PhishGuard/01_theory/05_evaluation.md` §5.1?
+3. `python visualize.py --live` — slide the threshold and watch the point.
 
-## 8. Check yourself
+## 8. Do it yourself
 
-<details><summary>1. The ROC curve passes through (0.02, 0.90). Say it in words.</summary>
+<details><summary>1. In the 10-link example, threshold 0.5. TP, FP, TPR, FPR?</summary>
 
-At some threshold the model blocks 90 % of phishing URLs while blocking only 2 % of the legitimate ones.
+Blocked: 1–5. TP = 1, 2, 4, 5 → 4 (TPR 0.8); FP = 3 → 1 (FPR 0.2).
 </details>
 
-<details><summary>2. Why does Laith's choose_threshold raise an error instead of returning 0.5 when nothing reaches 0.98?</summary>
+<details><summary>2. The ROC passes through (0.02, 0.90). Say it in words.</summary>
 
-Because then the model does not meet the requirement. Silently using 0.5 would show users verdicts nobody chose
-and that break the precision promise. The error forces a human decision. (`test_impossible_floor_raises_rather_than_defaulting`.)
+At some threshold the model blocks 90 % of phishing links while blocking only 2 % of good ones.
 </details>
 
-<details><summary>3. A model's AUC is 0.35. What happened?</summary>
+<details><summary>3. A model's AUC is 0.35. What probably happened?</summary>
 
-The ranking is mostly reversed — almost certainly the labels are swapped somewhere (0/1 or good/bad). Flipping the
-scores would give 0.65.
+The order is mostly backwards — labels are swapped somewhere. Flipping the scores would give 0.65.
 </details>
 
 ## 9. In your project
 
 | Project | Where |
 |---|---|
-| Spam | `spamclassifier/ml/threshold.py` → `confusion_at`, `choose_threshold`, `precision_recall_curve`; the threshold is stored in the bundle (`threshold.json`, `chosen_on`) · theory `08_SpamClassifier/01_theory/06_evaluation.md` |
-| PhishGuard | `phishguard/ml/evaluator.py` → `ModelEvaluator.choose_threshold`, `compare` (ROC for both models) · theory `25_PhishGuard/01_theory/05_evaluation.md` |
+| Spam | `spamclassifier/ml/threshold.py` → `confusion_at`, `choose_threshold`, `precision_recall_curve`; the threshold is saved in the bundle (`threshold.json`) · theory `08_SpamClassifier/01_theory/06_evaluation.md` |
+| PhishGuard | `phishguard/ml/evaluator.py` → `ModelEvaluator.choose_threshold`, `compare` (ROC for both models) · exercises `ex10`–`ex12` · theory `25_PhishGuard/01_theory/05_evaluation.md` |
 
 ## 🎬 Watch & explore
 

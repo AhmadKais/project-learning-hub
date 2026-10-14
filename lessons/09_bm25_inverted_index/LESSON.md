@@ -1,82 +1,131 @@
-# Lesson 09 — BM25 and the inverted index: how search engines rank
+# Lesson 09 — BM25 and the inverted index: how real search engines rank
 
-> **For:** Kosai (ResumeMatch stage 5 — the comparison that *is* his project) &nbsp;·&nbsp; **Time:** 60 min
-> **Before:** Lessons 07, 08 &nbsp;·&nbsp; **After this:** Lesson 10 (measuring the ranking)
+> **For:** Kosai (ResumeMatch stage 5 — the comparison that *is* his project) &nbsp;·&nbsp; **Time:** 2 × 45 min
+> **Before:** Lessons 00 §7, 07, 08 &nbsp;·&nbsp; **After this:** Lesson 10
+
+## The story
+
+> Hila's TF-IDF ranking works — but she notices two annoying things.
+>
+> 1. One candidate wrote **"Python Python Python …" 15 times** (a "keyword stuffer"). TF-IDF thinks he is 15× more of a
+>    Python person than someone who wrote it once. He isn't.
+> 2. Some CVs are 3 pages long and list **every technology ever invented** ("also familiar with …"). They match every
+>    job a little, just by being long.
+>
+> Search engines (Google, Elasticsearch) solved both problems decades ago with a formula called **BM25**. This lesson
+> builds it from those two problems, one piece at a time — and then shows how a search engine avoids reading all
+> documents at all.
 
 ## 🎯 By the end, the student can
 
-1. Name the two things TF-IDF gets wrong (repetition, length) and show how BM25 fixes each, with the picture.
-2. Explain what `k1` and `b` do, and predict what `b = 0` will do to the ranking.
-3. Compute one BM25 term score by hand, with the **BM25 IDF** (not the TF-IDF one).
-4. Explain the inverted index and why it makes search fast.
+1. Explain **saturation** and compute the BM25 "repeat factor" by hand for tf = 1, 2, 5, 20.
+2. Explain length normalisation and what the knobs **k1** and **b** do, and predict what b = 0 does.
+3. Compute one full BM25 term score by hand, with BM25's own IDF.
+4. Explain the inverted index with the book-index analogy.
+
+## Words you need
+
+| word | meaning |
+|---|---|
+| **tf** | how many times the word is in this CV (Lesson 07) |
+| **saturation** | after a few mentions, more mentions add almost nothing |
+| **k1** | a knob: how fast saturation happens (project: 1.5) |
+| **\|d\|** | the length of this CV (number of terms) |
+| **avgdl** | the average length of all CVs |
+| **b** | a knob: how strongly long CVs are punished (0 = not at all, 1 = fully; project: 0.75) |
+| **inverted index** | for every word, the list of CVs that contain it — like the index at the back of a book |
 
 ---
 
-## 1. The formula, piece by piece
+## 1. Problem 1 — repeating a word counts too much → saturation
 
-$$\text{score}(d,q)=\sum_{t\in q}\ \text{idf}_{bm25}(t)\cdot\frac{tf\,(k_1+1)}{tf+k_1\left(1-b+b\,\frac{|d|}{avgdl}\right)}$$
+In TF-IDF, "python" 20 times counts **10×** more than 2 times. BM25 replaces the raw count tf with this **repeat
+factor**:
 
-Do **not** start with the whole formula. Build it from two problems.
+$$\text{repeat factor} = \frac{tf\,(k_1+1)}{tf+k_1}\qquad k_1 = 1.5$$
 
-## 2. Problem 1 — repetition counts too much → saturation
+Step by step:
+
+```
+tf = 1:    1 × 2.5 / (1 + 1.5)   = 2.5 / 2.5   = 1.00
+tf = 2:    2 × 2.5 / (2 + 1.5)   = 5.0 / 3.5   = 1.43     (+0.43 for the 2nd mention)
+tf = 5:    5 × 2.5 / (5 + 1.5)   = 12.5 / 6.5  = 1.92
+tf = 20:  20 × 2.5 / (20 + 1.5)  = 50 / 21.5   = 2.33     (18 more mentions added only 0.4)
+tf = ∞:   approaches k1 + 1      = 2.50       (the ceiling — it can never be more)
+```
+
+Why does it flatten? When tf is big, the top (tf × 2.5) and the bottom (tf + 1.5) both grow with tf, so their ratio
+stops growing and approaches 2.5.
 
 ![saturation](figs/saturation.gif)
 
-In TF-IDF "python" ×20 counts 10× more than "python" ×2. BM25's factor $\frac{tf(k_1+1)}{tf+k_1}$ climbs fast and
-then flattens at the ceiling $k_1+1$. With the project's $k_1 = 1.5$:
+The animation sweeps k1: **small k1** → the first mention is almost all that counts; **big k1** → almost a straight line,
+like TF-IDF. The keyword stuffer's 15 mentions now count only a little more than 2 mentions.
 
-| tf | 1 | 2 | 5 | 20 | ∞ |
-|---|---|---|---|---|---|
-| factor | 1.00 | 1.43 | 1.92 | 2.33 | 2.50 |
+## 2. Problem 2 — long CVs → length normalisation
 
-The animation sweeps $k_1$: small $k_1$ → "mentioned at all" is all that matters; large $k_1$ → almost linear like TF-IDF.
-(The project's data has "keyword stuffers" who repeat one skill 15 times — saturation stops them.)
+BM25 adds the CV's length into the bottom of the fraction:
 
-## 3. Problem 2 — length → the `b` knob
+$$\frac{tf\,(k_1+1)}{tf + k_1\left(1 - b + b\cdot\frac{|d|}{avgdl}\right)}$$
+
+Look only at the bracket. **|d| / avgdl** = "how long is this CV compared to an average CV":
+
+```
+average length (|d|/avgdl = 1):    1 − 0.75 + 0.75 × 1   = 1       → nothing changes
+twice as long  (= 2):              1 − 0.75 + 0.75 × 2   = 1.75    → the bottom gets bigger → score smaller
+half as long   (= 0.5):            1 − 0.75 + 0.75 × 0.5 = 0.625   → the bottom gets smaller → score bigger
+```
 
 ![length normalisation](figs/length_b.png)
 
-$|d|/avgdl$ = "how long is this CV compared to an average CV". A long CV mentions many things just by being long, so
-the same tf is worth less. `b` says how strongly to correct: **0 = ignore length, 1 = full, 0.75 = standard**.
+The knob **b** says how strongly: b = 0 → the bracket is always 1 → length ignored; b = 1 → full correction.
 
-### The experiment on the project's data
+### Kosai's experiment, on the project's data
 
 ![b experiment](figs/b_experiment.png)
 
-With `b = 0` the top-10 CVs are on average **136 terms** long (average CV: 100). With `b = 0.75` they are 79. On this
-data P@10 barely changes (0.86–0.88) — the human labels are by role, and long CVs of the right role are still relevant.
-**That is a result too.** Kosai reports both charts and explains them; he does not hide the flat one.
+With b = 0 the top-10 CVs are on average **136 terms** long (average CV: 100) — long CVs flood the top. With b = 0.75
+they are 79. On this data the precision of the top 10 hardly changes (0.86–0.88). **That is a result too** — Kosai shows
+both charts in his book and explains them.
 
-## 4. BM25 has its own IDF
+## 3. BM25 has its own IDF
+
+$$\text{idf}_{bm25} = \ln\left(\frac{N - df + 0.5}{df + 0.5} + 1\right)$$
 
 ![BM25 idf](figs/bm25_idf.png)
 
-$$\text{idf}_{bm25}(t)=\ln\left(\frac{N-df+0.5}{df+0.5}+1\right)$$
-
-Without the `+1` inside the log, a word in more than half of the CVs gets a **negative** IDF and *lowers* the score of
-everyone who mentions it. Using the TF-IDF formula here instead is a **silent** bug — nothing crashes, the ranking is just
+Without the `+ 1` inside the log, a word in more than half of the CVs would get a **negative** weight — mentioning it
+would *lower* your score. Using the TF-IDF formula here by mistake is a silent bug: nothing crashes, the ranking is just
 worse.
 
-## 5. One term by hand
+## 4. One full term score, by hand
 
-N = 200, df(python) = 60, avgdl = 100. CV with tf = 2, |d| = 150. $k_1 = 1.5$, $b = 0.75$.
+N = 200 CVs, "python" in 60 of them, average length 100. One CV mentions python **2** times and has **150** terms.
 
 ```
-idf   = ln((200 − 60 + 0.5) / (60 + 0.5) + 1) = ln(2.322 + 1) = ln(3.322) = 1.2006
-norm  = 1 − 0.75 + 0.75 × 150/100           = 0.25 + 1.125  = 1.375
-part  = 2 × 2.5 / (2 + 1.5 × 1.375)         = 5 / 4.0625    = 1.2308
-score = 1.2006 × 1.2308                                        = 1.4777
+1. idf    = ln((200 − 60 + 0.5) / (60 + 0.5) + 1)
+          = ln(140.5 / 60.5 + 1) = ln(2.322 + 1) = ln(3.322) = 1.2006
+2. bracket = 1 − 0.75 + 0.75 × (150 / 100) = 0.25 + 1.125 = 1.375
+3. bottom  = tf + k1 × bracket = 2 + 1.5 × 1.375 = 2 + 2.0625 = 4.0625
+4. top     = tf × (k1 + 1) = 2 × 2.5 = 5
+5. factor  = 5 / 4.0625 = 1.2308
+6. score   = idf × factor = 1.2006 × 1.2308 = 1.4777
 ```
 
-Same CV but average length (|d| = 100): norm = 1, part = 5 / 3.5 = 1.4286, score = 1.7151 — more, because it is shorter.
+The CV's total score for a job = the sum of these term scores over the job's words (Σ, Lesson 00 §5).
 
-## 6. The inverted index
+The same CV if it were average length (150 → 100): bracket 1, bottom 3.5, factor 1.4286, score **1.7151** — higher,
+because it is shorter.
+
+## 5. The inverted index — don't read what you don't need
+
+To rank 200 CVs, TF-IDF computes 200 dot products. Google has billions of pages. The trick: an **inverted index** — like
+the index at the back of a textbook.
 
 ![inverted index](figs/inverted_index.gif)
 
-Instead of a matrix with a row per CV, keep **for every term the list of CVs that contain it** (with tf) — like the
-index at the back of a book. To rank a job, walk only the lists of the job's terms. A CV that shares no word with the job
-is **never touched**: its score is 0 without looking at it.
+For every word, keep the list of CVs that contain it (and how many times). To rank the job "python django", walk **only**
+those two lists. A CV with neither word is **never touched** — its score is 0 without even looking.
 
 ![final state](figs/inverted_index_final.png)
 
@@ -88,50 +137,46 @@ for term in set(job_terms):
         scores[doc_row] += self._term_score(tf, self.doc_len[doc_row], idf[term])
 ```
 
-This is how Google ranks billions of pages in milliseconds. **Put "documents touched / total" in the book** — direct
-evidence that the index works.
+Put "CVs touched / total" in the book — proof that the index does its job.
 
-## 7. Comparing BM25 with cosine fairly
+## 6. Comparing BM25 and cosine fairly
 
-Cosine is in [0, 1]; BM25 is unbounded (3.7 or 41.2 depending on the job). Normalise by the top score of the ranking
-(`Ranker._normalise`) — this makes scores comparable **within one ranking only**. To compare the methods, compare **rank
-positions** and P@k / MRR (Lesson 10), not raw numbers.
+Cosine is between 0 and 1; a BM25 score can be 3.7 or 41.2. So: normalise each ranking by its top score
+(`Ranker._normalise`), and compare the methods by **rank positions** and P@k / MRR (Lesson 10), never by raw numbers.
 
-## 8. Misconceptions
+## 7. Common mistakes
 
-| Student says | Truth |
+| student says | the truth |
 |---|---|
-| "BM25 uses the same IDF as TF-IDF" | No — see §4. Separate function: `compute_idf_bm25`. |
-| "b = 0.75 is magic" | It's a widely used default from the literature. The project measures it instead of trusting it. |
-| "The index changes the scores" | It changes only *which documents are looked at*. Same scores as checking every CV. |
-| "A BM25 score of 12 is better than 8 in another job" | Scores across jobs are not comparable. |
+| "BM25 uses the same IDF as TF-IDF" | No — §3. A separate function, `compute_idf_bm25`. |
+| "b = 0.75 is magic" | A common default. The project **measures** it instead of trusting it. |
+| "The index changes the scores" | It only changes which CVs are *looked at*. Same scores. |
 
-## 9. Activities
+## 8. Activities
 
-1. **Book index (5 min).** Open any textbook's index. Find "loop" — how many pages did you *not* read? That's the inverted index.
-2. **Human BM25 (15 min).** Cards with 5 tiny CVs. Groups build the inverted index on paper, then score the job
-   "python sql" with tf saturation only (no idf). Then add `b`.
-3. **Live sliders.** `python visualize.py --live` — change `k1`, see the ceiling move.
-4. **Predict-then-run.** Before running Kosai's `b = 0` experiment: "Will long CVs go up or down?"
+1. **The book index (5 min).** Open a textbook's index; find "loop". How many pages did you **not** read?
+2. **Human BM25 (15 min).** 5 tiny CVs on cards. Groups build the inverted index on paper, then score "python sql" with the
+   repeat factor only. Then add b.
+3. **Slider:** `python visualize.py --live` — move k1, watch the ceiling.
 
-## 10. Check yourself
+## 9. Do it yourself
 
-<details><summary>1. With k1 = 1.5, what is the most one term can contribute (ignoring idf and length)?</summary>
+<details><summary>1. Repeat factor for tf = 3 with k1 = 1.5.</summary>
 
-k1 + 1 = **2.5**, reached only as tf → ∞.
+3 × 2.5 / (3 + 1.5) = 7.5 / 4.5 = **1.67**.
 </details>
 
-<details><summary>2. b = 0. Does the CV's length still matter at all?</summary>
+<details><summary>2. With b = 0, does length matter at all?</summary>
 
-No: the bracket becomes $1 - 0 + 0 = 1$, so $|d|$ disappears from the formula.
+No: the bracket = 1 − 0 + 0 = 1 for every CV, so |d| disappears.
 </details>
 
-<details><summary>3. N = 200, df = 150. Compute idf with and without the +1.</summary>
+<details><summary>3. N = 200, df = 150. BM25 idf with and without the +1.</summary>
 
-Without: ln(50.5/150.5) = ln(0.3355) = **−1.09** (negative!). With: ln(0.3355 + 1) = ln(1.3355) = **0.289**.
+Without: ln(50.5 / 150.5) = ln(0.3355) = **−1.09** (negative!). With: ln(0.3355 + 1) = ln(1.3355) = **0.289**.
 </details>
 
-## 11. In your project
+## 10. In your project
 
 | Project | Where |
 |---|---|
@@ -140,5 +185,4 @@ Without: ln(50.5/150.5) = ln(0.3355) = **−1.09** (negative!). With: ln(0.3355 
 ## 🎬 Watch & explore
 
 * *BM25 explained* — [search on YouTube](https://www.youtube.com/results?search_query=BM25+ranking+function+explained)
-* Stanford IR book (Manning et al.), §11.4.3 — [Okapi BM25](https://nlp.stanford.edu/IR-book/html/htmledition/okapi-bm25-a-non-binary-model-1.html)
-* Stanford IR book, ch. 1 — [An example information retrieval problem (the inverted index)](https://nlp.stanford.edu/IR-book/html/htmledition/an-example-information-retrieval-problem-1.html)
+* Stanford IR book — [Okapi BM25](https://nlp.stanford.edu/IR-book/html/htmledition/okapi-bm25-a-non-binary-model-1.html) · [the inverted index](https://nlp.stanford.edu/IR-book/html/htmledition/an-example-information-retrieval-problem-1.html)

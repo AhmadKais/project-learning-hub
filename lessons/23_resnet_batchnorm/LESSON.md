@@ -1,14 +1,35 @@
 # Lesson 23 — EmotionNet: residual blocks, BatchNorm, Dropout, and `train()` vs `eval()`
 
-> **For:** Ryan (FaceEmotion stage 3 — `network.py`) &nbsp;·&nbsp; **Time:** 45 – 60 min
-> **Before:** Lessons 20–22 &nbsp;·&nbsp; **After this:** Lesson 24 (training), Lesson 26 (real time)
+> **For:** Ryan (FaceEmotion stage 3 — `network.py`) &nbsp;·&nbsp; **Time:** 2 × 45 min
+> **Before:** Lessons 20–22 &nbsp;·&nbsp; **After this:** Lessons 24, 26
+
+## The story
+
+> The class plays **"broken telephone"**: a sentence is whispered through 20 students. At the end it's nonsense. Now
+> change the rule: every student also gets **a copy of the original note**, and only whispers what they want to *add or
+> correct*. The message survives 20 people. Deep networks had exactly this problem until 2015 — the learning signal got
+> lost on its way back through many layers — and the fix, **ResNet**, is exactly the "copy of the note": a shortcut around
+> every block. This lesson builds Ryan's network, EmotionNet, piece by piece, and explains the two switches every student
+> forgets: `train()` and `eval()`.
 
 ## 🎯 By the end, the student can
 
-1. Draw EmotionNet with the shape after every block, and count the parameters of one block.
-2. Explain the vanishing gradient and how the residual shortcut fixes it.
+1. Draw EmotionNet with the shape after every block, and count the weights of one block.
+2. Explain the vanishing gradient and how the shortcut fixes it.
 3. Explain when the shortcut needs a 1 × 1 convolution.
-4. Explain BatchNorm and Dropout, and **exactly** what `model.eval()` changes.
+4. Explain BatchNorm and Dropout, and exactly what `model.eval()` changes.
+
+## Words you need
+
+| word | meaning |
+|---|---|
+| **block** | a small group of layers used as one unit |
+| **residual block** | a block whose output = (what the layers computed) + (the original input) |
+| **shortcut / skip connection** | the path that carries the input around the layers |
+| **vanishing gradient** | the learning signal (Lesson 21) shrinks layer by layer until the first layers learn nothing |
+| **BatchNorm (BN)** | a z-score (Lesson 02) inside the network, for each channel, over the current batch |
+| **Dropout** | in training, randomly switch off some neurons |
+| **`model.train()` / `model.eval()`** | switches that tell BatchNorm and Dropout whether we are training or using the model |
 
 ---
 
@@ -17,118 +38,131 @@
 ![architecture](figs/architecture.png)
 
 ```
-input           1 × 48 × 48
+input           1 × 48 × 48        (a grey face: 1 channel, 48 × 48)
 stem            Conv3x3 → BN → ReLU         64 × 48 × 48
-block1          Residual(64 → 64,  s=1)     64 × 48 × 48
-block2          Residual(64 → 128, s=2)    128 × 24 × 24
-block3          Residual(128 → 256, s=2)   256 × 12 × 12
-block4          Residual(256 → 512, s=2)   512 ×  6 ×  6
-GlobalAvgPool                              512
-Dropout(0.3) → Linear(512 → 7)               7 logits
+block1          Residual(64 → 64,  stride 1)   64 × 48 × 48
+block2          Residual(64 → 128, stride 2)  128 × 24 × 24
+block3          Residual(128 → 256, stride 2) 256 × 12 × 12
+block4          Residual(256 → 512, stride 2) 512 ×  6 ×  6
+GlobalAvgPool                                 512
+Dropout(0.3) → Linear(512 → 7)                  7 logits (one per emotion)
 ```
 
-The picture gets **smaller** (48 → 6) and **deeper** (1 → 512 channels): fewer positions, more kinds of features.
-Total ≈ **4.9 million** weights — small enough for 25 fps, big enough for 65 %+.
+Read the shapes as "**channels × height × width**". The picture gets **smaller** (48 → 6) and **deeper** (1 → 512): fewer
+positions, many more kinds of features. Total ≈ **4.9 million** weights: small enough for 25 pictures per second, big enough
+for 65 %+ accuracy.
 
-**Counting one block (block 2) — be ready in the defence:**
+### Counting one block (block 2) — be ready in the defence
 
 ```
-conv 3×3, 64→128      9·64·128   =  73,728
-BN(128)               2·128      =     256
-conv 3×3, 128→128     9·128·128  = 147,456
-BN(128)                          =     256
-shortcut 1×1, 64→128  64·128     =   8,192
-BN(128)                          =     256
-                                   230,144
+conv 3×3, 64 → 128:        3 × 3 × 64 × 128  = 73,728    (each of 128 filters is 3 × 3 × 64)
+BatchNorm(128):            2 × 128           =    256    (γ and β per channel, §4)
+conv 3×3, 128 → 128:       3 × 3 × 128 × 128 = 147,456
+BatchNorm(128):                                   256
+shortcut 1×1, 64 → 128:    1 × 1 × 64 × 128  =  8,192
+BatchNorm(128):                                   256
+total                                           230,144
 ```
 
-(Conv layers use `bias=False` because the BatchNorm right after has its own shift β.)
+(The convolutions have `bias=False` because the BatchNorm right after them has its own shift β.)
 
-## 2. The problem ResNet solved — vanishing gradients
+## 2. The problem: vanishing gradients
 
 ![gradient flow](figs/gradient_flow.png)
 
-Before 2015, a 56-layer network trained **worse** than a 20-layer one — even on training data. Backprop multiplies one
-factor per layer; many factors < 1 → almost nothing reaches the first layers (red). With shortcuts the gradient has a
-direct path back (green).
+Backpropagation (Lesson 21) multiplies one factor per layer on its way back. If many factors are below 1, the product
+shrinks fast: 0.5 × 0.5 × … (40 times) ≈ 0.000000000001. The first layers get (almost) **no** signal and stop learning
+(red line). Before 2015, a 56-layer network trained **worse** than a 20-layer one — even on its training data.
 
 ## 3. The residual block
 
 ![residual block](figs/residual_block.png)
 
-$$\text{out}=\text{ReLU}\big(F(x)+x\big)$$
+$$\text{out} = \text{ReLU}\big(F(x) + x\big)$$
 
-* The layers learn only the **correction** to x. If nothing is needed, F(x) = 0 and x passes through unchanged.
-* When the block halves the picture (stride 2) or changes the channels (64 → 128), `x` has the wrong shape to add → the
-  shortcut becomes a **1 × 1 conv with stride 2 + BN** that only matches the shape
-  (`test_residual_block_halves_with_stride_two`).
+* **x** goes around the layers (the shortcut) and is **added** at the end.
+* The layers only need to learn **F(x) — the correction** to x. If no correction is needed, F(x) = 0 and x passes through
+  unchanged.
+* On the way back, the gradient also flows through the "+ x" path untouched → the first layers keep getting a signal
+  (green line).
+
+When a block halves the picture (stride 2) or changes the number of channels (64 → 128), x has the wrong shape to be added.
+Then the shortcut becomes a **1 × 1 convolution with stride 2 (+ BN)** that only reshapes it
+(`test_residual_block_halves_with_stride_two`).
 
 ```python
-identity = self.shortcut(x)            # nn.Identity() or 1x1 conv + BN
+identity = self.shortcut(x)            # nn.Identity() or a 1×1 conv + BN
 out = F.relu(self.bn1(self.conv1(x)))
 out = self.bn2(self.conv2(out))
-out = F.relu(out + identity)           # the jump
+out = F.relu(out + identity)           # the shortcut
 ```
 
-## 4. BatchNorm
+## 4. BatchNorm — a z-score inside the network
 
 ![batchnorm](figs/batchnorm.png)
 
-For every channel, over the batch: subtract the mean, divide by the std (Lesson 02 again — *inside* the network), then let
-the network rescale with learned γ, β. Keeps every layer's inputs in a healthy range → faster, more stable training, higher
-learning rates possible. During training it also keeps **running averages** of mean and variance.
+For each channel, over the 128 faces of the batch:
+
+```
+1. average of the channel over the batch:  μ      2. standard deviation: σ       (Lesson 00 §2–3)
+3. x̂ = (x − μ) / σ                          → average 0, spread 1               (Lesson 02's z-score)
+4. y = γ × x̂ + β                            → γ, β are LEARNED: the network can undo the normalisation if useful
+```
+
+Small example — one channel, a batch of 4 values 2, 4, 4, 6: μ = 4, σ = 1.41 → x̂ = −1.41, 0, 0, 1.41 → with γ = 1, β = 0.5:
+−0.91, 0.5, 0.5, 1.91.
+
+It keeps every layer's numbers in a healthy range → faster, more stable training. During training it also keeps **running
+averages** of μ and σ for later.
 
 ## 5. Dropout
 
 ![dropout](figs/dropout.gif)
 
-In training, each batch randomly switches off 30 % of the neurons before the last layer (the rest are multiplied by
-1/0.7). No neuron can rely on another — the network learns redundant, robust features. **0 parameters.**
+In training, every batch randomly switches off 30 % of the neurons before the last layer (the others are multiplied by
+1 / 0.7 so the total stays the same). No neuron can rely on one particular partner → the network learns several ways to
+recognise each emotion → less overfitting. **0 weights.**
 
 ## 6. `model.train()` vs `model.eval()` — the most-asked question
 
 | | `train()` | `eval()` |
 |---|---|---|
 | Dropout | random 30 % off | everyone on |
-| BatchNorm | normalises with **this batch's** mean/var, updates running averages | uses the **running** averages |
+| BatchNorm | normalises with **this batch's** μ, σ and updates the running averages | uses the **saved running** averages |
 
-`eval()` does not "evaluate" anything — it is a switch. Forget it in real time and: Dropout makes every frame random, and
-BatchNorm normalises **one face** by itself (variance 0) → nonsense. Always: `model.eval()` + `torch.no_grad()` for
-inference.
+`eval()` doesn't evaluate anything — it's a switch. Forget it with the camera and: Dropout makes every frame random, and
+BatchNorm normalises **one face by itself** (σ = 0) → nonsense. Always: `model.eval()` + `torch.no_grad()` before using the
+model.
 
-## 7. Misconceptions
+## 7. Common mistakes
 
-| Student says | Truth |
+| student says | the truth |
 |---|---|
-| "Deeper is always better" | Not without shortcuts — that was the 2015 surprise. |
-| "The shortcut skips learning" | It skips *the need* to learn identity; the block still learns F(x). |
-| "`eval()` turns off gradients" | No — that's `torch.no_grad()`. Use both for inference. |
-| "Why not ResNet-50 from the internet?" | Built for 224 × 224 colour; 25 M weights slow real time; and the project requires understanding the architecture. (Valid alternative for the book.) |
+| "Deeper is always better" | Not without shortcuts — the 2015 surprise. |
+| "`eval()` turns off gradients" | That's `torch.no_grad()`. Use both. |
+| "Why not download ResNet-50?" | Built for 224 × 224 colour photos; 25 M weights slow down real time; and the project requires understanding the architecture. |
 
 ## 8. Activities
 
-1. **Telephone game (10 min).** Whisper a sentence through 10 students (a plain deep network) vs. the first student also
-   writing it on a note passed directly to the last (the shortcut). Which one survives?
-2. **Count (10 min).** Pairs compute block 3's parameters with the formulas. (919,040)
-3. **Break it (10 min).** In `02_neurons_to_resnet.ipynb` / `04_detection_and_realtime.ipynb`, predict the same face 5
-   times with `train()` and with `eval()`.
+1. **Broken telephone (10 min).** 10 students whisper a sentence; then again with the original note travelling along.
+2. **Count (10 min).** Pairs compute block 3's weights with the formulas (answer: 919,040).
+3. **Break it (10 min).** Predict the same face 5 times with `train()` and 5 times with `eval()`.
 
-## 9. Check yourself
+## 9. Do it yourself
 
 <details><summary>1. Block 4 input 256 × 12 × 12, stride 2, 512 filters. Output shape?</summary>
 
 512 × 6 × 6.
 </details>
 
-<details><summary>2. Why does block 1 not need a 1 × 1 shortcut?</summary>
+<details><summary>2. BatchNorm of the batch 1, 3, 5 (γ = 2, β = 0).</summary>
 
-Input and output are both 64 × 48 × 48, so `x` can be added directly (identity).
+μ = 3 · σ = √((4 + 0 + 4)/3) = 1.63 · x̂ = −1.22, 0, 1.22 · y = **−2.45, 0, 2.45**.
 </details>
 
-<details><summary>3. The camera always says "neutral" with 31 % confidence, whatever the face. Two likely causes?</summary>
+<details><summary>3. The camera always says "neutral 31 %", whatever the face. Two likely causes?</summary>
 
-`model.eval()` forgotten (BatchNorm on one image), or a pre-processing mismatch (Lesson 19). Also check the weights file
-actually loaded.
+`model.eval()` forgotten, or a preparation mismatch (Lesson 19). Also check that the weights file really loaded.
 </details>
 
 ## 10. In your project
@@ -139,6 +173,6 @@ actually loaded.
 
 ## 🎬 Watch & explore
 
-* *ResNet (Residual Networks) explained* — [search on YouTube](https://www.youtube.com/results?search_query=ResNet+residual+network+explained+skip+connection)
+* *ResNet explained* — [search on YouTube](https://www.youtube.com/results?search_query=ResNet+residual+network+explained+skip+connection)
 * *Batch Normalization explained* — [search on YouTube](https://www.youtube.com/results?search_query=batch+normalization+explained)
-* He et al. 2016 — [Deep Residual Learning for Image Recognition (arXiv)](https://arxiv.org/abs/1512.03385)
+* He et al. 2016 — [Deep Residual Learning (arXiv)](https://arxiv.org/abs/1512.03385)

@@ -71,6 +71,7 @@ def build_html():
         # make the relative links work from lessons/: figs/x -> NN_name/figs/x, file.py -> NN_name/file.py
         md = re.sub(r"\]\((?!https?:|#|\.\./)([^)]+)\)", lambda m: f"]({folder.name}/{m.group(1)})", md)
         parts.append(md)
+    parts.append((LESSONS / "GLOSSARY.md").read_text(encoding="utf-8"))
     # the README's own links to NN_name/LESSON.md become in-page anchors
     joined = "\n\n".join(parts)
     joined = re.sub(r"\((\d\d_[a-z0-9_]+)/LESSON\.md\)", lambda m: f"(#{m.group(1)})", joined)

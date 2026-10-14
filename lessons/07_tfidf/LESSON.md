@@ -1,117 +1,191 @@
 # Lesson 07 — TF-IDF: turning text into numbers that mean something
 
-> **For:** Kosai (ResumeMatch stages 3–4) · Laith (SpamClassifier stage 3) &nbsp;·&nbsp; **Time:** 45 – 60 min
-> **Before:** Lesson 06 &nbsp;·&nbsp; **After this:** Lesson 08 (cosine), 09 (BM25), 11 (Naive Bayes)
+> **For:** Kosai (ResumeMatch stages 3–4) · Laith (SpamClassifier stage 3) &nbsp;·&nbsp; **Time:** 2 × 45 min
+> **Before:** Lesson 00 §7 (logarithms), §10; Lesson 06 &nbsp;·&nbsp; **After this:** Lessons 08, 09, 11
+
+## The story
+
+> Hila the recruiter (Lesson 06) now has clean word lists. She asks: *"Which words describe each candidate?"* Counting
+> words is the obvious answer — but in every CV the most common words are "experience", "team", "worked". Those tell her
+> nothing. What she wants are the words that make a CV **different**: "kubernetes", "figma". TF-IDF is the arithmetic
+> for exactly that idea: **a word is important for a document if it is frequent in it and rare in the others.**
 
 ## 🎯 By the end, the student can
 
-1. Build a bag-of-words matrix by hand.
-2. Compute df, idf and tf-idf for a small example — with **their project's exact formula** — and explain each `+1`.
-3. Explain L2 normalisation and why a long document must not win just by being long.
+1. Build a bag-of-words table by hand.
+2. Compute TF, DF, IDF and TF-IDF for a small example, with their project's exact formula, every step written out.
+3. Explain each `+1` in the IDF formula and why there is a log.
+4. Explain L2 normalisation and why a long document must not win just by being long.
+
+## Words you need
+
+| word | meaning |
+|---|---|
+| **document** | one text: one CV, one SMS |
+| **collection / corpus** | all the documents: 200 CVs |
+| **term** | one cleaned word (Lesson 06) |
+| **TF — term frequency** | how many times the term is in **this** document |
+| **DF — document frequency** | in how many **documents** the term appears (each document counts once) |
+| **N** | the number of documents |
+| **IDF — inverse document frequency** | a weight: big for rare terms, small for common ones |
+| **TF-IDF** | TF × IDF |
+| **vector** | the row of numbers describing one document (Lesson 00 §10) |
+| **L2 normalisation** | dividing a vector by its length so that its length becomes 1 |
 
 ---
 
-## 1. Bag of words
+## 1. Bag of words — just count
+
+Three tiny CVs (already cleaned):
+
+```
+CV 1:  python python sql docker
+CV 2:  java sql spring
+CV 3:  python sql pandas
+```
+
+Make a table: one **row per CV**, one **column per term**, and in each cell **how many times** the term appears.
 
 ![bag of words](figs/bag_of_words.png)
 
-Every document becomes a **row**, every term a **column**, every cell a count. Word order is lost (a "bag"). A real CV
-row has thousands of columns and almost all are 0 — a **sparse vector** — so we store it as a dictionary
-`{"python": 2, "sql": 1}` instead of a long list of zeros.
+That's a **bag of words**: like pouring the words into a bag and counting them — the order is forgotten. Each CV is now a
+row of numbers, which the computer can compare.
 
-**Problem:** raw counts reward words that are everywhere ("experience", "team") and long documents.
+**The problem:** `sql` is in every CV. It describes *none* of them better than the others. We want it to weigh **less**.
 
-## 2. TF-IDF, built step by step
+## 2. TF-IDF, step by step
 
 ![TF-IDF step by step](figs/tfidf_build.gif)
 
-| Step | Formula (ResumeMatch) | On the example |
-|---|---|---|
-| tf | count of the term in this document | `python` in CV 1 = 2 |
-| df | number of **documents** that contain the term | `python` = 2, `sql` = 3, `docker` = 1 |
-| idf | $\ln\frac{1+N}{1+df}+1$ | `python` = ln(4/3)+1 = **1.2877** · `sql` = ln(4/4)+1 = **1.0** · `docker` = ln(4/2)+1 = **1.6931** |
-| tf-idf | tf × idf | CV 1: python 2 × 1.2877 = **2.58**, sql 1.00, docker 1.69 |
-| L2 | divide the row by $\sqrt{\sum v^2}$ | CV 1: √(2.58² + 1² + 1.69²) = 3.24 → **0.79, 0.31, 0.52** |
+### Step 1 — TF: count in this document
+
+`python` appears 2 times in CV 1 → TF = 2. (Kosai uses the raw count; Laith divides by the message length, §5.)
+
+### Step 2 — DF: in how many documents?
+
+Count each **document** once, no matter how many times the word appears in it:
+
+```
+python: CV 1, CV 3          → DF = 2
+sql:    CV 1, CV 2, CV 3    → DF = 3
+docker: CV 1                → DF = 1     (java, spring, pandas: also 1)
+```
+
+### Step 3 — IDF: rare → big weight
+
+Kosai's formula (N = 3 documents):
+
+$$\text{idf} = \ln\frac{1+N}{1+\text{DF}} + 1$$
+
+Read it in three parts:
+
+1. **N / DF** — "one in how many documents has this word?" Rare word → big number.
+2. **ln( … )** — shrink it so it grows slowly (Lesson 00 §7). Without the log, a word in 1 of 200 CVs would weigh 200×
+   more than a word in all of them — far too much.
+3. **+1** in two places — explained below.
+
+```
+python:  (1 + 3) / (1 + 2) = 4 / 3 = 1.333    ln(1.333) = 0.2877    + 1  →  idf = 1.2877
+sql:     (1 + 3) / (1 + 3) = 4 / 4 = 1        ln(1)     = 0         + 1  →  idf = 1.0000
+docker:  (1 + 3) / (1 + 1) = 4 / 2 = 2        ln(2)     = 0.6931    + 1  →  idf = 1.6931
+```
+
+(`ln` on the calculator, or `math.log(...)` in Python.)
+
+**The two `+1`s:**
+* `1 +` inside: avoids dividing by zero, and smooths the numbers a little.
+* `+ 1` at the end: a word in *every* document gets 1, not 0 — it is **weakened, not deleted**.
+
+### Step 4 — TF × IDF
+
+```
+CV 1:   python 2 × 1.2877 = 2.58     sql 1 × 1.0 = 1.00     docker 1 × 1.6931 = 1.69
+```
+
+Read it: *"`docker` describes CV 1 better than `sql`, even though each appears once — because docker is rare."*
+
+### Step 5 — L2 normalisation: make every CV the same length
+
+The **length** of a row of numbers is Pythagoras (Lesson 00 §10): the root of the sum of the squares.
+
+```
+length of CV 1 = √(2.58² + 1.00² + 1.69²) = √(6.66 + 1.00 + 2.86) = √10.52 = 3.24
+divide every number by 3.24:   python 2.58 / 3.24 = 0.79    sql 0.31    docker 0.52
+check: √(0.79² + 0.31² + 0.52²) = √(0.62 + 0.10 + 0.27) = √0.99 ≈ 1 ✓
+```
 
 ![final matrix](figs/tfidf_final.png)
 
-Read it aloud: *"`sql` is in every CV, so it barely matters. `docker` is only in CV 1, so it's what makes CV 1 special."*
+**Why?** A CV that pastes the same paragraph four times would have 4× bigger numbers everywhere and win every comparison.
+After dividing by the length, only the **proportions** remain — which words, in what mix — not how much text there is.
 
-## 3. The IDF curve — and the two `+1`s
+## 3. The IDF curve
 
 ![idf curve](figs/idf_curve.png)
 
-| Piece | Why |
-|---|---|
-| the **log** | without it, a term in 5 docs would be 40× a term in 190 docs; the log makes importance grow slowly |
-| `1 +` inside | no division by zero; a little smoothing |
-| `+ 1` outside | a term in every document gets weight 1, not 0 — weakened, **not deleted** |
-
-⚠️ **The two projects use slightly different formulas.** Use your own, exactly:
-
-| | tf | idf |
-|---|---|---|
-| ResumeMatch (Kosai) | raw count | `ln((1 + N) / (1 + df)) + 1` → check values 1.2877 / 1.6931 / 1.0000 |
-| SpamClassifier (Laith) | count / number of terms in the message | `ln(N / (1 + df)) + 1` → N = 1000: "the" ≈ 1.0, "meeting" (100) ≈ 3.3, "viagra" (5) ≈ 6.1 |
+With 200 CVs: "kubernetes" (in 5 CVs) gets a big weight, "python" (60) a medium one, "experience" (190) almost the
+minimum. The curve drops fast and then flattens — that's the log.
 
 ## 4. On the project's real CVs
 
 ![real CV](figs/real_cv.png)
 
-Left: what the CV repeats. Right: what makes it *different*. Skills like `figma` and `webpack` rise — and so does the
-candidate's **name**, because it is rare. That is not a feature, it is a bias: the reason Kosai's pipeline scrubs names,
-e-mails and phone numbers *before* counting.
+Left: the words this CV repeats. Right: the words with the highest TF-IDF — the ones that make it **different**: skills
+like `figma`, `webpack` — and the candidate's **name** (rare!). The name is not a skill — it's exactly why Kosai's
+pipeline removes personal data **before** counting (Lesson 06).
 
-## 5. L2 normalisation — why
+## 5. ⚠️ The two projects use slightly different formulas
 
-Two CVs: one says "python" once in 50 words, the other pastes the same paragraph 4 times. Without normalisation the
-second has 4× bigger numbers everywhere and wins every comparison. After dividing by the length, both rows have
-length 1 and only the **proportions** (the direction, Lesson 08) remain. Laith: `test_long_and_short_messages_are_comparable`.
+| | TF | IDF | check values |
+|---|---|---|---|
+| ResumeMatch (Kosai) | raw count | `ln((1 + N) / (1 + df)) + 1` | N = 3: df 2 → 1.2877, df 1 → 1.6931, df 3 → 1.0000 |
+| SpamClassifier (Laith) | count ÷ number of terms in the message | `ln(N / (1 + df)) + 1` | N = 1000: "the" (1000) ≈ 1.0, "meeting" (100) ≈ 3.3, "viagra" (5) ≈ 6.1 |
+
+Laith's "meeting", step by step: N / (1 + df) = 1000 / 101 = 9.90 → ln(9.90) = 2.29 → + 1 = **3.29**.
+
+Use your own project's formula exactly — the tests check the numbers.
 
 ## 6. The bug everyone makes once
 
 ```python
 df = Counter()
 for doc in docs:
-    df.update(set(doc))      # set()! each term counts ONCE per document
+    df.update(set(doc))      # set() !  — each term counts ONCE per document
 ```
 
-Without `set()` you count **occurrences**, not documents. A word shouted 500 times in one e-mail gets df = 500 and looks
-"common". Tests: `test_document_frequency_counts_documents_not_occurrences` (Kosai), the vocabulary test (Laith).
+Without `set()`, a word shouted 500 times in one e-mail gets DF = 500 and looks "common everywhere". Tests:
+`test_document_frequency_counts_documents_not_occurrences` (Kosai), the vocabulary test (Laith).
 
-## 7. Misconceptions
+## 7. Common mistakes
 
-| Student says | Truth |
+| student says | the truth |
 |---|---|
 | "IDF is per document" | IDF is per **term**, computed once over the whole training collection. TF is per document. |
-| "Compute IDF on all documents including test" | Leakage (Lesson 05). Fit on training; the same IDF transforms new documents. |
-| "A term in every document gets IDF 0" | Not with these formulas — it gets 1 (the `+1` outside). |
-| "TF-IDF understands meaning" | It counts. "java" (coffee) = "java" (language). Synonyms do not match. |
+| "Compute IDF with the test documents too" | Leakage (Lesson 05). Fit on training; reuse for new documents. |
+| "TF-IDF understands meaning" | It counts. "java" (coffee) = "java" (language). |
 
 ## 8. Activities
 
-1. **Paper TF-IDF (15 min).** Give 4 short "job ads" on cards. Groups compute df and idf with a calculator, then the
-   tf-idf of one term. Compare with the person next to them. (Use the exact project formula.)
-2. **Guess the weight (5 min).** Show 6 words from the CV data and ask the class to order them by idf before revealing
-   the df counts.
-3. **Break it (5 min).** In the notebook, remove the `set()` and see how the weights change.
+1. **Paper TF-IDF (20 min).** 4 short job ads on cards. Groups compute DF and IDF (calculator: `ln`), then TF-IDF for one
+   ad, then its length and the normalised row.
+2. **Guess the weight (5 min).** 6 words from the CV data — the class orders them by IDF before seeing the DF counts.
+3. **Break it (5 min).** Remove `set()` in the notebook and see how the weights change.
 
-## 9. Check yourself
+## 9. Do it yourself
 
-<details><summary>1. N = 3, df = 2. Compute Kosai's idf.</summary>
+<details><summary>1. N = 5 CVs, "docker" in 1 of them. Kosai's IDF, every step.</summary>
 
-ln(4/3) + 1 = 0.2877 + 1 = **1.2877**.
+(1 + 5) / (1 + 1) = 6 / 2 = 3 → ln(3) = 1.0986 → + 1 = **2.0986**.
 </details>
 
-<details><summary>2. A row is (3, 4). What is it after L2 normalisation?</summary>
+<details><summary>2. CV 3 = "python sql pandas". Its TF-IDF row and normalised row.</summary>
 
-length = √(9+16) = 5 → (0.6, 0.8).
+python 1 × 1.2877 = 1.29 · sql 1.00 · pandas 1.69 · length √(1.66 + 1 + 2.86) = √5.52 = 2.35 → 0.55, 0.43, 0.72.
 </details>
 
-<details><summary>3. Why is the vocabulary of the spam filter chosen by document frequency and not total count?</summary>
+<details><summary>3. Normalise the row (3, 4).</summary>
 
-A word repeated 500 times in one rant has total count 500 but df 1 — it is one person shouting, not a common word. df
-measures how widespread a word is.
+length √(9 + 16) = 5 → **(0.6, 0.8)**.
 </details>
 
 ## 10. In your project
@@ -119,10 +193,9 @@ measures how widespread a word is.
 | Project | Where |
 |---|---|
 | ResumeMatch | `resumematch/nlp/vocabulary.py` → `VocabularyBuilder.build`, `compute_idf` · `rank/tfidf.py` → `TfidfRanker.fit`, `_l2_normalise_rows` · theory `31_ResumeMatch/01_theory/01_vectors.md` · notebook `02_tfidf_cosine.ipynb` |
-| Spam | `spamclassifier/features/feature_engineer.py` → `FeatureEngineer.fit`, `transform`, `idf_value`, `l2_normalise` · theory `08_SpamClassifier/01_theory/03_features.md` §3.3–3.5 |
+| Spam | `spamclassifier/features/feature_engineer.py` → `fit`, `transform`, `idf_value`, `l2_normalise` · theory `08_SpamClassifier/01_theory/03_features.md` §3.3–3.5 |
 
 ## 🎬 Watch & explore
 
-* *TF-IDF explained* — [search on YouTube](https://www.youtube.com/results?search_query=TF-IDF+explained+visually)
-* Stanford IR book (Manning et al.), ch. 6 — [Inverse document frequency](https://nlp.stanford.edu/IR-book/html/htmledition/inverse-document-frequency-1.html)
-* scikit-learn — [Tf–idf term weighting](https://scikit-learn.org/stable/modules/feature_extraction.html#tfidf-term-weighting)
+* *TF-IDF explained* — [search on YouTube](https://www.youtube.com/results?search_query=TF-IDF+explained+simply)
+* Stanford IR book — [Inverse document frequency](https://nlp.stanford.edu/IR-book/html/htmledition/inverse-document-frequency-1.html)

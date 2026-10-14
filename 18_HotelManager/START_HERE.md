@@ -42,6 +42,7 @@ or open `lessons/LESSONS.html` in a browser). Watch the lesson **before** the st
 
 | # | Lesson | Before your skeleton's … |
 |---|---|---|
+| 0 | [Lesson 00 — The maths toolkit](../lessons/00_math_toolkit/LESSON.md) and the [glossary](../lessons/GLOSSARY.md) | before everything — and whenever a word or a formula is new |
 | 1 | [Lesson 27 — Do two stays collide? Half-open intervals and a two-comparison rule](../lessons/27_intervals_overlap/LESSON.md) | stage 1 |
 | 2 | [Lesson 33 — The database: constraints, transactions, indexes, parameters](../lessons/33_databases/LESSON.md) | stage 2 |
 | 3 | [Lesson 28 — Which free room to give? First-Fit, Best-Fit, Preference — and the Strategy pattern](../lessons/28_allocation_strategies/LESSON.md) | stage 3 |

@@ -44,6 +44,7 @@ or open `lessons/LESSONS.html` in a browser). Watch the lesson **before** the st
 
 | # | Lesson | Before your skeleton's … |
 |---|---|---|
+| 0 | [Lesson 00 — The maths toolkit](../lessons/00_math_toolkit/LESSON.md) and the [glossary](../lessons/GLOSSARY.md) | before everything — and whenever a word or a formula is new |
 | 1 | [Lesson 31 — TCP is a stream: sockets, the protocol and message framing](../lessons/31_tcp_framing/LESSON.md) | stages 1-2 |
 | 2 | [Lesson 32 — Threads, race conditions and locks](../lessons/32_threads_locks/LESSON.md) | stage 2 |
 | 3 | [Lesson 33 — The database: constraints, transactions, indexes, parameters](../lessons/33_databases/LESSON.md) | stage 3 |
