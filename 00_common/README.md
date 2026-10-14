@@ -78,6 +78,9 @@ E       assert 5.0 == 7.0 ± 7.0e-06
 3. Print! `print(x.shape, x[:5])` solves half of all bugs.
 4. Only after 20 honest minutes: open `solutions.py`, read **one** function, close it, and write yours again
    from memory.
+
+Stuck on your **project** rather than an exercise? Your folder's `06_solve/HINTS.md` has hints, numbers to check
+against and the common traps for every hard function of your skeleton — in the order of `TASKS.md`.
 5. Bring the question to the lesson — with the red test output copied.
 
 ## Useful references

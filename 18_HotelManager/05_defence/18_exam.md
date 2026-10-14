@@ -206,7 +206,7 @@ extra query per row (the N+1 problem).
 
 ## 18.7 Testing, limits and the future
 
-**69. How many tests, and what do they cover?** 47: the interval rule (8 cases), repositories,
+**69. How many tests, and what do they cover?** 49: the interval rule (8 cases), repositories,
 availability and the three strategies, the pricing numbers, and the whole life cycle including illegal
 moves.
 

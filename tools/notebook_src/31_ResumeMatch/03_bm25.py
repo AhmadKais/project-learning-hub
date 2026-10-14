@@ -21,15 +21,14 @@ import matplotlib.pyplot as plt
 from nltk.stem.snowball import SnowballStemmer
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS as STOP
 
-TOKEN_PATTERN = re.compile(r"[A-Za-z֐-׿][A-Za-z0-9֐-׿+#.]*")
+TOKEN_PATTERN = re.compile(r"\.?[A-Za-z֐-׿][A-Za-z0-9֐-׿+#.]*(?<!\.)")    # = config.TOKEN_PATTERN
 SCRUB = [re.compile(r"\S+@\S+\.\w+"), re.compile(r"\+?\d[\d\-\s]{7,}\d")]
 stem = SnowballStemmer("english").stem
 
 def process(text):
     for p in SCRUB:
         text = p.sub(" ", text)
-    text = re.sub(r"(?<![A-Za-z])\.net\b", "dotnet", text, flags=re.I)
-    toks = [t.rstrip(".").lower() for t in TOKEN_PATTERN.findall(text)]
+    toks = [t.lower() for t in TOKEN_PATTERN.findall(text)]
     toks = [stem(t) for t in toks if t and (t not in STOP and len(t) > 1 or t in ("c", "go", "r"))]
     return toks + [f"{a} {b}" for a, b in zip(toks, toks[1:])]
 

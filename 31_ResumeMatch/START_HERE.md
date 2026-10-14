@@ -20,6 +20,7 @@ depends on preprocessing: if `C++` becomes `C`, no ranking method can save you.
 | `03_exercises/` | 13 short functions to write yourself + automatic tests + `solutions.py` | Write, run `pytest`, only then look at the solution |
 | `04_build/` | Code map and the stage-by-stage build chapters for your skeleton | Use it next to `TASKS.md` in your project |
 | `05_defence/` | Exam-style questions and resources | Before the defence — and test yourself every few weeks |
+| `06_solve/` | `CHECKLIST.md`: all 73 functions of your skeleton, stage by stage, with the test that checks each · `HINTS.md`: hidden hints, numbers to check against and the common traps for the hard ones | Tick the checklist as you go; open a hint only after you tried |
 | `data/` | `resumes.csv` (200 invented CVs), `jobs.csv` (5 adverts + which CVs are relevant) | Made by `tools/make_resume_data.py` — **no real person's CV**, on purpose |
 
 The synthetic CVs contain traps on purpose: very long CVs that list every technology, "keyword stuffers"
@@ -62,6 +63,14 @@ pytest test_exercises.py -v              # everything
 
 ex08 checks that your explanation **sums exactly to the score** — the same promise your project makes in
 `test_explanation_sums_to_the_score`.
+
+## When you are stuck on your project
+
+1. Find the function in `06_solve/CHECKLIST.md` — it names the stage and the test that checks it.
+2. Read its docstring in your code again, slowly, and the matching step in `04_build/`.
+3. Open `06_solve/HINTS.md` at that function: the 💡 hint first, the 🔧 steps only if you need them.
+   Compare your output with the "check yourself" numbers.
+4. Still red after 30 honest minutes? Send your supervisor the test name and the last 10 lines of the error.
 
 ## The rule
 

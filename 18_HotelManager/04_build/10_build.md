@@ -195,6 +195,9 @@ rows = conn.execute(self.SELECT + " WHERE b.check_in < ? AND b.check_out > ? ORD
                     (end.isoformat(), start.isoformat())).fetchall()
 ```
 
+**Step 2.14** — `count_by_status` (the test checks it): `SELECT status, COUNT(*) AS n FROM bookings GROUP BY
+status`, then `return {r["status"]: r["n"] for r in rows}`.
+
 **Check:** `pytest tests/test_repositories.py -v` → **4 passed**.
 Then open `hotel.db` with DB Browser for SQLite (free) and look at your rows — a screenshot for the book.
 
@@ -349,7 +352,7 @@ for line in quote.lines:
 return 0.0
 ```
 
-**Check:** `pytest tests/test_pricing.py -v` → **8 passed**. Now do the 7-night example from guide 5.3
+**Check:** `pytest tests/test_pricing.py -v` → **10 passed**. Now do the 7-night example from guide 5.3
 **by hand** and compare with what the program prints. They must agree to the agora.
 
 **Commit:** `stage 4: pricing engine`
@@ -360,6 +363,18 @@ return 0.0
 
 **Goal:** the whole system works without any window.
 **File:** `booking/hotel_service.py`. **Read first:** guide chapter 6.
+
+**Step 5.0** — first the two repositories the service needs (same four shapes as stage 2):
+- `SeasonRepository.add`: columns `name, start_date, end_date, multiplier` — the dates with `.isoformat()`.
+  `list_all`: `ORDER BY start_date`, each row back to
+  `Season(r["name"], date.fromisoformat(r["start_date"]), date.fromisoformat(r["end_date"]), r["multiplier"], r["id"])`.
+  `delete`: one line. (`quote_for` reads the seasons every time.)
+- `InvoiceRepository.add` — **one** `with self.db.connection() as conn:` block: insert the invoice
+  (`booking_id, issued_at, subtotal, vat, total, paid`), take `invoice_id = cur.lastrowid`, then
+  `conn.executemany("INSERT INTO invoice_lines (invoice_id, description, quantity, unit_price) VALUES (?, ?, ?, ?)",
+  [(invoice_id, l.description, l.quantity, l.unit_price) for l in invoice.lines])`; return `invoice_id`.
+  If one line fails, the `with` block rolls the invoice back too — that is the transaction of guide 7.
+- `get_for_booking` (the docstring shows both queries) and `mark_paid` (one `UPDATE`).
 
 **Step 5.1** — `add_room`: check `number` not empty, `room_type in config.ROOM_TYPES`,
 `capacity > 0`, and that no existing room has the same number; raise `HotelError` with a readable
@@ -436,7 +451,7 @@ return booking, fee
 ```
 pytest -v
 ```
-**All 47 tests must pass.** This is the moment the project exists: book, check in, check out, cancel,
+**All 49 tests must pass.** This is the moment the project exists: book, check in, check out, cancel,
 and every illegal move refused — all without a single window.
 
 **Commit:** `stage 5: rules and state machine`
@@ -465,7 +480,7 @@ rooms are rows, days are columns, colour by status, click to select.
 **Stage 7:**
 **Step 7.1** — `availability.occupancy_rate` (occupied nights ÷ rooms × days) and
 `HotelService.occupancy_for_month`, `dashboard`.
-**Step 7.2** — `revenue_by_month`, `count_by_status`, `ReportsView.show`.
+**Step 7.2** — `revenue_by_month`, `ReportsView.show` (`count_by_status` is already written — step 2.14).
 **Step 7.3** — `importer.export_invoice` → a CSV the hotel can print.
 **Step 7.4 — the experiment for the book.** Write a small script (not part of the app) that:
 ```

@@ -32,6 +32,7 @@ NN_Project/
 ├── 03_exercises/     exercises.py (you fill it) + test_exercises.py (checks you) + solutions.py
 ├── 04_build/         architecture, code map, and the stage-by-stage chapters for your skeleton
 ├── 05_defence/       exam-style questions, answers, further reading
+├── 06_solve/         CHECKLIST.md (every function of your skeleton, with its test) + HINTS.md (when you are stuck)
 └── data/             the data the notebooks use (where we are allowed to share it)
 ```
 
@@ -40,7 +41,8 @@ The learning loop, for every topic:
 1. **Read** the theory chapter — do the hand examples on paper.
 2. **Run** the notebook — every cell, top to bottom. Then change numbers and run again.
 3. **Solve** the matching exercises until `pytest` is green. Only then look at `solutions.py`.
-4. **Build** the matching stage of your project (`TASKS.md` in your skeleton).
+4. **Build** the matching stage of your project (`TASKS.md` in your skeleton). Tick each function in
+   `06_solve/CHECKLIST.md`; when one will not go green, open its entry in `06_solve/HINTS.md`.
 
 ## The one rule
 
@@ -57,6 +59,7 @@ wrote and understood.
 | `python tools/build_notebooks.py [project]` | converts the sources to `.ipynb`, **runs** them and saves the outputs |
 | `python tools/sync_guides.py` | re-copies the theory / build / defence chapters from the students' study guides |
 | `python tools/make_resume_data.py` | regenerates the synthetic CVs for ResumeMatch |
+| `python tools/make_checklists.py` | regenerates every `06_solve/CHECKLIST.md` from the students' skeletons (run after a skeleton changes) |
 | `EXERCISES=solutions pytest <project>/03_exercises` | checks that the solutions pass their own tests |
 
 Data sources and licences are listed in each project's `data/README.md`.

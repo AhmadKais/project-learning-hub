@@ -20,6 +20,7 @@ so the label does not flicker, and keep the camera in its own thread so the wind
 | `03_exercises/` | 12 exercises (17 tests) + `solutions.py` | Write, run `pytest`, only then look at the solution |
 | `04_build/` | Architecture, the two build chapters, debugging | Use it next to `TASKS.md` in your project |
 | `05_defence/` | Exam-style questions, answers, resources | Before the defence — and test yourself every few weeks |
+| `06_solve/` | `CHECKLIST.md`: all 97 functions of your skeleton, stage by stage, with the test that checks each · `HINTS.md`: hidden hints, numbers to check against and the common traps for the hard ones | Tick the checklist as you go; open a hint only after you tried |
 | `data/fer2013/` | **You put FER-2013 here** (same layout as your project) — see `data/README.md` | It is not in Git: we may not redistribute it |
 
 ## Setup (once)
@@ -61,6 +62,14 @@ pytest test_exercises.py -v              # everything
 
 ex06 (your own convolution in numpy) must match PyTorch's `conv2d` for every stride and padding. ex07 (the
 residual block) must have exactly the parameter counts of theory §5.6: 73,984 and 230,144.
+
+## When you are stuck on your project
+
+1. Find the function in `06_solve/CHECKLIST.md` — it names the stage and the test that checks it.
+2. Read its docstring in your code again, slowly, and the matching step in `04_build/`.
+3. Open `06_solve/HINTS.md` at that function: the 💡 hint first, the 🔧 steps only if you need them.
+   Compare your output with the "check yourself" numbers.
+4. Still red after 30 honest minutes? Send your supervisor the test name and the last 10 lines of the error.
 
 ## The rule
 

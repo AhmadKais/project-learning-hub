@@ -44,11 +44,19 @@ Platt scaling fits a sigmoid to turn distances into probabilities:
 ```python
 from sklearn.svm import LinearSVC
 from sklearn.calibration import CalibratedClassifierCV
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 
-base = LinearSVC(C=self.c, random_state=config.RANDOM_SEED)
+base = make_pipeline(StandardScaler(), LinearSVC(C=self.c, random_state=config.RANDOM_SEED))
 self._model = CalibratedClassifierCV(base, method="sigmoid", cv=5)
 self._model.fit(vectors, labels)
 ```
+
+**Why `StandardScaler` first?** The SVM's vector mixes TF-IDF values (between 0 and 1) with the seven handcrafted
+numbers, and `message_length` can be in the thousands. An SVM measures distances, so without scaling that one
+column decides the margin on its own (and `LinearSVC` warns *"failed to converge"*). The scaler gives every
+column mean 0 and standard deviation 1 — learned on the training folds only, because it is inside the pipeline.
+Naive Bayes needs none of this: it works on token counts, not on the dense vector.
 
 Without this there is no shared threshold, no joint precision-recall curve, and no fair comparison — which is the entire purpose of the class.
 

@@ -78,17 +78,26 @@ document has:    "machin learn"        (after stemming)
 ```
 
 The dictionary must go through **the same preprocessing** as the documents. That
-is what the `normalised` column in `skills.csv` is for:
+is what the `normalised` key of `self.skills` is for:
 
 ```python
-normalised = " ".join(self.preprocessor.process(skill))
+words = [t for t in self.preprocessor.process(skill) if " " not in t]
+normalised = " ".join(words)           # "Machine Learning" -> "machin learn"
 self.skills[normalised] = skill        # map back to the pretty display name
 ```
 
 Store the normalised form for matching, the original for display.
 
+⚠️ Why `if " " not in t`: `process()` also appends the bigrams, so "Machine Learning"
+comes back as `["machin", "learn", "machin learn"]`. Joining all three would store
+`"machin learn machin learn"` — a key no CV can ever contain. Joining only the single
+words gives `"machin learn"`, exactly the bigram the CV's own `process()` produced.
+
 💡 Because the preprocessor already emits bigrams, two-word skills match for
-free. You built that machinery in step 4 and now it pays off twice.
+free. You built that machinery in step 4 and now it pays off twice. A skill of
+**three** words ("Test Driven Development") cannot match — the pipeline stops at
+bigrams — which is why `skills.csv` gives it the alias `tdd`. That is a limitation
+to write in the book.
 
 ## The reliability check
 

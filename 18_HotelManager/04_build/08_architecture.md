@@ -61,7 +61,7 @@ grep -rn "hotel_service\|repositories" hotelmanager/views                       
 | 3 | Stage 2 — database + repositories. | `test_repositories.py` green; you can see rows in DB Browser. |
 | 4 | Stage 3 — availability + allocation. | `test_availability_allocation.py` green (12 tests). |
 | 5 | Stage 4 — the pricing engine. | `test_pricing.py` green (8); your hand calculation matches. |
-| 6 | Stage 5 — the service and the state machine. | `pytest -v` all 47 green. |
+| 6 | Stage 5 — the service and the state machine. | `pytest -v` all 49 green. |
 | 7–8 | Stage 6 — the five tabs and the calendar. | `python run.py` does a full booking cycle. |
 | 9 | Stage 7 — reports, the allocation experiment, UML, the book. | Every number in the book comes from your computer. |
 

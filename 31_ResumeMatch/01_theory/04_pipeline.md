@@ -53,11 +53,20 @@ C++ job. Silently.
 📄 **The pattern that works**
 
 ```python
-TOKEN_PATTERN = r"[A-Za-z\u0590-\u05FF][A-Za-z0-9\u0590-\u05FF+#.]*"
+TOKEN_PATTERN = r"\.?[A-Za-z\u0590-\u05FF][A-Za-z0-9\u0590-\u05FF+#.]*(?<!\.)"
 ```
 
-Reading it: start with a letter (Latin **or** Hebrew), then allow letters,
-digits, `+`, `#` and `.`. Now `C++`, `C#` and `.NET` survive intact.
+Reading it, piece by piece:
+
+| piece | means | why |
+|---|---|---|
+| `\.?` | an optional dot at the very start | `.NET` keeps its dot |
+| `[A-Za-z\u0590-\u05FF]` | then a letter, Latin **or** Hebrew | a token never starts with a digit, so `3.5` is not a word |
+| `[A-Za-z0-9\u0590-\u05FF+#.]*` | then letters, digits, `+`, `#` and `.` | `C++`, `C#`, `Node.js`, `ASP.NET` stay whole |
+| `(?<!\.)` | the token may not **end** with a dot | `Docker.` at the end of a sentence becomes `Docker` — the same term as `Docker` anywhere else |
+
+Without the last piece every word that ends a sentence becomes a second, different term (`docker` and `docker.`),
+the vocabulary doubles, and a CV that writes "…and Docker." never matches a job that asks for Docker.
 
 💡 There is a test for exactly this (`test_technical_tokens_survive`). It exists
 because this bug is invisible — everything *looks* fine.

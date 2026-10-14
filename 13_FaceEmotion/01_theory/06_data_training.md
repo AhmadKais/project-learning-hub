@@ -83,7 +83,7 @@ Three lines in `trainer.py`:
 
 📄 **AMP**
 ```python
-scaler = torch.cuda.amp.GradScaler(enabled=use_amp)
+scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
 with torch.autocast("cuda", enabled=use_amp):
     outputs = model(images)
     loss = criterion(outputs, labels)

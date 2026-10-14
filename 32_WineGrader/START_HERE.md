@@ -20,6 +20,7 @@ nested cross-validation).
 | `03_exercises/` | 13 short functions to write yourself + automatic tests + `solutions.py` | Write, run `pytest`, only then look at the solution |
 | `04_build/` | Architecture, code map, and the stage-by-stage build chapter for your project skeleton | Use it next to `TASKS.md` in your project |
 | `05_defence/` | Exam-style questions, answers, resources | Before the defence — and test yourself every few weeks |
+| `06_solve/` | `CHECKLIST.md`: all 107 functions of your skeleton, stage by stage, with the test that checks each · `HINTS.md`: hidden hints, numbers to check against and the common traps for the hard ones | Tick the checklist as you go; open a hint only after you tried |
 | `data/` | The UCI Wine Quality dataset (6,497 wines) | The notebooks read it from here |
 
 ## Setup (once)
@@ -61,6 +62,14 @@ pytest test_exercises.py -v              # everything
 A red test tells you exactly what was expected and what you returned. Read it — it is the fastest
 teacher you have. Stuck for more than 20 minutes? Re-read the theory section named in the docstring,
 look at the notebook, and only then open `solutions.py`.
+
+## When you are stuck on your project
+
+1. Find the function in `06_solve/CHECKLIST.md` — it names the stage and the test that checks it.
+2. Read its docstring in your code again, slowly, and the matching step in `04_build/`.
+3. Open `06_solve/HINTS.md` at that function: the 💡 hint first, the 🔧 steps only if you need them.
+   Compare your output with the "check yourself" numbers.
+4. Still red after 30 honest minutes? Send your supervisor the test name and the last 10 lines of the error.
 
 ## The rule
 

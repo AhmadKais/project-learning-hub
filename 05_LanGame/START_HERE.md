@@ -20,6 +20,7 @@ rules in time** — a state machine decides what is legal when, and a timer clos
 | `03_exercises/` | 12 exercises (34 tests) + `solutions.py` | Write, run `pytest`, only then look at the solution |
 | `04_build/` | Architecture and the two build chapters for your skeleton | Use it next to `TASKS.md` in your project |
 | `05_defence/` | Exam-style questions, answers, resources | Before the defence — and test yourself every few weeks |
+| `06_solve/` | `CHECKLIST.md`: all 86 functions of your skeleton, stage by stage, with the test that checks each · `HINTS.md`: hidden hints, numbers to check against and the common traps for the hard ones | Tick the checklist as you go; open a hint only after you tried |
 
 No dataset needed — everything uses the standard library.
 
@@ -60,6 +61,14 @@ pytest test_exercises.py -v              # everything
 
 ex05 starts 6 threads that close the same round at the same instant, 20 times — it only passes if exactly one
 of them scores the round.
+
+## When you are stuck on your project
+
+1. Find the function in `06_solve/CHECKLIST.md` — it names the stage and the test that checks it.
+2. Read its docstring in your code again, slowly, and the matching step in `04_build/`.
+3. Open `06_solve/HINTS.md` at that function: the 💡 hint first, the 🔧 steps only if you need them.
+   Compare your output with the "check yourself" numbers.
+4. Still red after 30 honest minutes? Send your supervisor the test name and the last 10 lines of the error.
 
 ## The rule
 

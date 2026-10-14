@@ -59,6 +59,10 @@ Print it immediately after loading. If the ratio is nowhere near the ~13% the li
 ### 1.4 Split, stratified and seeded
 
 See chapter 2, section 2.4. Two `train_test_split` calls, `stratify=` on both, `random_state=config.RANDOM_SEED`.
+Give `test_size` as a **whole number of messages** — `n_test = round(len(texts) * config.TEST_RATIO)` and
+`n_val = round(len(texts) * config.VAL_RATIO)` — not as a ratio: `0.15 / 0.85` of 85 messages is
+`15.000000000000002`, scikit-learn rounds a test size **up**, and `test_split_sizes` gets 69 / 16 / 15 instead of
+70 / 15 / 15.
 
 ### 1.5 Check for leakage
 
@@ -131,22 +135,26 @@ def parse(self, raw):
     subject, body = self.split_headers(raw)
 
     raw_length = len(raw)
-    caps = self.caps_ratio(body)              # BEFORE lower-casing
-    excl = self.exclamation_count(body)
-    digits = self.digit_ratio(body)
+    signals = f"{subject} {body}"             # a shouting subject is a signal too
+    caps = self.caps_ratio(signals)           # BEFORE lower-casing
+    excl = self.exclamation_count(signals)
+    digits = self.digit_ratio(signals)
     urls = self.count_urls(body)
     tags = self.count_html_tags(body)
 
     body = self.strip_html(body)
     body = self.replace_urls(body)
+    body = body.lower().replace(config.URL_TOKEN.lower(), config.URL_TOKEN)   # lower-casing hit the token too
 
     return CleanedMessage(
-        subject=subject.lower(), body=body.lower(), raw_length=raw_length,
+        subject=subject.lower(), body=body, raw_length=raw_length,
         caps_ratio=caps, exclamation_count=excl, digit_ratio=digits,
         url_count=urls, html_tag_count=tags)
 ```
 
 The measurement block sits above the normalisation block. Move it below and `test_parse_measures_caps_before_lowercasing` fails — as it should.
+
+The `.replace(...)` after `.lower()` matters: `URLTOKEN` is upper-case on purpose, so that it can never be confused with a real word, and lower-casing the body would turn it into the ordinary word `urltoken`. Putting it back keeps the one token the tokenizer treats specially. `test_parse_full_pipeline` checks that `URLTOKEN` is in the body.
 
 ### 2.3 The tokenizer
 
@@ -154,7 +162,7 @@ The measurement block sits above the normalisation block. Move it below and `tes
 ```python
 def tokenize_text(self, text):
     out = []
-    for part in text.split(config.URL_TOKEN.lower()):
+    for part in text.split(config.URL_TOKEN):
         out.extend(t for t in WORD_RE.findall(part.lower()) if self._keep(t))
         out.append(config.URL_TOKEN)
     out.pop()                       # one too many from the final split
@@ -270,26 +278,45 @@ Code in chapter 5. The two things that go wrong:
 
 📄 **`cross_validate`**
 ```python
+import statistics
 from sklearn.model_selection import StratifiedKFold
 
 def cross_validate(self, model_factory, texts, labels):
+    parser, tokenizer = EmailParser(), Tokenizer()
+    messages = [parser.parse(t) for t in texts]          # parse once; parsing learns nothing
     kfold = StratifiedKFold(n_splits=self.folds, shuffle=True,
                             random_state=config.RANDOM_SEED)
     scores = {"precision": [], "recall": [], "f1": []}
 
     for train_idx, test_idx in kfold.split(texts, labels):
-        engineer = FeatureEngineer(Tokenizer()).fit([messages[i] for i in train_idx])
-        model = model_factory()
-        model.fit(...)
+        model = model_factory()                           # a FRESH model every fold
+        y_train = [labels[i] for i in train_idx]
+        if isinstance(model, NaiveBayesClassifier):       # NB eats tokens
+            name = "naive_bayes"
+            model.fit([tokenizer.tokenize(messages[i]) for i in train_idx], y_train)
+            predictions = [model.predict(tokenizer.tokenize(messages[i])) for i in test_idx]
+        else:                                             # the SVM eats dense vectors
+            name = "svm"
+            engineer = FeatureEngineer(tokenizer).fit([messages[i] for i in train_idx])   # refit per fold
+            dense = lambda i: engineer.to_dense(engineer.transform(messages[i]))
+            model.fit([dense(i) for i in train_idx], y_train)
+            predictions = [model.predict(dense(i)) for i in test_idx]
         matrix = self.confusion_matrix(predictions, [labels[i] for i in test_idx])
         scores["precision"].append(matrix.precision)
         scores["recall"].append(matrix.recall)
         scores["f1"].append(matrix.f1)
 
-    import statistics
     return [MetricResult(name, metric, statistics.mean(v), statistics.pstdev(v))
             for metric, v in scores.items()]
 ```
+
+The imports it needs at the top of `comparator.py`: `EmailParser`, `Tokenizer`, `FeatureEngineer` and
+`NaiveBayesClassifier`. Call it as `ModelComparator().cross_validate(NaiveBayesClassifier, texts, labels)` — the
+**class** is the factory: calling it gives a new, unfitted model.
+
+📄 **`confusion_matrix`** — the four counts at threshold 0.5 (the predictions are already 0 / 1):
+`ConfusionMatrix(true_ham, false_spam, false_ham, true_spam)` — in **that** order; `false_spam` (real mail marked as
+spam) is the second one.
 
 ---
 

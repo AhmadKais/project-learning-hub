@@ -507,8 +507,14 @@ self.is_ready = True
 
 ## 15.2 `Predictor.predict`
 
-**Step 5.2** — Exactly the five lines in the docstring. The only trap: `float(...)` around the
-probability.
+**Step 5.2** — Exactly the six lines in the docstring. Two traps:
+
+- The first line, `url = url.strip().lower()`, is the **same** clean-up `DatasetLoader.read` did to every
+  training URL (Step 2.2). Leave it out and the model sees `PayPal.com` at scan time while it only ever saw
+  `paypal.com` in training — the entropy is different, so the probability is different, with no error.
+  That is the train/serve rule of §3.4 again: whatever happens to a URL before training must happen at scan
+  time too. `test_pipeline.py` checks it by scanning the same URL in capitals.
+- `float(...)` around the probability.
 
 ## 15.3 `Explainer.contributions`
 
@@ -528,7 +534,9 @@ else:
     contribs = clf.feature_importances_ * np.sign(x_scaled)
 ```
 **Step 5.5** — Build the list: for `i, name in enumerate(names)`: `raw = result.features[name]`;
-`text = TEMPLATES.get(name, name).format(value=raw)`; append
+`text = TEMPLATES.get(name, name).format(value=raw)` — except when `raw == 0` and `name` is in
+`TEMPLATES_WHEN_ZERO`: then `text = TEMPLATES_WHEN_ZERO[name]`. (Why: an `http://` URL has `has_https = 0`,
+which pushes toward phishing — the reason shown must be "Does not use HTTPS", not "Uses HTTPS".) Append
 `Explanation(feature=name, value=raw, contribution=float(contribs[i]), text=text)`. Return the list.
 
 ## 15.4 `Explainer.explain`

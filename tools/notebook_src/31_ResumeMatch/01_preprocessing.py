@@ -53,23 +53,24 @@ print(scrub("Noa Cohen. Email noa12@mail.com, phone 054-1234567. ID 123456789. S
 text = "Skills: C++, C#, .NET, Node.js and Python 3."
 print(r"\w+      ->", re.findall(r"\w+", text))
 
-TOKEN_PATTERN = re.compile(r"[A-Za-z֐-׿][A-Za-z0-9֐-׿+#.]*")
-print("project  ->", TOKEN_PATTERN.findall(text))
+SIMPLE = re.compile(r"[A-Za-z֐-׿][A-Za-z0-9֐-׿+#.]*")
+print("letters  ->", SIMPLE.findall(text))
 
 # %% [markdown]
-# Better, but `.NET` lost its dot (a token must start with a letter) and `3.` keeps a trailing dot on some
-# words — `Python.` at the end of a sentence would become a different token from `Python`. A sentence-ending
-# dot must be stripped; a dot **inside** a token (`node.js`) must stay. And `.net` needs a special case:
+# Better — `C++`, `C#` and `Node.js` survive — but two new problems: `.NET` lost its dot (a token must start with a
+# letter), and a word that ends a sentence keeps the full stop: `Python.` would become a different term from
+# `Python`. Your project's `config.TOKEN_PATTERN` adds two small pieces:
+#
+# | piece | means |
+# |---|---|
+# | `\.?` at the start | an optional leading dot → `.NET` keeps it |
+# | `(?<!\.)` at the end | the token may not **end** with a dot → `Python.` becomes `Python`; `Node.js` keeps its inner dot |
 
 # %%
+TOKEN_PATTERN = re.compile(r"\.?[A-Za-z֐-׿][A-Za-z0-9֐-׿+#.]*(?<!\.)")    # = config.TOKEN_PATTERN
+
 def tokenize(text):
-    text = re.sub(r"(?<![A-Za-z])\.net\b", "dotnet", text, flags=re.I)   # .NET -> dotnet
-    out = []
-    for tok in TOKEN_PATTERN.findall(text):
-        tok = tok.rstrip(".")                                            # "Python." -> "Python"
-        if tok:
-            out.append(tok)
-    return out
+    return TOKEN_PATTERN.findall(text)
 
 print(tokenize("I know C++, C#, .NET and Node.js. I love Python."))
 

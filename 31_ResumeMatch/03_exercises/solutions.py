@@ -7,7 +7,7 @@ import math
 import re
 from collections import Counter, defaultdict
 
-TOKEN_PATTERN = re.compile(r"[A-Za-z֐-׿][A-Za-z0-9֐-׿+#.]*")
+TOKEN_PATTERN = re.compile(r"\.?[A-Za-z֐-׿][A-Za-z0-9֐-׿+#.]*(?<!\.)")   # the same pattern as your config.py
 EMAIL_RE = re.compile(r"\S+@\S+\.\w+")
 PHONE_RE = re.compile(r"\+?\d[\d\- ]{7,}\d")
 
