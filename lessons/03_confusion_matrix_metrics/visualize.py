@@ -210,6 +210,137 @@ if L.wanted("macro_f1"):
     caption(fig, "macro-F1 = the plain average of the three F1s: the small 'high' class counts as much as the big one.")
     L.save(fig, "macro_f1")
 
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 6. sorting 16 SMS into the four boxes, one by one
+SORT = [("WINNER! claim £900 now", 1, 1), ("ok see u at 6", 0, 0), ("FREE ringtone txt 8007", 1, 1),
+        ("is my phone ready?", 0, 0), ("Your mobile won a prize, call", 1, 0), ("Free under warranty?", 0, 1),
+        ("lol good one", 0, 0), ("URGENT! You have won", 1, 1), ("where are you", 0, 0), ("call me later", 0, 0),
+        ("Txt STOP to end", 1, 0), ("thanks for the repair", 0, 0), ("CASH prize 2day!!", 1, 1),
+        ("bring the charger", 0, 0), ("Win a free iPhone", 1, 1), ("sorry, running late", 0, 0)]
+BOX = {(1, 1): ("TP", 1, 0), (1, 0): ("FN", 0, 0), (0, 1): ("FP", 1, 1), (0, 0): ("TN", 0, 1)}
+BOX_COL = {"TP": LIGHT_ORANGE, "FN": "#f3e2b3", "FP": "#f6c9b6", "TN": LIGHT_BLUE}
+
+if L.wanted("sorting"):
+    fig, ax = plt.subplots(figsize=(13, 7.5))
+
+    def upd(k):
+        blank(ax, (0, 13), (0, 8))
+        for (truth, pred), (tag, cx, cy) in BOX.items():
+            x0, y0 = 4.2 + cx * 4.4, 0.2 + cy * 3.7
+            ax.add_patch(FancyBboxPatch((x0, y0), 4.2, 3.5, boxstyle="round,pad=0,rounding_size=0.15",
+                                        color=BOX_COL[tag]))
+            n = sum(1 for _, t, p_ in SORT[:k] if (t, p_) == (truth, pred))
+            ax.text(x0 + 0.15, y0 + 3.15, f"{tag} = {n}", fontsize=15, weight="bold")
+        ax.text(6.3, 7.75, "filter said: inbox", ha="center", fontsize=12, color=INK2)
+        ax.text(10.7, 7.75, "filter said: SPAM", ha="center", fontsize=12, color=INK2)
+        ax.text(4.0, 5.65, "really\na customer", ha="right", va="center", fontsize=12, color=INK2)
+        ax.text(4.0, 1.95, "really\nspam", ha="right", va="center", fontsize=12, color=INK2)
+        placed = {}
+        for i, (txt, t, p_) in enumerate(SORT[:k]):
+            tag, cx, cy = BOX[(t, p_)]
+            j = placed.get(tag, 0)
+            placed[tag] = j + 1
+            x0, y0 = 4.35 + cx * 4.4, 0.2 + cy * 3.7 + 2.75 - j * 0.36
+            ax.text(x0, y0, txt, fontsize=10, color=ORANGE if t else BLUE,
+                    weight="bold" if i == k - 1 else "normal")
+        if k < len(SORT):
+            txt, t, p_ = SORT[k]
+            ax.text(0.1, 4.2, f"next SMS:\n\n\"{txt}\"\n\ntruth: {'spam' if t else 'customer'}\nfilter: "
+                              f"{'SPAM' if p_ else 'inbox'}", fontsize=11.5, va="center",
+                    color=ORANGE if t else BLUE)
+        else:
+            c = {tag: sum(1 for _, t, p_ in SORT if BOX[(t, p_)][0] == tag) for tag in BOX_COL}
+            ax.text(0.1, 4.2, f"done!\n\nTP {c['TP']} · FN {c['FN']}\nFP {c['FP']} · TN {c['TN']}", fontsize=13,
+                    va="center", weight="bold")
+    frames = [k for k in range(len(SORT) + 1) for _ in range(2)] + [len(SORT)] * 4
+    L.animate(fig, lambda i: upd(frames[i]), len(frames), "sorting", fps=2)
+
+# ---------------------------------------------------------------- 7. precision = a column, recall = a row
+if L.wanted("row_vs_column"):
+    tp, fp, fn, tn = counts(0.5)
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    for ax, which in [(axes[0], "precision"), (axes[1], "recall")]:
+        draw_matrix(ax, tp, fp, fn, tn, title="")
+        if which == "precision":
+            ax.add_patch(plt.Rectangle((1.0, 0.0), 1.0, 2.0, fill=False, ec=INK, lw=5))
+            ax.set_title(f"PRECISION looks at the 'SPAM' column\nTP ÷ (TP + FP) = {tp} ÷ {tp + fp} = {tp / (tp + fp):.3f}")
+        else:
+            ax.add_patch(plt.Rectangle((0.0, 0.0), 2.0, 1.0, fill=False, ec=INK, lw=5))
+            ax.set_title(f"RECALL looks at the 'really spam' row\nTP ÷ (TP + FN) = {tp} ÷ {tp + fn} = {tp / (tp + fn):.3f}")
+    caption(fig, "Same TP on top. Precision: 'of what I flagged...'.  Recall: 'of what was really there...'.")
+    L.save(fig, "row_vs_column")
+
+# ---------------------------------------------------------------- 8. real-world mistakes: which one is worse?
+if L.wanted("mistakes_world"):
+    cards = [("Smoke alarm", "beeps, no fire", "fire, no beep", "FN is worse: people die", RED),
+             ("COVID test", "healthy person told 'sick'", "sick person told 'healthy'", "FN is worse: they infect others", ORANGE),
+             ("Court", "innocent person jailed", "guilty person goes free", "FP is worse: never jail the innocent", VIOLET),
+             ("Spam filter (Maya)", "customer's SMS hidden", "spam reaches the inbox", "FP is worse: a lost customer", BLUE),
+             ("PhishGuard (Dani)", "real bank site blocked", "phishing site allowed", "FN is worse: a stolen account", AQUA),
+             ("Airport security", "a bag searched for nothing", "a weapon gets through", "FN is worse: accept many FPs", GREEN)]
+    fig, axes = plt.subplots(2, 3, figsize=(15, 7.4))
+    for ax, (title, fp, fn, verdict, col) in zip(axes.ravel(), cards):
+        blank(ax)
+        ax.add_patch(FancyBboxPatch((0.02, 0.02), 0.96, 0.96, boxstyle="round,pad=0,rounding_size=0.05", lw=2.5,
+                                    edgecolor=col, facecolor=PAPER))
+        ax.add_patch(FancyBboxPatch((0.02, 0.76), 0.96, 0.22, boxstyle="round,pad=0,rounding_size=0.05", lw=0,
+                                    facecolor=col))
+        ax.text(0.5, 0.87, title, ha="center", va="center", color="white", fontsize=14, weight="bold")
+        ax.text(0.06, 0.62, "false alarm (FP):", fontsize=10.5, color=MUTED)
+        ax.text(0.06, 0.53, fp, fontsize=12)
+        ax.text(0.06, 0.40, "miss (FN):", fontsize=10.5, color=MUTED)
+        ax.text(0.06, 0.31, fn, fontsize=12)
+        ax.text(0.5, 0.12, verdict, ha="center", fontsize=11.5, weight="bold", color=col)
+    fig.suptitle("Every yes/no decision makes two kinds of mistake - and they never cost the same", fontsize=15,
+                 weight="bold")
+    L.save(fig, "mistakes_world")
+
+# ---------------------------------------------------------------- 9. the rare disease: a 99%-accurate test, but...
+if L.wanted("rare_disease"):
+    fig, ax = plt.subplots(figsize=(12, 7.4))
+    blank(ax, (0, 40), (-4, 25))
+    ax.set_aspect("equal")
+    r = np.random.default_rng(1)
+    sick = set(r.choice(1000, 10, replace=False))
+    sick_l = sorted(sick)
+    missed = {sick_l[0]}
+    healthy = [i for i in range(1000) if i not in sick]
+    false_alarm = set(r.choice(healthy, 10, replace=False))
+    for i in range(1000):
+        rr, cc = divmod(i, 40)
+        x, y_ = cc + 0.5, 24.5 - rr
+        if i in sick:
+            col = YELLOW if i in missed else RED
+        elif i in false_alarm:
+            col = ORANGE
+        else:
+            col = "#cfd8e3"
+        ax.add_patch(plt.Circle((x, y_), 0.42, color=col))
+    for k, (col, txt) in enumerate([(RED, "sick, test says SICK: 9 (TP)"), (YELLOW, "sick, test says healthy: 1 (FN)"),
+                                    (ORANGE, "healthy, test says SICK: 10 (FP)"),
+                                    ("#cfd8e3", "healthy, test says healthy: 980 (TN)")]):
+        ax.add_patch(plt.Circle((1 + (k % 2) * 20, -1.2 - (k // 2) * 1.6), 0.45, color=col))
+        ax.text(1.9 + (k % 2) * 20, -1.2 - (k // 2) * 1.6, txt, va="center", fontsize=12)
+    ax.set_title("1,000 people, 10 are sick. A test that is right 99% of the time.\n"
+                 "You test positive. Chance you are really sick = 9 ÷ (9 + 10) = 47%", fontsize=14)
+    L.save(fig, "rare_disease")
+
+# ---------------------------------------------------------------- 10. F1 punishes the weak side; the plain average doesn't
+if L.wanted("f1_vs_mean"):
+    fig, ax = plt.subplots(figsize=(11, 5.2))
+    rc = np.linspace(0.001, 1, 200)
+    for pr, col in [(1.0, BLUE), (0.8, AQUA), (0.5, ORANGE)]:
+        ax.plot(rc, 2 * pr * rc / (pr + rc), color=col, lw=3, label=f"F1 when precision = {pr}")
+        ax.plot(rc, (pr + rc) / 2, color=col, lw=1.5, ls="--")
+    ax.text(0.03, 0.55, "dashed = plain average\n(too kind: 0.5 even when recall is 0)", fontsize=11, color=INK2)
+    ax.set_xlabel("recall")
+    ax.set_ylabel("score")
+    ax.set_title("F1 is only high when BOTH precision and recall are high")
+    ax.legend(loc="lower right")
+    L.save(fig, "f1_vs_mean")
+
+
 if L.live:
     from matplotlib.widgets import Slider
     fig, axes = plt.subplots(1, 3, figsize=(17, 5.8), gridspec_kw={"width_ratios": [1.2, 1, 1]})
