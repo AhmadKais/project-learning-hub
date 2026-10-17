@@ -138,3 +138,102 @@ if L.wanted("dropout"):
         ax.set_title("model.train(): every batch, a random 30 % of neurons are switched off (the rest ×1/0.7)"
                      if train else "model.eval(): everyone works - the same answer every time", fontsize=12.5)
     L.animate(fig, upd, frames, "dropout", fps=2)
+
+# ================================================================ expanded lesson: more pictures
+EMOTIONS = ["angry", "disgust", "fear", "happy", "neutral", "sad", "surprise"]
+
+
+def _smallnet():
+    import torch
+    from torch import nn
+
+    def conv_bn(c_in, c_out, stride):
+        return nn.Sequential(nn.Conv2d(c_in, c_out, 3, stride, 1, bias=False), nn.BatchNorm2d(c_out), nn.ReLU())
+
+    class SmallNet(nn.Module):                      # the network of 13_FaceEmotion/02_examples/03_training_loop.ipynb
+        def __init__(self):
+            super().__init__()
+            self.features = nn.Sequential(conv_bn(1, 32, 2), conv_bn(32, 64, 1), conv_bn(64, 128, 2), conv_bn(128, 256, 2))
+            self.head = nn.Sequential(nn.AdaptiveAvgPool2d(1), nn.Flatten(), nn.Dropout(0.3), nn.Linear(256, 7))
+
+        def forward(self, x):
+            return self.head(self.features(x))
+    net = SmallNet()
+    net.load_state_dict(torch.load(HUB / "13_FaceEmotion" / "data" / "_smallnet.pt", map_location="cpu",
+                                   weights_only=False))
+    return net
+
+
+def _face_tensor(mouth="smile"):
+    import torch
+    f = cartoon_face(48, mouth)
+    hist = np.bincount(f.ravel(), minlength=256)
+    cdf = hist.cumsum()
+    cmin = cdf[cdf > 0][0]
+    f = np.round((cdf - cmin) / (cdf[-1] - cmin) * 255).clip(0, 255).astype(np.uint8)[f]
+    x = (f / 255 - 0.5013) / 0.2916
+    return torch.tensor(x, dtype=torch.float32)[None, None]
+
+
+# ---------------------------------------------------------------- 6. measured: the gradient reaching each layer, plain vs residual
+if L.wanted("measured_gradients"):
+    import torch
+    from torch import nn
+    torch.manual_seed(0)
+    depth = 30
+
+    class Plain(nn.Module):
+        def __init__(self, residual):
+            super().__init__()
+            self.residual = residual
+            self.layers = nn.ModuleList([nn.Linear(64, 64) for _ in range(depth)])
+            for l in self.layers:
+                nn.init.normal_(l.weight, 0, 1 / np.sqrt(64))
+                nn.init.zeros_(l.bias)
+
+        def forward(self, x):
+            for l in self.layers:
+                x = x + (torch.sigmoid(l(x)) - 0.5) if self.residual else torch.sigmoid(l(x))
+            return x.sum()
+    x = torch.randn(32, 64)
+    fig, ax = plt.subplots(figsize=(12, 5))
+    for res, col, name in [(False, RED, "plain: 30 layers stacked"), (True, GREEN, "residual: out = F(x) + x")]:
+        torch.manual_seed(1)
+        m = Plain(res)
+        m(x).backward()
+        g = [l.weight.grad.norm().item() for l in m.layers]
+        ax.semilogy(range(1, depth + 1), g, "o-", color=col, lw=2.5, label=name)
+        print(f"  {name}: first layer {g[0]:.2e}, last layer {g[-1]:.2e}")
+    ax.set_xlabel("layer (1 = nearest the input)")
+    ax.set_ylabel("size of the learning signal (log)")
+    ax.set_title("Measured with PyTorch: the learning signal reaching each layer of a 30-layer network (sigmoid)")
+    ax.legend()
+    caption(fig, "Plain: the signal shrinks by a big factor on its way back - the first layers barely learn. "
+                 "Residual: it arrives almost intact.")
+    L.save(fig, "measured_gradients")
+
+# ---------------------------------------------------------------- 7. the real trained network: train() vs eval() on the same face
+if L.wanted("train_vs_eval"):
+    import torch
+    net = _smallnet()
+    x = _face_tensor("smile")
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5.2), sharey=True)
+    for ax, mode in [(axes[0], "train"), (axes[1], "eval")]:
+        getattr(net, mode)()
+        torch.manual_seed(0)
+        runs = []
+        with torch.no_grad():
+            for _ in range(5):
+                runs.append(torch.softmax(net(x), 1)[0].numpy())
+        runs = np.array(runs)
+        for r_i, p in enumerate(runs):
+            ax.bar(np.arange(7) + (r_i - 2) * 0.15, p, 0.15, color=SERIES[r_i], alpha=0.9,
+                   label=f"try {r_i + 1}: {EMOTIONS[int(p.argmax())]}")
+        ax.set_xticks(range(7), EMOTIONS, rotation=25)
+        ax.set_title(f"model.{mode}()  -  the same face 5 times", fontsize=13)
+        ax.legend(fontsize=9, loc="upper left")
+    axes[0].set_ylabel("probability")
+    net.train()
+    caption(fig, "The project's trained small network on one drawn smiling face. train(): BatchNorm uses this one face's own "
+                 "statistics and Dropout is random. eval(): stable.")
+    L.save(fig, "train_vs_eval")

@@ -3,6 +3,21 @@
 > **For:** Ryan (FaceEmotion stage 3 — `network.py`) &nbsp;·&nbsp; **Time:** 2 × 45 min
 > **Before:** Lessons 20–22 &nbsp;·&nbsp; **After this:** Lessons 24, 26
 
+**In one sentence:** EmotionNet stacks residual blocks — layers that only learn a *correction* and pass their input
+around them on a shortcut — plus BatchNorm (a z-score inside the network) and Dropout (random switch-offs), and the switch
+`eval()` tells the last two to behave when the model is used.
+
+## 🗺️ The map of this lesson
+
+```mermaid
+flowchart LR
+    A["1 · The whole<br/>network & shapes"] --> B["2 · The problem:<br/>vanishing gradients"]
+    B --> C["3 · The fix:<br/>out = F(x) + x"]
+    C --> D["4 · BatchNorm"]
+    D --> E["5 · Dropout"]
+    E --> F["6 · train() vs eval()"]
+```
+
 ## The story
 
 > The class plays **"broken telephone"**: a sentence is whispered through 20 students. At the end it's nonsense. Now
@@ -12,12 +27,14 @@
 > every block. This lesson builds Ryan's network, EmotionNet, piece by piece, and explains the two switches every student
 > forgets: `train()` and `eval()`.
 
-## 🎯 By the end, the student can
+### 🌍 Real world
 
-1. Draw EmotionNet with the shape after every block, and count the weights of one block.
-2. Explain the vanishing gradient and how the shortcut fixes it.
-3. Explain when the shortcut needs a 1 × 1 convolution.
-4. Explain BatchNorm and Dropout, and exactly what `model.eval()` changes.
+* **ResNet** (Microsoft Research, 2015) won the big ImageNet picture contest with a network of **152 layers** — before it,
+  networks deeper than ~20 layers trained badly. Its paper became one of the most cited scientific papers of all time.
+* The same **shortcut idea** (add the input back) is inside every modern network, including the Transformers behind
+  ChatGPT and Claude.
+* **Dropout** is like a sports team that trains with random players sitting out: everyone must learn to play every role, so
+  the team doesn't collapse when one star is missing.
 
 ## Words you need
 
@@ -73,6 +90,16 @@ total                                           230,144
 Backpropagation (Lesson 21) multiplies one factor per layer on its way back. If many factors are below 1, the product
 shrinks fast: 0.5 × 0.5 × … (40 times) ≈ 0.000000000001. The first layers get (almost) **no** signal and stop learning
 (red line). Before 2015, a 56-layer network trained **worse** than a 20-layer one — even on its training data.
+
+### Measured, not drawn
+
+A 30-layer network (sigmoid neurons), the learning signal arriving at each layer after one backward pass, computed by
+PyTorch:
+
+![measured gradients](figs/measured_gradients.png)
+
+Plain: from about 10² at the last layer down to about **10⁻¹⁶** at the first — a million billion times smaller. The first
+layers effectively learn nothing. Residual: the signal stays the same size all the way back.
 
 ## 3. The residual block
 
@@ -130,9 +157,51 @@ recognise each emotion → less overfitting. **0 weights.**
 | Dropout | random 30 % off | everyone on |
 | BatchNorm | normalises with **this batch's** μ, σ and updates the running averages | uses the **saved running** averages |
 
+### On the project's real trained network
+
+The small network trained in the FaceEmotion notebook (`_smallnet.pt`), shown the **same** drawn face five times in each
+mode:
+
+![train vs eval](figs/train_vs_eval.png)
+
+* `train()`: the answer changes every time (Dropout is random, and BatchNorm normalises this one face by itself) — 4 times
+  "disgust", once "angry".
+* `eval()`: identical every time.
+
+(And notice the answer: "neutral" for a drawn smile. The network learned from **photos**; a cartoon is outside what it has
+seen — Lesson 19's lesson again: inputs must look like the training data.)
+
 `eval()` doesn't evaluate anything — it's a switch. Forget it with the camera and: Dropout makes every frame random, and
 BatchNorm normalises **one face by itself** (σ = 0) → nonsense. Always: `model.eval()` + `torch.no_grad()` before using the
 model.
+
+## 🧪 Worked example: a residual block in PyTorch, and the shapes
+
+```python
+import torch
+from torch import nn
+import torch.nn.functional as F
+
+class ResidualBlock(nn.Module):
+    def __init__(self, c_in, c_out, stride=1):
+        super().__init__()
+        self.conv1 = nn.Conv2d(c_in, c_out, 3, stride, 1, bias=False)
+        self.bn1 = nn.BatchNorm2d(c_out)
+        self.conv2 = nn.Conv2d(c_out, c_out, 3, 1, 1, bias=False)
+        self.bn2 = nn.BatchNorm2d(c_out)
+        self.shortcut = nn.Identity() if (stride == 1 and c_in == c_out) else nn.Sequential(
+            nn.Conv2d(c_in, c_out, 1, stride, bias=False), nn.BatchNorm2d(c_out))
+
+    def forward(self, x):
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = self.bn2(self.conv2(out))
+        return F.relu(out + self.shortcut(x))           # F(x) + x
+
+block2 = ResidualBlock(64, 128, stride=2)
+x = torch.randn(8, 64, 48, 48)                          # a batch of 8 maps from block 1
+print(block2(x).shape)                                  # torch.Size([8, 128, 24, 24])
+print(sum(p.numel() for p in block2.parameters()))      # 230144 - the count of Part 1
+```
 
 ## 7. Common mistakes
 
@@ -141,6 +210,16 @@ model.
 | "Deeper is always better" | Not without shortcuts — the 2015 surprise. |
 | "`eval()` turns off gradients" | That's `torch.no_grad()`. Use both. |
 | "Why not download ResNet-50?" | Built for 224 × 224 colour photos; 25 M weights slow down real time; and the project requires understanding the architecture. |
+| "The shortcut skips learning" | The layers still learn — only the *correction*; the shortcut keeps the signal alive. |
+
+## 📝 Summary
+
+> * EmotionNet: stem → 4 residual blocks (48 → 6 pixels, 1 → 512 channels) → global average pool → Dropout → 7 logits.
+> * Deep plain networks suffer **vanishing gradients**: the signal shrinks layer by layer on its way back.
+> * **Residual block**: out = ReLU(F(x) + x) — learn a correction, keep a shortcut. 1 × 1 conv when shapes change.
+> * **BatchNorm**: z-score per channel over the batch, then γ, β (learned); keeps running averages for later.
+> * **Dropout**: randomly switch off 30 % in training only.
+> * **`eval()`**: Dropout off, BatchNorm uses the saved averages. With `torch.no_grad()`, always, before using the model.
 
 ## 8. Activities
 
@@ -173,6 +252,12 @@ model.
 
 ## 🎬 Watch & explore
 
-* *ResNet explained* — [search on YouTube](https://www.youtube.com/results?search_query=ResNet+residual+network+explained+skip+connection)
-* *Batch Normalization explained* — [search on YouTube](https://www.youtube.com/results?search_query=batch+normalization+explained)
+| | |
+|---|---|
+| <a href="https://www.youtube.com/watch?v=o_3mboe1jYI"><img src="https://img.youtube.com/vi/o_3mboe1jYI/mqdefault.jpg" width="240" alt="video"></a> | **ResNet (actually) explained in under 10 minutes**. The 2015 paper, animated. |
+| <a href="https://www.youtube.com/watch?v=Gey9CG6R6w8"><img src="https://img.youtube.com/vi/Gey9CG6R6w8/mqdefault.jpg" width="240" alt="video"></a> | **DataMListic — Why residual connections work**. The gradient view of Part 3. |
+| <a href="https://www.youtube.com/watch?v=dXB-KQYkzNU"><img src="https://img.youtube.com/vi/dXB-KQYkzNU/mqdefault.jpg" width="240" alt="video"></a> | **deeplizard — Batch Normalization explained**. Part 4. |
+| <a href="https://www.youtube.com/watch?v=CPOGlwvVv6o"><img src="https://img.youtube.com/vi/CPOGlwvVv6o/mqdefault.jpg" width="240" alt="video"></a> | **Dropout — theory + PyTorch code**. Part 5, with the train/eval difference in code. |
+
+**Read more:**
 * He et al. 2016 — [Deep Residual Learning (arXiv)](https://arxiv.org/abs/1512.03385)
