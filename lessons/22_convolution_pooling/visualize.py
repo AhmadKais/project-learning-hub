@@ -157,3 +157,96 @@ if L.wanted("why_conv"):
     ax.set_xlim(100, 1e8)
     ax.set_title("A filter is SHARED over the whole picture: an eye detector works anywhere, and costs 9 weights")
     L.save(fig, "why_conv")
+
+# ================================================================ expanded lesson: more pictures
+def _equalize(img):
+    hist = np.bincount(img.ravel(), minlength=256)
+    cdf = hist.cumsum()
+    cmin = cdf[cdf > 0][0]
+    lut = np.round((cdf - cmin) / (cdf[-1] - cmin) * 255).clip(0, 255).astype(np.uint8)
+    return lut[img]
+
+
+def _smallnet_conv1():
+    import torch
+    sd = torch.load(HUB / "13_FaceEmotion" / "data" / "_smallnet.pt", map_location="cpu", weights_only=False)
+    return sd["features.0.0.weight"][:, 0].numpy()          # (32, 3, 3)
+
+
+# ---------------------------------------------------------------- 6. the detective's stencil: an eye template sliding over a face
+if L.wanted("stencil_search"):
+    face = cartoon_face(48, "smile").astype(float)
+    tmpl = face[15:23, 14:22]                                 # the left eye
+    t = (tmpl - tmpl.mean()) / tmpl.std()
+    H = face.shape[0] - 8 + 1
+    match = np.full((H, H), np.nan)
+    order = [(i, j) for i in range(H) for j in range(H)]
+    for i, j in order:
+        p = face[i:i + 8, j:j + 8]
+        match[i, j] = ((p - p.mean()) / (p.std() + 1e-6) * t).mean()
+    fig, (a1, a2, a3) = plt.subplots(1, 3, figsize=(14, 5), gridspec_kw={"width_ratios": [0.5, 1, 1]})
+    a1.imshow(tmpl, cmap="gray", vmin=0, vmax=255)
+    a1.set_title("the stencil\n(an eye, 8 × 8)")
+    a1.axis("off")
+    steps = list(range(0, len(order), 41)) + [len(order) - 1] * 4
+
+    def upd(k):
+        n = steps[k]
+        i, j = order[n]
+        a2.clear()
+        a2.imshow(face, cmap="gray", vmin=0, vmax=255)
+        a2.add_patch(plt.Rectangle((j - 0.5, i - 0.5), 8, 8, fill=False, ec=ORANGE, lw=3))
+        a2.set_title("sliding over the face")
+        a2.axis("off")
+        a3.clear()
+        shown = np.full_like(match, np.nan)
+        for (ii, jj) in order[: n + 1]:
+            shown[ii, jj] = match[ii, jj]
+        a3.imshow(np.nan_to_num(shown, nan=-1), cmap="magma", vmin=-0.6, vmax=1)
+        a3.set_title("the map of marks: bright = 'looks like my stencil'")
+        a3.axis("off")
+    L.animate(fig, upd, len(steps), "stencil_search", fps=5)
+
+# ---------------------------------------------------------------- 7. REAL learned filters from the project's trained network
+if L.wanted("learned_filters"):
+    W1 = _smallnet_conv1()
+    fig, axes = plt.subplots(4, 8, figsize=(12, 6.4))
+    for ax, w in zip(axes.ravel(), W1):
+        m = np.abs(w).max()
+        ax.imshow(w, cmap="RdBu_r", vmin=-m, vmax=m)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.grid(False)
+    fig.suptitle("The 32 filters (3 × 3) of the first layer, LEARNED by the small FaceEmotion network from FER-2013\n"
+                 "red = positive weight, blue = negative. Some look like edge or spot detectors; real learned filters are noisy.",
+                 fontsize=13)
+    L.save(fig, "learned_filters")
+
+# ---------------------------------------------------------------- 8. what those learned filters see on a face
+if L.wanted("learned_maps"):
+    W1 = _smallnet_conv1()
+    face = _equalize(cartoon_face(48, "smile"))
+    x = (face / 255 - 0.5013) / 0.2916
+    xp = np.pad(x, 1)
+    strength = [np.abs(conv2d(xp, w)).mean() for w in W1]
+    pick = np.argsort(strength)[::-1][:7]
+    fig, axes = plt.subplots(2, 8, figsize=(16, 4.8))
+    axes[0, 0].imshow(face, cmap="gray")
+    axes[0, 0].set_title("input face", fontsize=11)
+    axes[1, 0].axis("off")
+    for c, f in enumerate(pick, start=1):
+        w = W1[f]
+        m = np.abs(w).max()
+        axes[0, c].imshow(w, cmap="RdBu_r", vmin=-m, vmax=m)
+        axes[0, c].set_title(f"filter {f}", fontsize=11)
+        fm = np.maximum(conv2d(xp, w), 0)                    # + ReLU
+        axes[1, c].imshow(fm, cmap="magma")
+        axes[1, c].set_title("its feature map", fontsize=11)
+    for ax in axes.ravel():
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.grid(False)
+    fig.suptitle("Seven learned filters slid over a drawn face (after ReLU): each lights up a different kind of edge",
+                 fontsize=13)
+    fig.tight_layout()
+    L.save(fig, "learned_maps")
