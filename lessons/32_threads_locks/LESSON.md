@@ -3,6 +3,21 @@
 > **For:** Liraz (LanGame — server and client) · Ryan (the camera thread, Lesson 26) &nbsp;·&nbsp; **Time:** 2 × 45 min
 > **Before:** Lesson 31 &nbsp;·&nbsp; **After this:** Lesson 33
 
+**In one sentence:** when several threads change the same data, their read–change–write steps can interleave and lose
+work; a lock lets only one thread at a time into that critical section — use one lock, with `with`, and hold it briefly.
+
+## 🗺️ The map of this lesson
+
+```mermaid
+flowchart LR
+    A["1 · why threads"] --> B["2 · the race:<br/>read–add–write"]
+    B --> C["3 · see it live"]
+    C --> D["4 · the lock"]
+    D --> E["5 · deadlock:<br/>one lock only"]
+    E --> F["6 · hold it briefly"]
+    F --> G["7 · threads &<br/>the window"]
+```
+
 ## The story
 
 > A small shop has **one notebook** with the day's total, and **two cashiers**. Cashier A sells for 800 ₪: she reads the
@@ -12,13 +27,12 @@
 > the same scores. This lesson shows the bug happening for real, and the fix: **only one cashier may hold the pen at a
 > time** — a lock.
 
-## 🎯 By the end, the student can
+### 🌍 Real world
 
-1. Explain why the server needs threads, and name LanGame's threads.
-2. Show a race condition step by step and reproduce one live.
-3. Fix it with a `Lock` and `with`, and explain the critical section.
-4. Explain deadlock, why LanGame uses **one** lock, and why it must be held **briefly**.
-5. Explain why only Tkinter's main thread may touch the window.
+![races, locks and deadlocks outside computers](figs/locks_world.png)
+
+Real railways solved this a century ago: on a single track, only the train driver **holding the token** may enter, so two
+trains can never meet head-on. Online ticket shops must lock the last seat while someone pays, or two people buy it.
 
 ## Words you need
 
@@ -41,12 +55,27 @@ while player 2's answer piles up. So: **one thread per player** (`ClientHandler`
 plus **timer** threads that close a question after 15 seconds. They all share **one** game state — fast and convenient, and
 dangerous.
 
+![LanGame's threads in time](figs/thread_lanes.png)
+
 ## 2. The race condition, step by step
 
 ![race animation](figs/race.gif)
 
 `score += 800` looks like one step, but the computer does **three**: **read** the value, **add**, **write** it back. If thread
 B reads between A's read and A's write, A's work is overwritten:
+
+```mermaid
+sequenceDiagram
+    participant A as thread A (+800)
+    participant S as score
+    participant B as thread B (+500)
+    A->>S: read → 0
+    B->>S: read → 0
+    Note over A: 0 + 800 = 800
+    Note over B: 0 + 500 = 500
+    A->>S: write 800
+    B->>S: write 500  ✗ A's 800 is lost
+```
 
 ```
 time   thread A                        thread B                          score
@@ -84,6 +113,22 @@ with self._lock:                      # take the pen (wait if another thread has
 
 With the lock, the same story:
 
+```mermaid
+sequenceDiagram
+    participant A as thread A (+800)
+    participant L as lock
+    participant S as score
+    participant B as thread B (+500)
+    A->>L: take
+    B->>L: take → must WAIT
+    A->>S: read 0, write 800
+    A->>L: release
+    L-->>B: now yours
+    B->>S: read 800, write 1300 ✓
+    B->>L: release
+```
+
+
 ```
 t1  A takes the lock            t2  B tries → must WAIT
 t3  A: read 0, add 800, write 800    t4  A releases the lock
@@ -119,6 +164,37 @@ Ryan's camera thread, Lesson 26.)
 **SQLite and threads:** a database connection may only be used by the thread that created it → `Database.get_connection()`
 gives each thread its own (Lesson 33).
 
+## 🧪 Worked example: the race and the fix in 20 lines
+
+```python
+import threading, time
+
+score = 0
+lock = threading.Lock()
+
+def add_points(n, use_lock):
+    global score
+    for _ in range(n):
+        if use_lock:
+            with lock:
+                current = score
+                time.sleep(0)            # invite a thread switch exactly in the dangerous place
+                score = current + 1
+        else:
+            current = score              # read
+            time.sleep(0)                # another thread may run here
+            score = current + 1          # write - may overwrite someone else's work
+
+for use_lock in (False, True):
+    score = 0
+    threads = [threading.Thread(target=add_points, args=(2_000, use_lock)) for _ in range(4)]
+    for t in threads: t.start()
+    for t in threads: t.join()
+    print(f"lock={use_lock}: score {score:,} of 8,000")
+```
+
+Expect a large loss without the lock, and exactly 8,000 with it.
+
 ## 8. Common mistakes
 
 | student says | the truth |
@@ -126,6 +202,15 @@ gives each thread its own (Lesson 33).
 | "Python has the GIL, I don't need locks" | The GIL protects single instructions, not your read–add–write. |
 | "The tests pass, so there's no race" | Races depend on timing — they hide from tests. Reason about them; run the demo. |
 | "More locks = safer" | More locks = deadlock risk. One lock, held briefly. |
+| "Send the broadcast inside the lock, to be safe" | Every other thread then waits for the network. Copy inside, send outside. |
+
+## 📝 Summary
+
+> * Threads let the server **wait** for many players at once; they **share** the game state.
+> * `x += 1` is **read, add, write**; two threads can interleave → **lost updates** (a race), rare and hidden from tests.
+> * A **lock** makes the **critical section** one-at-a-time; always `with lock:`.
+> * Two locks taken in different orders → **deadlock**. LanGame: **one** lock, held **briefly** (copy inside, send outside).
+> * Only Tkinter's main thread touches the window: other threads → `queue.Queue` → `root.after(50, poll)`.
 
 ## 9. Activities
 
@@ -163,5 +248,6 @@ Both change the state under the same lock, so one finishes before the other star
 ## 🎬 Watch & explore
 
 * *Race conditions and mutexes* — [search on YouTube](https://www.youtube.com/results?search_query=race+condition+mutex+lock+explained)
+* At home: `python race_demo.py` and `python race_demo.py --lock` in this folder.
 * *The Deadlock Empire* — [deadlockempire.github.io](https://deadlockempire.github.io/) (a game: you are the scheduler)
 * Python docs — [`threading.Lock`](https://docs.python.org/3/library/threading.html#lock-objects) · [`queue`](https://docs.python.org/3/library/queue.html)

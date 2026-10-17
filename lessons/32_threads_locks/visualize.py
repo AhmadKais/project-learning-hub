@@ -145,3 +145,54 @@ if L.wanted("tk_queue"):
                        "it drops messages into the queue.", ha="center", fontsize=12)
     ax.set_title("The client: network in one thread, GUI in another, a queue between them")
     L.save(fig, "tk_queue")
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 6. LanGame's threads as lanes in time
+if L.wanted("thread_lanes"):
+    lanes = [("main: accept()", [(0, 1.2, "accept liraz"), (3.0, 0.8, "accept noa"), (6.5, 0.6, "accept dan")], MUTED),
+             ("player liraz", [(1.2, 10.8, "waiting in recv() …"), (8.1, 0.4, "ANSWER")], BLUE),
+             ("player noa", [(3.8, 8.2, "waiting in recv() …"), (9.6, 0.4, "ANSWER")], AQUA),
+             ("player dan", [(7.1, 4.9, "waiting in recv() …"), (11.2, 0.4, "ANSWER")], VIOLET),
+             ("timer (15 s)", [(5.0, 7.0, "sleeping until the question closes …")], YELLOW)]
+    fig, ax = plt.subplots(figsize=(14, 4.8))
+    for i, (name, bars, col) in enumerate(lanes):
+        y = len(lanes) - 1 - i
+        for start, dur, label in bars:
+            busy = label.isupper() or label.startswith("accept")
+            ax.add_patch(plt.Rectangle((start, y - 0.32), dur, 0.64, fc=col if busy else PAPER, ec=col, lw=2,
+                                       hatch=None if busy else "///", zorder=2 if busy else 1))
+            ax.text(start + dur / 2 if busy else start + 0.15, y, label, ha="center" if busy else "left", va="center",
+                    fontsize=10, weight="bold" if busy else "normal", zorder=3,
+                    bbox=None if busy else dict(fc=PAPER, ec="none", pad=1))
+        ax.text(-0.2, y, name, ha="right", va="center", fontsize=11)
+    for t, lab in [(8.1, "lock"), (9.6, "lock"), (11.2, "lock")]:
+        ax.annotate("", (t + 0.2, 4.55), (t + 0.2, 4.95), arrowprops=dict(arrowstyle="->", color=RED))
+    ax.text(9.6, 4.98, "each ANSWER updates the shared scores → inside `with self._lock:`", ha="center", fontsize=11,
+            color=RED)
+    ax.set_xlim(-3.2, 12.5)
+    ax.set_ylim(-0.6, 5.3)
+    ax.set_yticks([])
+    ax.set_xlabel("seconds")
+    ax.set_title("LanGame's server: five threads at the same time - most of them just WAITING (striped)", fontsize=13)
+    L.save(fig, "thread_lanes")
+
+# ---------------------------------------------------------------- 7. locks and deadlocks in the real world
+if L.wanted("locks_world"):
+    tiles = [("Single-track railway", "only the train holding the TOKEN\nmay enter the track", "a lock", BLUE),
+             ("One-person toilet", "the door lock: occupied / free", "a lock", AQUA),
+             ("Shared online document", "two people typing in the same sentence", "a race condition", ORANGE),
+             ("Gridlocked crossing", "four cars, each waiting\nfor the one on its right", "a deadlock", RED),
+             ("Corridor dance", "two people step aside to the\nsame side, again and again", "a livelock", VIOLET),
+             ("Ticket sale", "two people buy the last seat\nat the same moment", "a race (needs a lock)", GREEN)]
+    fig, axes = plt.subplots(2, 3, figsize=(15, 6.2))
+    for ax, (title, what, name, col) in zip(axes.ravel(), tiles):
+        blank(ax)
+        ax.add_patch(FancyBboxPatch((0.02, 0.02), 0.96, 0.96, boxstyle="round,pad=0,rounding_size=0.05", lw=2.5,
+                                    edgecolor=col, facecolor=PAPER))
+        ax.add_patch(FancyBboxPatch((0.02, 0.74), 0.96, 0.24, boxstyle="round,pad=0,rounding_size=0.05", lw=0,
+                                    facecolor=col))
+        ax.text(0.5, 0.86, title, ha="center", va="center", color="white", fontsize=13.5, weight="bold")
+        ax.text(0.5, 0.48, what, ha="center", fontsize=11, wrap=True)
+        ax.text(0.5, 0.18, name, ha="center", fontsize=13, weight="bold", color=col)
+    fig.suptitle("Races, locks and deadlocks outside computers", fontsize=14, weight="bold")
+    L.save(fig, "locks_world")
