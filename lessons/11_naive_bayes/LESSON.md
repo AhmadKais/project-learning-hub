@@ -3,6 +3,20 @@
 > **For:** Laith (SpamClassifier stage 4 — the heart of the project) &nbsp;·&nbsp; **Time:** 3 × 45 min
 > **Before:** Lesson 00 §1, §4, §7 (fractions, probability, logs); Lessons 03, 06 &nbsp;·&nbsp; **After this:** Lessons 04, 14
 
+**In one sentence:** every word in a message is a clue; Naive Bayes counts how often each clue appeared in spam and in
+normal messages, and combines the clues into one verdict — and can tell you which clues convinced it.
+
+## 🗺️ The map of this lesson
+
+```mermaid
+flowchart LR
+    A["1–3 · Bayes:<br/>one word, by counting"] --> B["4 · Many words:<br/>the naive trick"]
+    B --> C["5 · Training =<br/>counting"]
+    C --> D["6 · Bug 1: zeros<br/>→ smoothing"]
+    D --> E["7 · Bug 2: tiny numbers<br/>→ logs"]
+    E --> F["8–9 · Classify &<br/>explain (log-odds)"]
+```
+
 ## The story
 
 > Maya (the phone shop, Lesson 01) asks her nephew: *"How does your filter decide? Explain it to me without computers."*
@@ -12,13 +26,15 @@
 > the evidence. Naive Bayes does the same thing with counting and probabilities — and can tell you exactly which words
 > convinced it.
 
-## 🎯 By the end, the student can
+### 🌍 Real world
 
-1. Compute P(spam | "free") from real counts, with the picture and with the formula.
-2. Explain what is "naive" about Naive Bayes.
-3. Train a tiny Naive Bayes by hand: priors, counts, Laplace smoothing.
-4. Classify a message in **log space**, and explain the two classic bugs (zeros, underflow).
-5. Read a word's **log-odds** as the explanation of a verdict.
+* In **2002** the programmer Paul Graham published *"A Plan for Spam"*: count how often each word appears in spam and in good
+  mail, combine the evidence with Bayes' rule. It worked so well that within a few years almost every e-mail program had a
+  "Bayesian" spam filter. Laith's project is that idea.
+* **Doctors** reason the same way: a symptom (the evidence) changes how likely each illness is, starting from how common the
+  illness is (the prior).
+* **A detective** collects clues; each clue makes some suspects more likely and others less. No single clue decides — the
+  combination does.
 
 ## Words you need
 
@@ -102,8 +118,13 @@ Then the probability of all the words together is the **product** of their separ
 
 $$P(w_1, w_2, w_3\mid\text{spam}) \approx P(w_1\mid\text{spam})\times P(w_2\mid\text{spam})\times P(w_3\mid\text{spam})$$
 
-It is false ("click" and "here" come together), but for **choosing** between two classes it works very well, because the
-mistakes push both classes in a similar way.
+It is false — some words travel together. On the real spam SMS:
+
+![words that travel together](figs/naive_pairs.png)
+
+"claim" and "prize" appear together in 6.4 % of spam, four times more than the naive guess (1.6 %). But for **choosing**
+between two classes it works very well anyway, because the mistakes push both scores in a similar way — and the **order**
+(spam above ham) is all we need.
 
 So, to classify, compute two scores and compare:
 
@@ -204,6 +225,16 @@ answer is simply 0 or 1: `math.exp(710)` crashes.)
 award`. Each word adds its log-probability to both scores (bars grow left); the gap between them is the evidence. Below:
 each word's **vote**.
 
+### Like a detective's belief meter
+
+Here is P(spam) recomputed after **each** word, for a real spam SMS and a real customer SMS. Before any word, the belief is
+the prior (13 %). Each clue moves it:
+
+![belief after each word](figs/belief_meter.gif)
+
+"winner" alone moves the spam message from 13 % to 87 %; by "network" it's certain. In the customer's message, "call" pushes
+up a little (spam says "call" a lot!) — but "sorry", "later", "meeting" pull it straight back down.
+
 ## 9. The explanation comes for free — log-odds
 
 Each word's vote is its **log-odds**:
@@ -221,7 +252,17 @@ On the real data: *claim*, *prize*, *URLTOKEN* push hardest to spam; *later*, *l
 the model — so the app can say *"flagged because of: claim (+5.6), prize (+5.4), a link (+4.5)"*. That's why Naive Bayes
 is Laith's **main** model, even if the SVM (Lesson 14) were slightly more accurate.
 
-## 10. Proving it is right
+## 10. How good is it on SMS it never saw?
+
+Trained on 70 % of the real SMS and tested on the other 30 %:
+
+![Naive Bayes on unseen SMS](figs/nb_result.png)
+
+About **98 %** of unseen SMS are classified correctly at the 0.5 line. Notice the shape: almost every SMS is pushed to 0 or
+to 1 — Naive Bayes is **over-confident** (the naive assumption counts "claim" and "prize" as two independent proofs). The
+**order** is excellent; the exact percentages are not to be trusted, so Laith chooses the line on validation (Lesson 04).
+
+## 11. Proving it is right
 
 `test_matches_sklearn` trains scikit-learn's `MultinomialNB(alpha=1.0)` on the same data and demands the same answer to
 9 decimal places.
@@ -233,15 +274,53 @@ is Laith's **main** model, even if the SVM (Lesson 14) were slightly more accura
 | right for short messages, wrong for long | left log space too early |
 | wrong only with unknown words | smoothing unknown words at prediction time — skip them instead |
 
-## 11. Common mistakes
+## 12. Common mistakes
 
 | student says | the truth |
 |---|---|
 | "P(free \| spam) is the chance a 'free' message is spam" | That's P(spam \| free). The bar is not symmetric — remember the doctor. |
 | "Unknown words should get a probability at prediction time" | Skip them: they'd add the same amount to both classes. |
 | "NB's percentages are exact" | They are extreme (99.99 %) because of the naive assumption. The **order** is good; the threshold is chosen on validation (Lesson 04). |
+| "Naive means stupid" | It means "makes a simplifying assumption". It's fast, explainable and hard to beat on short texts. |
 
-## 12. Activities
+## 🧪 Worked example: the toy model in Python
+
+```python
+import math
+from collections import Counter
+
+train = [(["free", "money", "now"], "spam"), (["free", "prize", "winner"], "spam"),
+         (["meeting", "tomorrow", "office"], "ham"), (["project", "meeting", "notes"], "ham")]
+vocab = {w for doc, _ in train for w in doc}
+V, alpha = len(vocab), 1.0
+
+log_prior, loglik = {}, {}
+for c in ("spam", "ham"):
+    docs = [d for d, y in train if y == c]
+    log_prior[c] = math.log(len(docs) / len(train))
+    counts = Counter(w for d in docs for w in d)
+    total = sum(counts.values())
+    loglik[c] = {w: math.log((counts[w] + alpha) / (total + alpha * V)) for w in vocab}   # Laplace
+
+def scores(words):
+    return {c: log_prior[c] + sum(loglik[c][w] for w in words if w in vocab) for c in ("spam", "ham")}
+
+s = scores(["free", "money"])
+print({c: round(v, 3) for c, v in s.items()})            # {'spam': -4.447, 'ham': -6.238}
+print("P(spam) =", round(1 / (1 + math.exp(s["ham"] - s["spam"])), 3))   # 0.857
+print("log-odds(free) =", round(loglik["spam"]["free"] - loglik["ham"]["free"], 2))   # 1.1
+```
+
+## 📝 Summary
+
+> * **Bayes** = keep only the cases that match what you saw, then count: P(spam | free) = 174 ÷ 233 = 75 %.
+> * posterior = likelihood × prior ÷ evidence — the **prior** matters (the doctor's test).
+> * **Naive**: treat the words as independent → multiply their probabilities (wrong, but works for choosing).
+> * **Training is counting**; **Laplace** (+1) stops one unseen word from killing a class.
+> * Work in **logs**: add instead of multiply, so nothing underflows to 0.
+> * Each word's **log-odds** is its vote — the model explains itself.
+
+## 13. Activities
 
 1. **The doctor (10 min).** Ask for guesses first, then count with 100,000 people on the board.
 2. **Paper Naive Bayes (25 min).** 6 tiny messages (3 spam, 3 ham). Groups: priors, counts, smoothing, then classify
@@ -250,7 +329,7 @@ is Laith's **main** model, even if the SVM (Lesson 14) were slightly more accura
    without logs.
 4. **Explain a verdict (5 min).** Pick a real SMS, read its top 3 log-odds as a sentence for Maya.
 
-## 13. Do it yourself
+## 14. Do it yourself
 
 <details><summary>1. Prior spam 0.2. "win" is in 30 % of spam and 2 % of ham. P(spam | win)? (Count with 1,000 messages.)</summary>
 
@@ -268,7 +347,30 @@ spam: ln 0.5 + ln(1/16) + ln(1/16) = −0.693 − 2.773 − 2.773 = −6.239 · 
 difference = −52.3 − (−47.1) = −5.2 · e^(−5.2) = 0.0055 · 1 / 1.0055 = **0.9945**.
 </details>
 
-## 14. In your project
+<details><summary>4. 🟢 In the toy model, P(meeting | ham) with Laplace smoothing?</summary>
+
+meeting appears 2 times in ham, total 6, |V| = 10 → (2 + 1) ÷ (6 + 10) = **3/16 = 0.1875**.
+</details>
+
+<details><summary>5. 🟡 The toy model sees "free lunch" — "lunch" is not in the vocabulary. What happens to "lunch"?</summary>
+
+It is **skipped** — it would add the same amount to both classes anyway. The message is classified on "free" alone →
+spam (log-odds +1.10).
+</details>
+
+<details><summary>6. 🟡 Log-odds of "winner" in the toy model?</summary>
+
+spam: (1 + 1) ÷ 16 = 0.125 → ln = −2.079. ham: (0 + 1) ÷ 16 = 0.0625 → ln = −2.773. Log-odds = −2.079 + 2.773 = **+0.69** →
+pushes to spam.
+</details>
+
+<details><summary>7. 🔴 Why doesn't Naive Bayes need feature scaling (Lesson 02)?</summary>
+
+It never measures distances or walks downhill — it only counts words and compares probabilities. Multiplying all counts by
+10 wouldn't change any probability.
+</details>
+
+## 15. In your project
 
 | Project | Where |
 |---|---|
@@ -276,6 +378,11 @@ difference = −52.3 − (−47.1) = −5.2 · e^(−5.2) = 0.0055 · 1 / 1.0055
 
 ## 🎬 Watch & explore
 
-* StatQuest — *Naive Bayes, Clearly Explained!!!* — [search on YouTube](https://www.youtube.com/results?search_query=StatQuest+Naive+Bayes+clearly+explained)
-* 3Blue1Brown — *Bayes theorem, the geometry of changing beliefs* — [search on YouTube](https://www.youtube.com/results?search_query=3Blue1Brown+Bayes+theorem+geometry+of+changing+beliefs)
+| | |
+|---|---|
+| <a href="https://www.youtube.com/watch?v=HZGCoVF3YvM"><img src="https://img.youtube.com/vi/HZGCoVF3YvM/mqdefault.jpg" width="240" alt="video"></a> | **3Blue1Brown — Bayes theorem, the geometry of changing beliefs** (15 min). The square picture of Part 2, beautifully animated. Watch first. |
+| <a href="https://www.youtube.com/watch?v=O2L2Uv9pdDA"><img src="https://img.youtube.com/vi/O2L2Uv9pdDA/mqdefault.jpg" width="240" alt="video"></a> | **StatQuest — Naive Bayes, Clearly Explained!!!** (15 min). A spam filter with "Dear" and "Friend" — exactly Laith's model. |
+
+**Play with it:**
 * Seeing Theory — [Bayesian inference, interactive](https://seeing-theory.brown.edu/bayesian-inference/index.html)
+* At home: run the worked example, add a third spam message and watch the log-odds change.
