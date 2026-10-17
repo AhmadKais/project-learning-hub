@@ -135,3 +135,35 @@ if L.wanted("architecture"):
                         "the server decides, clients only display", ha="center", fontsize=12)
     ax.set_title("LanGame: one server, one thread per client, one lock around the game state", fontsize=13)
     L.save(fig, "architecture")
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 5. the buffer at work, chunk by chunk
+if L.wanted("buffer_feed"):
+    msgs = [b'{"type":"JOIN","payload":{"name":"liraz"}}\n', b'{"type":"ANSWER","payload":{"question_id":17,"choice":2}}\n',
+            b'{"type":"LEAVE","payload":{}}\n']
+    stream = b"".join(msgs)
+    cuts = [0, 9, 30, 41, 62, 88, 103, len(stream)]
+    chunks = [stream[a:b] for a, b in zip(cuts, cuts[1:])]
+    fig, ax = plt.subplots(figsize=(14, 6))
+
+    def show(b):
+        return b.decode().replace("\n", "⏎")
+
+    def upd(k):
+        blank(ax)
+        pending, done = b"", []
+        for ch in chunks[: k + 1]:
+            pending += ch
+            *complete, pending = pending.split(b"\n")
+            done += [c.decode() for c in complete if c]
+        ax.text(0.02, 0.92, f"recv() #{k + 1} returned {len(chunks[k])} bytes:", fontsize=12, color=INK2)
+        ax.text(0.02, 0.84, show(chunks[k]), fontsize=12, family="monospace", color=VIOLET, weight="bold")
+        ax.text(0.02, 0.68, "the buffer now keeps (an unfinished message):", fontsize=12, color=INK2)
+        ax.text(0.02, 0.6, show(pending) or "(empty)", fontsize=12, family="monospace", color=ORANGE,
+                bbox=dict(fc=LIGHT_ORANGE, ec=ORANGE))
+        ax.text(0.02, 0.44, "complete messages handed to the program so far:", fontsize=12, color=INK2)
+        for i, m in enumerate(done):
+            ax.text(0.04, 0.35 - i * 0.09, "✓ " + m, fontsize=12, family="monospace", color=GREEN)
+        ax.set_title("MessageBuffer.feed(): add the chunk, cut at every ⏎, keep the last piece", fontsize=14)
+    frames = [k for k in range(len(chunks)) for _ in range(2)] + [len(chunks) - 1] * 3
+    L.animate(fig, lambda i: upd(frames[i]), len(frames), "buffer_feed", fps=1)

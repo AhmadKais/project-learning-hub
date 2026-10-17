@@ -3,6 +3,20 @@
 > **For:** Liraz (LanGame stages 1–2) &nbsp;·&nbsp; **Time:** 2 × 45 min
 > **Before:** Python bytes/strings, JSON &nbsp;·&nbsp; **After this:** Lessons 32, 30
 
+**In one sentence:** TCP delivers a reliable stream of bytes with no message boundaries, so every message must end with
+a marker (a newline) and the receiver must collect bytes in a buffer until a full message has arrived.
+
+## 🗺️ The map of this lesson
+
+```mermaid
+flowchart LR
+    A["1 · who talks<br/>to whom"] --> B["2 · the handshake"]
+    B --> C["3 · TCP is a stream:<br/>glued & cut messages"]
+    C --> D["framing:<br/>⏎ + a buffer"]
+    D --> E["4 · the protocol:<br/>type + payload"]
+    E --> F["5 · never trust<br/>the other side"]
+```
+
 ## The story
 
 > Liraz's quiz game works perfectly on her laptop: the server and two players on the same computer. In the classroom, on
@@ -12,12 +26,12 @@
 > water, in order, but never "one cup at a time" as you poured it. TCP is that pipe. This lesson explains it and the simple
 > fix: **framing**.
 
-## 🎯 By the end, the student can
+### 🌍 Real world
 
-1. Explain client, server, IP address, port and socket with the building analogy, and the TCP handshake.
-2. Explain why TCP glues and cuts messages, and show it happening on a real socket.
-3. Write the newline-framing receiver.
-4. Explain the protocol (`type` + `payload`, one JSON per line) and "never trust the other side".
+* **Every web page** you open travels over TCP. HTTP — the language of the web — has the same framing problem and solves it
+  the same way: header lines end with a newline (`\r\n`), and an empty line marks the end of the headers.
+* **WhatsApp, online games, banking apps** all frame their messages, with a separator or a length in front of each message.
+* **Video calls and live streams** often use UDP instead: a lost video frame is better than a late one.
 
 ## Words you need
 
@@ -44,6 +58,22 @@
 
 The **server** runs on one computer, listens on port 5050, holds the game (questions, scores, the clock) and **decides**.
 The **clients** connect, send requests (JOIN, ANSWER…) and display what the server **broadcasts** to everyone.
+
+### A game, as messages
+
+```mermaid
+sequenceDiagram
+    participant P as player (client)
+    participant S as server :5050
+    P->>S: JOIN {"name": "liraz"}⏎
+    S-->>P: WELCOME {"name": "liraz", "is_host": true}⏎
+    Note over S: more players join, host sends START_GAME
+    S-->>P: QUESTION {"question_id": 17, "options": [...]}⏎  (no correct answer!)
+    P->>S: ANSWER {"question_id": 17, "choice": 2}⏎
+    Note over S: timer ends → SCORING (Lesson 30)
+    S-->>P: RESULT {...}⏎
+    S-->>P: LEADERBOARD {...}⏎
+```
 
 ## 2. Connecting — the handshake
 
@@ -95,6 +125,10 @@ after #4:  buffer = {"type":"JOIN",…}}⏎{"type":"ANSWER",
            newline found → message 1 = JOIN ✓      buffer = {"type":"ANSWER",
 ```
 
+Watch the buffer work, chunk by chunk:
+
+![the buffer at work](figs/buffer_feed.gif)
+
 ![naive vs buffer](figs/naive_vs_buffer.png)
 
 ```python
@@ -132,6 +166,36 @@ python demo_socket.py --framed   # the buffer                  → JOIN, ANSWER,
 A buggy or malicious client can send 10 MB without a newline, broken JSON, an unknown type, or `"choice": 7`. Each becomes an
 `ERROR` reply; the server never crashes. The 64 KB limit stops a client from filling the server's memory.
 
+## 🧪 Worked example: a complete message buffer you can run
+
+```python
+import json
+
+MAX_MESSAGE_BYTES = 64 * 1024
+
+class MessageBuffer:
+    def __init__(self):
+        self._pending = b""
+
+    def feed(self, chunk: bytes) -> list:
+        self._pending += chunk
+        if len(self._pending) > MAX_MESSAGE_BYTES:
+            raise ValueError("too_large")
+        *complete, self._pending = self._pending.split(b"\n")
+        return [json.loads(line) for line in complete if line]
+
+def to_wire(msg_type, payload):
+    return (json.dumps({"type": msg_type, "payload": payload}) + "\n").encode("utf-8")
+
+stream = to_wire("JOIN", {"name": "liraz"}) + to_wire("ANSWER", {"question_id": 17, "choice": 2})
+buf = MessageBuffer()
+for chunk in (stream[:9], stream[9:30], stream[30:50], stream[50:]):       # the network cuts anywhere
+    for msg in buf.feed(chunk):
+        print("got", msg["type"], msg["payload"])
+# got JOIN {'name': 'liraz'}
+# got ANSWER {'question_id': 17, 'choice': 2}
+```
+
 ## 6. Common mistakes
 
 | student says | the truth |
@@ -139,6 +203,15 @@ A buggy or malicious client can send 10 MB without a newline, broken JSON, an un
 | "One `send()` = one `recv()`" | Only by luck on one computer. On a network, never. |
 | "It works on my laptop, so it's fine" | Localhost rarely cuts messages; the classroom Wi-Fi does. Use the demo. |
 | "`recv(4096)` returns 4096 bytes" | *Up to* 4096 — whatever arrived. 0 bytes = the other side closed. |
+| "Put the correct answer in QUESTION, the client hides it" | Anyone can read the bytes (Wireshark). The server keeps the answer. |
+
+## 📝 Summary
+
+> * Server listens on a **port** (5050); clients connect; a **socket** is each end.
+> * **TCP**: reliable and ordered, after a 3-way handshake — but a **stream**: messages get glued and cut.
+> * **Framing**: one JSON per line; the receiver keeps a **buffer**, cuts at every ⏎, keeps the last piece.
+> * **Protocol**: `{"type": …, "payload": {…}}⏎`; the QUESTION never carries the answer.
+> * **Never trust the other side**: size limit, bad JSON, unknown types → an ERROR reply, never a crash.
 
 ## 7. Activities
 
@@ -173,6 +246,10 @@ A client that never sends a newline would make the buffer grow forever and fill 
 | LanGame | `langame/common/protocol.py` → `Message.to_wire`, `Message.from_wire`, `MessageBuffer.feed` · `server/client_handler.py` → `run`, `send` · `server/game_server.py` → `serve_forever`, `broadcast` · `client/network_client.py` → `_reader_loop`, `send` · config `SERVER_PORT = 5050`, `MAX_MESSAGE_BYTES` · theory `05_LanGame/01_theory/02_networks.md`, `03_sockets_protocol.md` · notebooks `01_tcp_stream_and_framing.ipynb`, `04_mini_server.ipynb` |
 
 ## 🎬 Watch & explore
+
+| | |
+|---|---|
+| <a href="https://www.youtube.com/watch?v=uwoD5YsGACg"><img src="https://img.youtube.com/vi/uwoD5YsGACg/mqdefault.jpg" width="240" alt="video"></a> | **PowerCert — TCP vs UDP Comparison** (animated). Why LanGame uses TCP, and when UDP is better. |
 
 * *TCP 3-way handshake explained* — [search on YouTube](https://www.youtube.com/results?search_query=TCP+3+way+handshake+explained)
 * Python docs — [Socket Programming HOWTO](https://docs.python.org/3/howto/sockets.html)
