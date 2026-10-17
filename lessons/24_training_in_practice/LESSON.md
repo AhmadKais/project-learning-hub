@@ -3,6 +3,20 @@
 > **For:** Ryan (FaceEmotion stage 4 — training on the GPU) &nbsp;·&nbsp; **Time:** 2 × 45 min
 > **Before:** Lessons 01, 21, 23 &nbsp;·&nbsp; **After this:** the evaluation chapter (Lesson 03 for 7 classes)
 
+**In one sentence:** four standard tricks — change the training pictures a little every time, make mistakes on rare
+emotions cost more, don't demand 100 % certainty, and keep the best epoch — turn a network that memorises into one that
+generalises.
+
+## 🗺️ The map of this lesson
+
+```mermaid
+flowchart LR
+    P1["problem: memorises"] --> F1["1 · augmentation"]
+    P2["problem: ignores rare<br/>'disgust'"] --> F2["2 · class weights"]
+    P3["problem: wrong labels,<br/>over-confidence"] --> F3["3 · label smoothing"]
+    P4["problem: when to stop?"] --> F4["4 · early stopping<br/>+ checkpoint"]
+```
+
 ## The story
 
 > Ryan trains EmotionNet. Three problems show up, one after the other:
@@ -14,12 +28,14 @@
 >
 > Each problem has a standard fix. This lesson explains all four tricks Ryan's trainer uses — with the numbers.
 
-## 🎯 By the end, the student can
+### 🌍 Real world
 
-1. Explain data augmentation and why it is only for the training set.
-2. Compute class weights for FER-2013 and explain what they change.
-3. Compute a label-smoothed target and explain why it makes the model more honest.
-4. Read training curves and explain early stopping with patience and checkpoints.
+* **Self-driving car companies** augment their camera pictures with fake rain, fog, darkness and glare, so the car has "seen"
+  bad weather it was never driven in.
+* **Medical image models** have few pictures of rare diseases — they use class weights (or show rare cases more often), the
+  same fix as "disgust".
+* **A student revising**: practising the same 20 questions until you memorise them is overfitting; practising with the
+  numbers changed every time is augmentation. Stopping when your practice-exam grade stops improving is early stopping.
 
 ## Words you need
 
@@ -49,6 +65,10 @@ Every epoch, before a face enters the network, it is changed a little at random:
 | a small crop | the face detector isn't perfectly centred |
 | erase a small rectangle | a hand, glasses, hair in front of the face |
 
+Watch one stored face over 16 epochs — the network gets a slightly different picture every time:
+
+![augmentation, live](figs/augment_live.gif)
+
 The network never sees the exact same picture twice, so memorising becomes hard → typically a few % better on new faces.
 
 ⚠️ **Training only.** The validation, test and camera pictures are never changed — otherwise scores change on every run, and
@@ -69,6 +89,18 @@ angry:    28,709 / (7 × 3,995) = 28,709 / 27,965 = 1.03      about normal
 Why this formula? If every class had the same number of faces (28,709 / 7 = 4,101 each), every weight would be exactly 1.
 Rare classes get more than 1, common ones less. The weights go into the loss: `nn.CrossEntropyLoss(weight=...)`. Now
 ignoring "disgust" is expensive, and the network starts trying. (The same problem as Seif's alpha, Lesson 15.)
+
+### What class weights really do — measured
+
+The small network trained in the project's notebook (8 epochs on a laptop CPU, with class weights and label smoothing), on
+all 7,178 FER-2013 test faces:
+
+![per-class results](figs/per_class_real.png)
+
+Look at **disgust**: recall 0.75 (it finds most disgust faces) but precision 0.05 (most faces it *calls* disgust aren't). The
+weight made disgust mistakes so expensive that the young network now says "disgust" too often. After more epochs on a GPU
+the full EmotionNet balances this out (target ≥ 65 % accuracy) — but this chart is exactly what to look at: **per-class
+precision and recall**, never just accuracy (Lesson 03).
 
 ## 3. Label smoothing — don't demand 100 % certainty
 
@@ -119,6 +151,33 @@ torch.save({"model_state": model.state_dict(), "epoch": epoch, "val_acc": val_ac
 | loss = `nan` | lr too high, or ln(0) | lower lr |
 | loss stuck at 1.95 (= ln 7) | the network guesses uniformly | a pipeline bug |
 
+## 🧪 Worked example: the numbers of Parts 2–4 in Python
+
+```python
+import numpy as np
+
+counts = {"angry": 3995, "disgust": 436, "fear": 4097, "happy": 7215, "sad": 4830, "surprise": 3171, "neutral": 4965}
+total, K = sum(counts.values()), len(counts)
+weights = {e: round(total / (K * n), 2) for e, n in counts.items()}
+print(weights)              # disgust 9.41, happy 0.57, ...
+
+eps = 0.1
+onehot = np.array([0, 0, 0, 1, 0, 0, 0], float)                 # truth = happy
+smooth = (1 - eps) * onehot + eps / K
+print(smooth.round(3), smooth.sum())                            # 0.914 for happy, 0.014 for the others, sum 1
+
+val_acc = [0.50, 0.55, 0.58, 0.60, 0.61, 0.60, 0.61, 0.60, 0.59, 0.61, 0.60, 0.60, 0.59]
+best, best_epoch, bad, patience = 0, 0, 0, 3
+for epoch, acc in enumerate(val_acc, start=1):
+    if acc > best:
+        best, best_epoch, bad = acc, epoch, 0                   # save the checkpoint here
+    else:
+        bad += 1
+        if bad >= patience:
+            print(f"stop after epoch {epoch}; the checkpoint holds epoch {best_epoch} ({best})")
+            break
+```
+
 ## 6. Common mistakes
 
 | student says | the truth |
@@ -126,6 +185,15 @@ torch.save({"model_state": model.state_dict(), "epoch": epoch, "val_acc": val_ac
 | "Augment the test set too" | Then you measure on pictures that don't exist. |
 | "Early stopping wastes the last epochs" | Those epochs made it worse; the checkpoint keeps the best. |
 | "Class weights make everything better" | They trade a bit of accuracy on common classes for recall on rare ones. Report per-class F1. |
+| "Upside-down faces are good augmentation" | Only changes the camera could really produce. A webcam never sees you upside down. |
+
+## 📝 Summary
+
+> * **Augmentation**: random flips, small rotations, crops, erasing — training pictures only.
+> * **Class weights** = total ÷ (K × count): rare classes cost more (disgust 9.4×). Check per-class precision and recall.
+> * **Label smoothing** ε = 0.1: target 0.914 / 0.014 — no chasing 100 % on possibly wrong labels.
+> * **Early stopping**: keep the best validation epoch (checkpoint), stop after 8 epochs without improvement.
+> * Read the **curves**: training ↓ validation ↑ = overfitting; stuck at ln 7 = 1.95 = a bug.
 
 ## 7. Activities
 
@@ -160,5 +228,10 @@ Epoch 4 (0.63) is saved; training stops after epoch 12.
 
 ## 🎬 Watch & explore
 
-* *Data augmentation explained* — [search on YouTube](https://www.youtube.com/results?search_query=data+augmentation+deep+learning+explained)
+| | |
+|---|---|
+| <a href="https://www.youtube.com/watch?v=rfM4DaLTkMs"><img src="https://img.youtube.com/vi/rfM4DaLTkMs/mqdefault.jpg" width="240" alt="video"></a> | **deeplizard — Data augmentation explained**. Part 1. |
+| <a href="https://www.youtube.com/watch?v=yY1Qh_4LHf8"><img src="https://img.youtube.com/vi/yY1Qh_4LHf8/mqdefault.jpg" width="240" alt="video"></a> | **Data augmentation explained simply**. A second, short explanation. |
+
+**Read more:**
 * Andrej Karpathy — [A Recipe for Training Neural Networks](https://karpathy.github.io/2019/04/25/recipe/)

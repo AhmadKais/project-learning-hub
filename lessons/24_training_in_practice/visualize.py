@@ -139,3 +139,87 @@ if L.wanted("early_stopping"):
         a2.legend(loc="lower right")
     L.animate(fig, upd, stop + 3, "early_stopping", fps=4)
     print(f"  illustration: best epoch {hist[stop - 1][1]}, stop at {stop}")
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 5. never the same picture twice: random augmentation, animated
+if L.wanted("augment_live"):
+    from PIL import Image as _Im
+    base = cartoon_face(96, "smile")
+    r = np.random.default_rng(4)
+    fig, axes = plt.subplots(1, 2, figsize=(10, 5.2))
+
+    def upd(k):
+        img = _Im.fromarray(base)
+        flip = r.random() < 0.5
+        ang = r.uniform(-10, 10)
+        if flip:
+            img = img.transpose(_Im.FLIP_LEFT_RIGHT)
+        img = img.rotate(ang, fillcolor=40)
+        a = np.asarray(img).copy()
+        dx, dy = r.integers(0, 9, 2)
+        a = np.pad(a, 4, constant_values=40)[dy:dy + 96, dx:dx + 96]
+        erased = r.random() < 0.5
+        if erased:
+            ex, ey = r.integers(10, 70, 2)
+            a[ey:ey + 18, ex:ex + 24] = 0
+        for ax in axes:
+            ax.clear()
+            ax.axis("off")
+        axes[0].imshow(base, cmap="gray", vmin=0, vmax=255)
+        axes[0].set_title("the stored training face")
+        axes[1].imshow(a, cmap="gray", vmin=0, vmax=255)
+        axes[1].set_title(f"epoch {k + 1}: what the network sees\nflip {'yes' if flip else 'no'} · "
+                          f"rotate {ang:+.0f}° · shift ({dx - 4}, {dy - 4}) · erase {'yes' if erased else 'no'}",
+                          fontsize=11)
+    L.animate(fig, upd, 16, "augment_live", fps=2)
+
+# ---------------------------------------------------------------- 6. the project's small network on the 7,178 FER test faces, per class
+if L.wanted("per_class_real"):
+    import torch
+    from torch import nn
+    from PIL import Image as _Im
+    root = HUB / "13_FaceEmotion" / "data" / "fer2013" / "test"
+    EMO = ["angry", "disgust", "fear", "happy", "neutral", "sad", "surprise"]
+
+    def conv_bn(c_in, c_out, stride):
+        return nn.Sequential(nn.Conv2d(c_in, c_out, 3, stride, 1, bias=False), nn.BatchNorm2d(c_out), nn.ReLU())
+
+    class SmallNet(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.features = nn.Sequential(conv_bn(1, 32, 2), conv_bn(32, 64, 1), conv_bn(64, 128, 2), conv_bn(128, 256, 2))
+            self.head = nn.Sequential(nn.AdaptiveAvgPool2d(1), nn.Flatten(), nn.Dropout(0.3), nn.Linear(256, 7))
+
+        def forward(self, x):
+            return self.head(self.features(x))
+    net = SmallNet()
+    net.load_state_dict(torch.load(HUB / "13_FaceEmotion" / "data" / "_smallnet.pt", map_location="cpu", weights_only=False))
+    net.eval()
+    import cv2
+    xs, ys = [], []
+    for c, e in enumerate(EMO):
+        for f in sorted((root / e).iterdir()):
+            g = cv2.equalizeHist(np.asarray(_Im.open(f).convert("L")))
+            xs.append((g / 255 - 0.5013) / 0.2916)
+            ys.append(c)
+    X = torch.tensor(np.array(xs), dtype=torch.float32)[:, None]
+    y = np.array(ys)
+    with torch.no_grad():
+        pred = torch.cat([net(X[i:i + 512]).argmax(1) for i in range(0, len(X), 512)]).numpy()
+    P = np.array([((pred == c) & (y == c)).sum() / max((pred == c).sum(), 1) for c in range(7)])
+    R = np.array([((pred == c) & (y == c)).sum() / (y == c).sum() for c in range(7)])
+    F = 2 * P * R / np.maximum(P + R, 1e-9)
+    fig, ax = plt.subplots(figsize=(13, 5))
+    xx = np.arange(7)
+    ax.bar(xx - 0.25, P, 0.25, color=BLUE, label="precision")
+    ax.bar(xx, R, 0.25, color=AQUA, label="recall")
+    ax.bar(xx + 0.25, F, 0.25, color=ORANGE, label="F1")
+    ax.set_xticks(xx, [f"{e}\n({(y == c).sum():,} faces)" for c, e in enumerate(EMO)])
+    ax.set_ylim(0, 1)
+    ax.axhline(F.mean(), color=INK, ls="--", lw=1.2)
+    ax.text(6.5, F.mean() + 0.02, f"macro-F1 {F.mean():.2f}", ha="right", fontsize=12)
+    ax.set_title(f"The notebook's small network (8 CPU epochs, class weights + label smoothing) on all {len(y):,} FER-2013 "
+                 f"test faces - accuracy {(pred == y).mean():.1%}", fontsize=12)
+    ax.legend(loc="upper left", ncols=3)
+    print("  per class P/R:", [(e, round(p, 2), round(r_, 2)) for e, p, r_ in zip(EMO, P, R)], "acc", (pred == y).mean())
+    L.save(fig, "per_class_real")
