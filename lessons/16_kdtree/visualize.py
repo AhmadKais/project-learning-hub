@@ -175,3 +175,83 @@ if L.wanted("curse"):
     print("  kd shares:", list(zip(ds, np.round(shares, 3))))
     caption(fig, "In 2-D the tree skips almost everything; with all 11 features it measures most wines anyway.")
     L.save(fig, "curse")
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 4. the paper example: 8 wines, 4 boxes, Q, who was measured
+if L.wanted("paper_tree"):
+    pts = {"A": (1, 7), "B": (2, 2), "C": (3, 9), "D": (5, 4), "E": (6, 8), "F": (7, 1), "G": (8, 6), "H": (9, 3)}
+    measured = {"B", "D", "F", "H"}
+    Q = (5.5, 2.5)
+    fig, ax = plt.subplots(figsize=(8.5, 8))
+    boxes = [((0, 0), 6, 7, "{B, D}"), ((0, 7), 6, 3, "{A, C}"), ((6, 0), 4, 6, "{F, H}"), ((6, 6), 4, 4, "{G, E}")]
+    for (x0, y0), w_, h_, name in boxes:
+        skipped = name in ("{A, C}", "{G, E}")
+        ax.add_patch(plt.Rectangle((x0, y0), w_, h_, fc="#ecebe7" if skipped else LIGHT_BLUE, ec=INK2, lw=2))
+        ax.text(x0 + 0.15, y0 + h_ - 0.4, "SKIPPED" if skipped else "searched", fontsize=11,
+                color=MUTED if skipped else BLUE, weight="bold")
+    ax.plot([6, 6], [0, 10], color=RED, lw=4)
+    ax.plot([0, 6], [7, 7], color=ORANGE, lw=3)
+    ax.plot([6, 10], [6, 6], color=ORANGE, lw=3)
+    ax.text(6.1, 9.6, "cut 1: x = 6", color=RED, fontsize=12, weight="bold")
+    ax.text(0.15, 7.15, "cut 2: y = 7", color=ORANGE, fontsize=11)
+    ax.text(8.0, 6.15, "cut 3: y = 6", color=ORANGE, fontsize=11)
+    for n, (x, y_) in pts.items():
+        ax.scatter(x, y_, s=200, color=GREEN if n in measured else MUTED, edgecolor=INK, zorder=3)
+        ax.text(x + 0.2, y_ + 0.2, n, fontsize=13, weight="bold")
+    ax.scatter(*Q, s=380, marker="*", color=INK, zorder=4)
+    ax.text(Q[0] - 0.2, Q[1] - 0.6, "Q", fontsize=14, weight="bold")
+    ax.add_patch(plt.Circle(Q, np.sqrt(2.5), fill=False, ec=GREEN, lw=2, ls="--"))
+    ax.set_xlim(0, 10)
+    ax.set_ylim(0, 10)
+    ax.set_aspect("equal")
+    ax.set_title("Nearest wine to Q: green = measured (4 of 8), grey = never looked at.\n"
+                 "Dashed circle = the best distance so far (D): the grey boxes are outside it", fontsize=12)
+    L.save(fig, "paper_tree")
+
+# ---------------------------------------------------------------- 5. halving: why trees are fast (the phone book)
+if L.wanted("halving"):
+    ns = np.array([10, 100, 1000, 10_000, 100_000, 1_000_000, 10_000_000])
+    fig, ax = plt.subplots(figsize=(11, 5))
+    ax.loglog(ns, ns, "o-", color=RED, label="look at every item")
+    ax.loglog(ns, np.ceil(np.log2(ns)), "o-", color=GREEN, label="halve again and again (a sorted phone book, a tree)")
+    for n in ns:
+        ax.text(n, np.ceil(np.log2(n)) * 1.6, f"{int(np.ceil(np.log2(n)))}", ha="center", fontsize=11, color=GREEN)
+    ax.set_xlabel("number of items")
+    ax.set_ylabel("steps to find one (log scale)")
+    ax.set_title("10 million names: 10,000,000 looks one by one - or 24 halvings")
+    ax.legend()
+    L.save(fig, "halving")
+
+# ---------------------------------------------------------------- 6. the honest timing on the real wines
+if L.wanted("timing"):
+    import time
+    corr = np.abs([np.corrcoef(Zall[:, j], W[:, -1])[0, 1] for j in range(11)])
+    order = np.argsort(-corr)
+    _, first = np.unique(W, axis=0, return_index=True)
+    Zu = Zall[np.sort(first)]
+    perm = rng.permutation(len(Zu))
+    train, test = Zu[perm[:4250]], Zu[perm[4250:4350]]
+    ds, t_lin, t_tree = [2, 4, 6, 8, 11], [], []
+    for d in ds:
+        cols = order[:d]
+        Pt = train[:, cols]
+        root = build(Pt, np.arange(len(Pt)), Pt.min(0) - 1, Pt.max(0) + 1, 16)
+        t0 = time.perf_counter()
+        for q in test[:, cols]:
+            np.argpartition(((Pt - q) ** 2).sum(1), 20)[:20]
+        t_lin.append((time.perf_counter() - t0) / len(test) * 1000)
+        t0 = time.perf_counter()
+        for q in test[:, cols]:
+            search(Pt, root, q, 20)
+        t_tree.append((time.perf_counter() - t0) / len(test) * 1000)
+    fig, ax = plt.subplots(figsize=(11, 5))
+    ax.plot(ds, t_lin, "o-", color=BLUE, lw=3, label="linear: numpy measures all 4,250 at once")
+    ax.plot(ds, t_tree, "o-", color=ORANGE, lw=3, label="kd-tree written in plain Python")
+    ax.set_yscale("log")
+    ax.set_xlabel("number of wine features used")
+    ax.set_ylabel("milliseconds per new wine (log)")
+    ax.set_title("Measured on this computer: fewer distances is not the same as less time")
+    ax.legend()
+    print("  timing ms:", list(zip(ds, np.round(t_lin, 3), np.round(t_tree, 3))))
+    caption(fig, "Numpy does thousands of distances in one fast C loop; the Python tree pays for every step it walks.")
+    L.save(fig, "timing")

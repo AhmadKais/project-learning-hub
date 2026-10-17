@@ -3,6 +3,20 @@
 > **For:** Seif (WineGrader stage 5) &nbsp;·&nbsp; **Time:** 2 × 45 min
 > **Before:** Lesson 15; Python recursion; `heapq` &nbsp;·&nbsp; **After this:** the "measure and decide" chapter of the book
 
+**In one sentence:** a kd-tree cuts the space into boxes inside boxes so a nearest-neighbour search can skip whole boxes
+that can't contain a closer wine — which works beautifully in 2–4 dimensions and hardly at all in 11.
+
+## 🗺️ The map of this lesson
+
+```mermaid
+flowchart LR
+    A["1 · Build: cut the box<br/>in half, again and again"] --> B["2 · Search: near side first,<br/>gap test, skip"]
+    B --> C["3 · The heap trick"]
+    C --> D["4 · Prove it's exact"]
+    D --> E["5 · The curse of<br/>dimensionality"]
+    E --> F["6 · Measure & decide"]
+```
+
 ## The story
 
 > Sami's k-NN (Lesson 15) measures the distance from the new wine to **all 4,250** wines in the list, every time. That's
@@ -12,12 +26,16 @@
 > boxes** that can't contain a closer wine. This lesson builds it — and then shows the honest result: with 11 features it
 > barely helps, and explains why.
 
-## 🎯 By the end, the student can
+### 🌍 Real world: halving is how computers find things fast
 
-1. Build a kd-tree by hand on paper (widest side, middle position, leaf size).
-2. Run the search and explain the **gap test** that makes skipping safe.
-3. Explain the heap trick with negative numbers.
-4. Explain the **curse of dimensionality** with two pictures, and defend "I built it and then didn't use it".
+Looking up a name in a printed phone book, you don't read every page: you open the middle, see whether the name is before or
+after, and throw away half the book — again and again.
+
+![halving](figs/halving.png)
+
+10 million names take only 24 halvings. Trees use this idea everywhere: **maps apps** ("restaurants near me" uses spatial
+trees), **taxi apps** (the nearest driver), **video games** (which objects might collide), **astronomy** (the stars near a
+point in the sky). A kd-tree is halving in several directions at once.
 
 ## Words you need
 
@@ -56,7 +74,17 @@ left box  A B C D:   x spread 4, y spread 7 → cut on y. sorted by y: B(2) D(4)
 right box E F G H:   x spread 3, y spread 7 → cut on y: F(1) H(3) | G(6) E(8) → leaves {F, H} {G, E}
 ```
 
-Draw the 4 boxes on squared paper — that is the whole tree.
+Draw the 4 boxes on squared paper — that is the whole tree. As a diagram:
+
+```mermaid
+flowchart TD
+    R{"root: x < 6 ?"} -- yes --> L{"y < 7 ?"}
+    R -- no --> Rt{"y < 6 ?"}
+    L -- yes --> L1["leaf {B, D}"]
+    L -- no --> L2["leaf {A, C}"]
+    Rt -- yes --> R1["leaf {F, H}"]
+    Rt -- no --> R2["leaf {G, E}"]
+```
 
 **Why the middle position and not "less than the median goes left"?** If 300 wines share the same pH, "less than the
 median" might send all 300 to one side; the cut does nothing and the recursion never ends. The middle position always
@@ -88,6 +116,8 @@ back at the root: far box = right (x ≥ 6). gap = (6 − 5.5)² = 0.25 ≤ 2.5 
    far leaf {G, E} above y = 6: gap (6 − 2.5)² = 12.25 > 2.5 → SKIP
 answer: D.   measured 4 of 8 wines.
 ```
+
+![the paper example](figs/paper_tree.png)
 
 (The tree compares **squared** distances — the root isn't needed, Lesson 15 §2.)
 
@@ -132,8 +162,43 @@ of walking the tree makes it ~10× **slower** than numpy measuring all of them a
 
 That's why `config.DEFAULT_INDEX = "linear"`: **the measurement decided**.
 
+### Distances saved ≠ time saved
+
+Counting distances is one thing; the clock is another. Measured on this computer, per new wine:
+
+![timing](figs/timing.png)
+
+Even in 2-D, where the tree measures only 2 % of the wines, the plain-Python tree is slower than numpy measuring **all** of
+them — numpy does thousands of distances in one fast C loop, while the Python tree pays for every step it walks. With 11
+features the tree is about **100× slower**. (A kd-tree written in C, like scikit-learn's, does win in low dimensions.)
+
 ❓ *"You built a kd-tree and didn't use it — wasted work?"* No: the claim is "here is how to decide whether it helps". It
-is built, proven correct, measured, and the curve explains the result. With 4 features, the same code wins 10×.
+is built, proven correct, measured, and the curves explain the result: 50× fewer distances in 2-D, almost no saving in
+11-D, and Python overhead on top.
+
+## 🧪 Worked example: the gap test in Python
+
+```python
+pts = {"A": (1, 7), "B": (2, 2), "C": (3, 9), "D": (5, 4), "E": (6, 8), "F": (7, 1), "G": (8, 6), "H": (9, 3)}
+leaves = {"BD": ["B", "D"], "AC": ["A", "C"], "FH": ["F", "H"], "GE": ["G", "E"]}
+Q = (5.5, 2.5)
+best, best_d, measured = None, float("inf"), []
+
+def look(leaf):
+    global best, best_d
+    for n in leaves[leaf]:
+        d = (pts[n][0] - Q[0]) ** 2 + (pts[n][1] - Q[1]) ** 2     # squared distance
+        measured.append(n)
+        if d < best_d:
+            best, best_d = n, d
+
+look("BD")                                        # near side of x<6, then of y<7
+if (7 - Q[1]) ** 2 <= best_d: look("AC")           # gap 20.25 > 2.5 → skipped
+if (6 - Q[0]) ** 2 <= best_d:                      # gap 0.25 ≤ 2.5 → must look right
+    look("FH")
+    if (6 - Q[1]) ** 2 <= best_d: look("GE")       # gap 12.25 > 2.5 → skipped
+print(best, best_d, "measured:", measured)         # D 2.5 measured: ['B', 'D', 'F', 'H']
+```
 
 ## 6. Common mistakes
 
@@ -141,6 +206,17 @@ is built, proven correct, measured, and the curve explains the result. With 4 fe
 |---|---|
 | "The kd-tree gives approximate neighbours" | It is **exact**: it only skips boxes that provably can't contain a better wine. |
 | "A tree is always faster" | Not in many dimensions, and not against vectorised numpy. Measure. |
+| "Fewer distances = faster" | Only if each step is cheap. Python steps are expensive. |
+
+## 📝 Summary
+
+> * **Build:** cut on the widest feature at the middle position, recursively, until ≤ 16 wines per leaf.
+> * **Search:** near side first; then the **gap test** — if even the gap to the cut is bigger than the k-th best distance,
+>   skip the whole far box. It's **exact**.
+> * **Heap** with minus distances → the worst of the k best is always at `heap[0]`.
+> * **Curse of dimensionality:** in 11-D, few cuts per feature and distances that all look alike → the tree measures most
+>   wines anyway.
+> * **Measure, then decide**: WineGrader uses the linear index.
 
 ## 7. Activities
 
@@ -168,6 +244,17 @@ measured.
 `heapq` gives the smallest first; negated, the smallest is the **largest** distance = the worst of the k best.
 </details>
 
+<details><summary>4. 🟢 How many halvings to get from 4,096 wines down to leaves of 16?</summary>
+
+4,096 → 2,048 → … → 16: 4,096 ÷ 16 = 256 = 2⁸ → **8** levels.
+</details>
+
+<details><summary>5. 🟡 Build the first cut for: (1,1), (2,8), (3,3), (4,6). Which feature, and where?</summary>
+
+x spread 3, y spread 7 → cut on **y**. Sorted by y: 1, 3, 6, 8 → middle position 2 → cut at **y = 6**: {(1,1),(3,3)} below,
+{(4,6),(2,8)} above.
+</details>
+
 ## 9. In your project
 
 | Project | Where |
@@ -176,6 +263,12 @@ measured.
 
 ## 🎬 Watch & explore
 
-* *K-d trees explained* — [search on YouTube](https://www.youtube.com/results?search_query=kd+tree+nearest+neighbor+search+explained)
-* VisuAlgo — [heaps and trees, animated](https://visualgo.net/en)
+| | |
+|---|---|
+| <a href="https://www.youtube.com/watch?v=BK5x7IUTIyU"><img src="https://img.youtube.com/vi/BK5x7IUTIyU/mqdefault.jpg" width="240" alt="video"></a> | **Computerphile — K-d Trees**. Building and searching, drawn on paper like Parts 1–2. |
+| <a href="https://www.youtube.com/watch?v=Glp7THUpGow"><img src="https://img.youtube.com/vi/Glp7THUpGow/mqdefault.jpg" width="240" alt="video"></a> | **Stable Sort — KD-Tree nearest neighbour**. The search and the pruning, animated. |
+| <a href="https://www.youtube.com/watch?v=Y4ZgLlDfKDg"><img src="https://img.youtube.com/vi/Y4ZgLlDfKDg/mqdefault.jpg" width="240" alt="video"></a> | **Victor Lavrenko — K-d tree algorithm**. A short university lecture, part of a k-NN series. |
+
+**Play with it:**
+* VisuAlgo — [binary heaps, animated](https://visualgo.net/en/heap) — watch `heappush` and `heappop` step by step.
 * scikit-learn — [KD tree and ball tree](https://scikit-learn.org/stable/modules/neighbors.html#kd-tree)
