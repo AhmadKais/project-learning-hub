@@ -127,3 +127,46 @@ if L.wanted("scoring"):
     ax.set_title("points = round(1000 × (15 − t) / 15), never below 100 if correct  —  every second costs ~67 points")
     ax.legend(loc="upper right")
     L.save(fig, "scoring")
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 5. state machines in everyday life
+if L.wanted("fsm_world"):
+    tiles = [("Traffic light", "red → green → yellow → red", "no arrow red → yellow"),
+             ("Vending machine", "waiting → paid → giving drink → waiting", "'give drink' while waiting: impossible"),
+             ("Washing machine", "filling → washing → rinsing → spinning", "door locked in every state but 'done'"),
+             ("Phone call", "ringing → talking → ended", "you can't 'hang up' a call that ended"),
+             ("Lift (elevator)", "doors open → closed → moving → stopped", "never 'moving' with doors open"),
+             ("Turnstile", "locked → (coin) unlocked → (push) locked", "push while locked: nothing happens")]
+    fig, axes = plt.subplots(2, 3, figsize=(15, 6.2))
+    for ax, (title, states, rule), col in zip(axes.ravel(), tiles, SERIES):
+        blank(ax)
+        ax.add_patch(FancyBboxPatch((0.02, 0.02), 0.96, 0.96, boxstyle="round,pad=0,rounding_size=0.05", lw=2.5,
+                                    edgecolor=col, facecolor=PAPER))
+        ax.add_patch(FancyBboxPatch((0.02, 0.74), 0.96, 0.24, boxstyle="round,pad=0,rounding_size=0.05", lw=0,
+                                    facecolor=col))
+        ax.text(0.5, 0.86, title, ha="center", va="center", color="white", fontsize=14, weight="bold")
+        ax.text(0.06, 0.52, states, fontsize=11)
+        ax.text(0.06, 0.24, rule, fontsize=11, weight="bold", color=col)
+    fig.suptitle("You live among state machines: one state at a time, only some arrows", fontsize=14, weight="bold")
+    L.save(fig, "fsm_world")
+
+# ---------------------------------------------------------------- 6. three booleans vs one Enum
+if L.wanted("booleans_vs_enum"):
+    import itertools
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(14, 5.4), gridspec_kw={"width_ratios": [1.5, 1]})
+    blank(a1)
+    a1.text(0.02, 0.94, "is_checked_in   is_checked_out   is_cancelled", fontsize=12, family="monospace", weight="bold")
+    legal = {(0, 0, 0): "CONFIRMED", (1, 0, 0): "CHECKED_IN", (1, 1, 0): "CHECKED_OUT", (0, 0, 1): "CANCELLED"}
+    for i, combo in enumerate(itertools.product([0, 1], repeat=3)):
+        y = 0.83 - i * 0.1
+        ok = combo in legal
+        txt = "      ".join(f"{'True ' if v else 'False'}" for v in combo)
+        a1.text(0.04, y, txt, fontsize=12, family="monospace", color=INK if ok else MUTED)
+        a1.text(0.72, y, legal.get(combo, "nonsense!"), fontsize=12, color=GREEN if ok else RED, weight="bold")
+    a1.set_title("3 booleans = 8 combinations - only 4 make sense", fontsize=13)
+    blank(a2)
+    for i, (name, col) in enumerate([("CONFIRMED", BLUE), ("CHECKED_IN", AQUA), ("CHECKED_OUT", MUTED),
+                                     ("CANCELLED", RED)]):
+        box(a2, 0.15, 0.75 - i * 0.2, 0.7, 0.13, f"BookingStatus.{name}", color=col, fontsize=12)
+    a2.set_title("1 Enum = exactly the 4 legal states", fontsize=13)
+    L.save(fig, "booleans_vs_enum")

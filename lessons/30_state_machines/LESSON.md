@@ -3,6 +3,9 @@
 > **For:** Eran (the booking life cycle) · Liraz (the game server + scoring) &nbsp;·&nbsp; **Time:** 2 × 45 min
 > **Before:** Python `Enum`, classes &nbsp;·&nbsp; **After this:** Lessons 32, 33
 
+**In one sentence:** keep the program in exactly one named state at a time and allow only the arrows you drew — then
+illegal actions (cancel after check-in, a late answer) are not "forgotten checks" but simply impossible.
+
 ## The story
 
 > Two bugs, one cause.
@@ -17,12 +20,13 @@
 > program is always in exactly **one state**, and from each state only a few **arrows** lead out. If there's no arrow, the
 > action is simply impossible.
 
-## 🎯 By the end, the student can
+### 🌍 Real world
 
-1. Define state, event, transition and guard, and draw the state machine of their own project.
-2. Fill a transition table (state × event → new state or an error).
-3. Write one guarded transition in code.
-4. (Liraz) Compute the time-based score; (Eran) explain how the state decides whether the room is blocked.
+![state machines in everyday life](figs/fsm_world.png)
+
+Traffic lights, vending machines, washing machines, lifts, phone calls, the turnstile at the train station — all are state
+machines. Their designers didn't write "don't move with the doors open" as a hundred checks; they made it a state with no
+such arrow.
 
 ## Words you need
 
@@ -43,6 +47,16 @@ to yellow" — it simply cannot happen.
 
 ## 1. Eran: a booking's life cycle
 
+```mermaid
+stateDiagram-v2
+    [*] --> CONFIRMED : create booking [room free, price quoted]
+    CONFIRMED --> CHECKED_IN : check in [today ≥ check-in date]
+    CHECKED_IN --> CHECKED_OUT : check out (build the invoice)
+    CONFIRMED --> CANCELLED : cancel [before check-in] (fee 0 or 1 night)
+    CHECKED_OUT --> [*]
+    CANCELLED --> [*]
+```
+
 ![booking FSM](figs/booking_fsm.gif)
 
 | from | event | guard (must be true) | action | to |
@@ -60,6 +74,18 @@ CHECKED_OUT don't. The availability check (Lesson 27) asks only that. So cancell
 deleting anything.
 
 ## 2. Liraz: the game server
+
+```mermaid
+stateDiagram-v2
+    [*] --> LOBBY
+    LOBBY --> LOBBY : JOIN / LEAVE
+    LOBBY --> QUESTION : START_GAME (host)
+    QUESTION --> QUESTION : ANSWER (once per player)
+    QUESTION --> SCORING : timer 15 s, or everyone answered
+    SCORING --> QUESTION : after 4 s, more questions
+    SCORING --> GAME_OVER : last question
+    GAME_OVER --> [*]
+```
 
 ![game FSM](figs/game_fsm.gif)
 
@@ -85,6 +111,13 @@ def check_in(self, booking_id, today):
 ```
 
 (A sketch — your skeleton's docstrings give the exact names and messages.) Every command has the same three steps.
+
+### Booleans or an Enum?
+
+![three booleans vs one Enum](figs/booleans_vs_enum.png)
+
+With three booleans, half of the combinations are nonsense — and some bug will eventually create one ("checked out but never
+checked in"). An `Enum` has **only** the legal states.
 
 ## 4. Why it makes the program correct and testable
 
@@ -117,6 +150,46 @@ Every second costs about 1000 / 15 ≈ 67 points. The minimum of 100 makes sure 
 **Leaderboard:** sort by score, highest first; on equal scores sort by **name**, so tied players don't swap places between
 broadcasts.
 
+## 🧪 Worked example: a tiny booking FSM and the scoring function
+
+```python
+from enum import Enum
+
+class Status(Enum):
+    CONFIRMED = "confirmed"
+    CHECKED_IN = "checked in"
+    CHECKED_OUT = "checked out"
+    CANCELLED = "cancelled"
+
+    @property
+    def blocks_room(self):
+        return self in (Status.CONFIRMED, Status.CHECKED_IN)
+
+ARROWS = {(Status.CONFIRMED, "check_in"): Status.CHECKED_IN,
+          (Status.CHECKED_IN, "check_out"): Status.CHECKED_OUT,
+          (Status.CONFIRMED, "cancel"): Status.CANCELLED}
+
+def fire(state, event):
+    if (state, event) not in ARROWS:
+        raise ValueError(f"Cannot {event.replace('_', ' ')}: the booking is {state.value}")
+    return ARROWS[(state, event)]
+
+s = fire(Status.CONFIRMED, "check_in")
+print(s, s.blocks_room)                          # Status.CHECKED_IN True
+try:
+    fire(s, "cancel")
+except ValueError as e:
+    print(e)                                     # Cannot cancel: the booking is checked in
+
+def points_for(t, correct, limit=15):
+    if not correct:
+        return 0
+    t = min(max(t, 0), limit)
+    return max(100, round(1000 * (limit - t) / limit))
+
+print([points_for(t, True) for t in (0, 3, 7.5, 13.2, 14.9)], points_for(2, False))   # [1000, 800, 500, 120, 100] 0
+```
+
 ## 6. Common mistakes
 
 | student says | the truth |
@@ -124,6 +197,15 @@ broadcasts.
 | "I'll use booleans: is_started, is_finished …" | 3 booleans = 8 combinations, most of them nonsense ("finished but not started"). An Enum has exactly the legal states. |
 | "Cancel = delete the row" | Change the state; history and invoices stay. |
 | "The client knows when time is up" | The server decides; client clocks differ and can cheat. |
+| "Errors for illegal moves are rude" | They're the point: a clear reason ("already checked in") instead of silent damage. |
+
+## 📝 Summary
+
+> * A **state machine**: one state at a time (an `Enum`), arrows = allowed **transitions**, **guards** = conditions.
+> * No arrow → the action is impossible → a clear error message.
+> * Eran: CONFIRMED → CHECKED_IN → CHECKED_OUT, or CONFIRMED → CANCELLED; `blocks_room` drives availability.
+> * Liraz: LOBBY → QUESTION ⇄ SCORING → GAME_OVER; the **server's** timer moves the state.
+> * Score = round(1000 × (15 − t) / 15), at least 100 if correct, 0 if wrong; ties on the leaderboard sorted by name.
 
 ## 7. Activities
 
@@ -159,5 +241,10 @@ Error — no arrow leaves CHECKED_OUT. The message says the stay already ended. 
 
 ## 🎬 Watch & explore
 
-* Computerphile — *Finite State Automata* — [search on YouTube](https://www.youtube.com/results?search_query=Computerphile+finite+state+automata)
+| | |
+|---|---|
+| <a href="https://www.youtube.com/watch?v=vhiiia1_hC4"><img src="https://img.youtube.com/vi/vhiiia1_hC4/mqdefault.jpg" width="240" alt="video"></a> | **Computerphile — Computers Without Memory**. Finite state machines explained with a turnstile-like example. |
+
+**Read more:**
+* Refactoring Guru — [The State pattern](https://refactoring.guru/design-patterns/state)
 * Game Programming Patterns — [State](https://gameprogrammingpatterns.com/state.html)
