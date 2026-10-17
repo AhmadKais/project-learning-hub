@@ -182,6 +182,81 @@ if L.wanted("tuning_curves"):
     caption(fig, "All 11 features, z-scored inside each fold, weighted vote.  A quick version of Seif's tuning table.")
     L.save(fig, "tuning_curves")
 
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 6. the paper example, drawn
+if L.wanted("paper_example"):
+    pts = {"W1": ((0.6, 0.1), 2), "W2": ((0.4, 0.5), 1), "W3": ((-0.3, 0.0), 0), "W4": ((1.5, 0.3), 2)}
+    Xq = np.array([0.5, 0.2])
+    fig, ax = plt.subplots(figsize=(10, 6))
+    for name, (p, lab) in pts.items():
+        p = np.array(p)
+        d = np.linalg.norm(p - Xq)
+        ax.plot([Xq[0], p[0]], [Xq[1], p[1]], color=MUTED, ls="--", lw=1.5)
+        off = {"W1": (0.12, -0.02), "W2": (-0.12, 0.0), "W3": (0, -0.07), "W4": (0, -0.07)}[name]
+        ax.text((Xq[0] + p[0]) / 2 + off[0], (Xq[1] + p[1]) / 2 + off[1], f"d = {d:.2f}", fontsize=11.5, color=INK2,
+                ha="center", bbox=dict(fc=PAPER, ec="none", pad=1))
+        ax.scatter(*p, s=420, color=GCOL[lab], edgecolor=INK, zorder=3)
+        above = name == "W2"
+        ax.text(p[0], p[1] + (0.09 if above else -0.09), f"{name}\n{GRADES[lab]}", ha="center",
+                va="bottom" if above else "top", fontsize=12)
+    ax.scatter(*Xq, s=500, marker="*", color=INK, zorder=4)
+    ax.annotate("X (the new wine)", Xq, xytext=(0.05, -0.45), fontsize=12, weight="bold",
+                arrowprops=dict(arrowstyle="->", color=INK))
+    ax.add_patch(plt.Circle(Xq, 0.83, fill=False, ec=GREEN, lw=2, ls=":"))
+    ax.text(-0.35, 0.95, "k = 3: the 3 nearest are inside the green circle", color=GREEN, fontsize=12)
+    ax.set_xlim(-0.6, 1.8)
+    ax.set_ylim(-0.75, 1.1)
+    ax.set_aspect("equal")
+    ax.set_xlabel("alcohol (scaled)")
+    ax.set_ylabel("acidity (scaled)")
+    ax.set_title("The paper example: distances from X to the four graded wines")
+    L.save(fig, "paper_example")
+
+# ---------------------------------------------------------------- 7. alpha sweeping: the winner flips
+if L.wanted("alpha_sweep"):
+    prior = np.array([0.37, 0.44, 0.19])
+    labs = [1, 1, 2]                      # medium, medium, high - all at distance 1
+    alphas = np.r_[np.linspace(0, 1, 21), [1] * 4]
+    fig, ax = plt.subplots(figsize=(10, 5.2))
+
+    def upd(k):
+        a = alphas[k]
+        v = vote([1, 1, 1], labs, prior, a)
+        ax.clear()
+        bars = ax.bar(GRADES, v, color=GCOL, edgecolor=INK)
+        win = int(np.argmax(v))
+        bars[win].set_linewidth(4)
+        for i, val in enumerate(v):
+            ax.text(i, val + 0.1, f"{val:.2f}", ha="center", fontsize=13, weight="bold" if i == win else "normal")
+        ax.set_ylim(0, 6.2)
+        ax.set_ylabel("total vote")
+        ax.set_title(f"alpha = {a:.2f}  →  winner: {GRADES[win].upper()}\n"
+                     "(neighbours: medium, medium, high - all at distance 1)", fontsize=13)
+    L.animate(fig, upd, len(alphas), "alpha_sweep", fps=3)
+
+# ---------------------------------------------------------------- 8. "nearest neighbours" in everyday life
+if L.wanted("knn_world"):
+    tiles = [("Estate agent", "a flat = (size, rooms, area, floor)", "price ≈ average price of the\n5 most similar flats sold"),
+             ("Netflix / Spotify", "you = what you watched / played", "people most like you\nloved this → try it"),
+             ("A new student", "joins a class", "'you'll be like the friends\nyou sit with'"),
+             ("Plant identification app", "a photo → numbers", "the closest photos in the\ndatabase say: rose"),
+             ("Doctor", "a patient = (age, symptoms, tests)", "the most similar past\npatients had…"),
+             ("Seif's WineGrader", "a wine = 11 lab numbers", "the 15 most similar\ngraded wines vote")]
+    fig, axes = plt.subplots(2, 3, figsize=(15, 6.4))
+    for ax, (title, what, how), col in zip(axes.ravel(), tiles, SERIES):
+        blank(ax)
+        ax.add_patch(FancyBboxPatch((0.02, 0.02), 0.96, 0.96, boxstyle="round,pad=0,rounding_size=0.05", lw=2.5,
+                                    edgecolor=col, facecolor=PAPER))
+        ax.add_patch(FancyBboxPatch((0.02, 0.74), 0.96, 0.24, boxstyle="round,pad=0,rounding_size=0.05", lw=0,
+                                    facecolor=col))
+        ax.text(0.5, 0.86, title, ha="center", va="center", color="white", fontsize=13.5, weight="bold")
+        ax.text(0.06, 0.52, what, fontsize=11.2)
+        ax.text(0.06, 0.25, how, fontsize=11.2, weight="bold", wrap=True)
+    fig.suptitle("\"Find the most similar known cases and copy their answer\" - k-NN in real life", fontsize=14,
+                 weight="bold")
+    L.save(fig, "knn_world")
+
 if L.live:
     from matplotlib.widgets import Slider
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(14, 6.5), gridspec_kw={"width_ratios": [1.3, 1]})
