@@ -175,3 +175,128 @@ if L.wanted("importance"):
     L.save(fig, "importance")
 
 print("  depth: train/test", [(d, round(a, 3), round(b, 3)) for d, (a, b) in zip(depths, acc)])
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 7. follow one real URL down the real tree
+if L.wanted("follow_url"):
+    Xa_tr, Xa_te, ya_tr, ya_te = train_test_split(X, y, test_size=0.3, random_state=0, stratify=y)
+    t = DecisionTreeClassifier(max_depth=3, random_state=0).fit(Xa_tr, ya_tr)
+    T = t.tree_
+    pos = {}
+
+    def place(node, x, y_, dx):
+        pos[node] = (x, y_)
+        if T.children_left[node] != -1:
+            place(T.children_left[node], x - dx, y_ - 1, dx / 2)
+            place(T.children_right[node], x + dx, y_ - 1, dx / 2)
+    place(0, 0.5, 3, 0.25)
+    pred = t.predict(Xa_te)
+    sample = Xa_te[np.flatnonzero((ya_te == 1) & (pred == 1) & (Xa_te[:, names.index("digit_ratio")] > 0.02))[0]]
+    path = t.decision_path(sample.reshape(1, -1)).indices.tolist()
+    fig, ax = plt.subplots(figsize=(15, 7.5))
+
+    def node_text(n):
+        v = T.value[n][0]
+        cnt = (v * T.n_node_samples[n]).round().astype(int) if v.sum() <= 1.0001 else v.astype(int)
+        if T.children_left[n] == -1:
+            lab = "PHISHING" if cnt[1] > cnt[0] else "legit"
+            return f"{lab}\n{cnt[1]} / {cnt[0]}"
+        f = names[T.feature[n]]
+        return f"{f} ≤ {T.threshold[n]:.3g} ?\n({cnt[1]} phish / {cnt[0]} legit)"
+
+    def upd(k):
+        blank(ax, (0, 1), (-0.6, 3.6))
+        for n, (x, y_) in pos.items():
+            for ch in (T.children_left[n], T.children_right[n]):
+                if ch != -1:
+                    on = n in path[: k + 1] and ch in path[: k + 2]
+                    ax.plot([x, pos[ch][0]], [y_ - 0.17, pos[ch][1] + 0.17], color=ORANGE if on else GRID,
+                            lw=4 if on else 1.5, zorder=1)
+                    side = "yes" if ch == T.children_left[n] else "no"
+                    ax.text((x + pos[ch][0]) / 2, (y_ + pos[ch][1]) / 2, side, fontsize=10, color=INK2,
+                            ha="center", bbox=dict(fc=PAPER, ec="none"))
+        for n, (x, y_) in pos.items():
+            here = n in path[: k + 1]
+            leaf = T.children_left[n] == -1
+            w_ = 0.11 if leaf else 0.2
+            box(ax, x - w_ / 2, y_ - 0.17, w_, 0.34, node_text(n), color=ORANGE if here else MUTED,
+                fill=LIGHT_ORANGE if here and leaf else PAPER, fontsize=9 if leaf else 9.5, lw=3 if here else 1.2)
+        n = path[min(k, len(path) - 1)]
+        if T.children_left[n] != -1:
+            f = T.feature[n]
+            ans = sample[f] <= T.threshold[n]
+            msg = f"this URL: {names[f]} = {sample[f]:.3g}  →  {'yes' if ans else 'no'}"
+        else:
+            msg = "arrived at a leaf: the answer for this URL"
+        ax.text(0.5, -0.5, msg, ha="center", fontsize=14, weight="bold", color=ORANGE)
+        ax.set_title("Follow one real phishing URL down the learned tree   (leaves: phishing / legitimate training URLs)",
+                     fontsize=13)
+    frames = [k for k in range(len(path)) for _ in range(3)] + [len(path) - 1] * 3
+    L.animate(fig, lambda i: upd(frames[i]), len(frames), "follow_url", fps=2)
+
+# ---------------------------------------------------------------- 8. bootstrap samples, drawn as cards
+if L.wanted("bootstrap"):
+    cards = list("ABCDEFGH")
+    r = np.random.default_rng(5)
+    fig, ax = plt.subplots(figsize=(13, 5.2))
+    blank(ax, (0, 10), (0, 5))
+    ax.text(0.1, 4.55, "the 8 training URLs:", fontsize=12, weight="bold")
+    for i, c in enumerate(cards):
+        box(ax, 2.5 + i * 0.8, 4.3, 0.65, 0.55, c, color=INK2, fontsize=13, radius=0.05)
+    for t_ in range(3):
+        draw = r.integers(0, 8, 8)
+        y0 = 3.1 - t_ * 1.25
+        ax.text(0.1, y0 + 0.25, f"tree {t_ + 1} gets:", fontsize=12)
+        cnt = {}
+        for i, d in enumerate(sorted(draw)):
+            c = cards[d]
+            cnt[c] = cnt.get(c, 0) + 1
+            box(ax, 2.5 + i * 0.8, y0, 0.65, 0.55, c, color=ORANGE if cnt[c] > 1 or list(draw).count(d) > 1 else BLUE,
+                fill=LIGHT_ORANGE if list(draw).count(d) > 1 else LIGHT_BLUE, fontsize=13, radius=0.05)
+        missing = [c for j, c in enumerate(cards) if j not in draw]
+        ax.text(9.0, y0 + 0.25, "left out: " + ", ".join(missing), fontsize=11, color=MUTED)
+    ax.set_title("Bootstrap: each tree draws 8 cards WITH replacement - some twice (orange), some never", fontsize=13)
+    L.save(fig, "bootstrap")
+
+# ---------------------------------------------------------------- 9. the wisdom of the crowd (sweets jar)
+if L.wanted("crowd"):
+    r = np.random.default_rng(8)
+    truth = 487
+    guesses = np.clip(truth * np.exp(r.normal(0, 0.35, 40)), 100, 1500)
+    fig, ax = plt.subplots(figsize=(12, 4.8))
+    ax.hist(guesses, np.arange(100, 1300, 50), color=BLUE, alpha=0.8, label="40 students' guesses")
+    ax.axvline(truth, color=GREEN, lw=3, label=f"the truth: {truth} sweets")
+    ax.axvline(np.median(guesses), color=ORANGE, lw=3, ls="--", label=f"the class's middle guess: {np.median(guesses):.0f}")
+    errs = np.abs(guesses - truth)
+    ax.set_xlabel("guessed number of sweets in the jar")
+    ax.set_ylabel("students")
+    ax.set_title(f"A typical student is {np.median(errs):.0f} sweets off; the crowd's middle guess is "
+                 f"{abs(np.median(guesses) - truth):.0f} off")
+    ax.legend()
+    L.save(fig, "crowd")
+
+# ---------------------------------------------------------------- 10. the real comparison on PhishGuard
+if L.wanted("model_compare"):
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import StandardScaler
+    Xa_tr, Xa_te, ya_tr, ya_te = train_test_split(X, y, test_size=0.3, random_state=0, stratify=y)
+    models = [("logistic\nregression", make_pipeline(StandardScaler(), LogisticRegression(max_iter=2000)), BLUE),
+              ("one tree\ndepth 3", DecisionTreeClassifier(max_depth=3, random_state=0), AQUA),
+              ("one tree\ndepth 8", DecisionTreeClassifier(max_depth=8, random_state=0), AQUA),
+              ("one tree\nno limit", DecisionTreeClassifier(random_state=0), RED),
+              ("random forest\n300 trees", RandomForestClassifier(300, random_state=0, n_jobs=-1), GREEN)]
+    fig, ax = plt.subplots(figsize=(12, 5))
+    for i, (name, m, col) in enumerate(models):
+        m.fit(Xa_tr, ya_tr)
+        tr, te = m.score(Xa_tr, ya_tr), m.score(Xa_te, ya_te)
+        ax.bar(i - 0.18, tr, 0.34, color=col, alpha=0.35)
+        ax.bar(i + 0.18, te, 0.34, color=col)
+        ax.text(i - 0.18, tr + 0.01, f"{tr:.2f}", ha="center", fontsize=10, color=INK2)
+        ax.text(i + 0.18, te + 0.01, f"{te:.2f}", ha="center", fontsize=11, weight="bold")
+        print(f"  {name.replace(chr(10), ' ')}: train {tr:.3f} test {te:.3f}")
+    ax.set_xticks(range(len(models)), [m[0] for m in models])
+    ax.set_ylim(0.5, 1.08)
+    ax.set_ylabel("accuracy")
+    ax.set_title("Real PhishGuard URLs - light bar: on training URLs, dark bar: on NEW URLs")
+    L.save(fig, "model_compare")

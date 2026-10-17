@@ -3,6 +3,20 @@
 > **For:** Dani (PhishGuard — second model, feature importance) &nbsp;·&nbsp; **Time:** 2 × 45 min
 > **Before:** Lesson 00 §1, §4; Lessons 01, 03, 12 &nbsp;·&nbsp; **After this:** comparing the two models (Lesson 04)
 
+**In one sentence:** a decision tree is a flow chart of yes/no questions that the computer builds by always asking the
+question that separates the classes best; a random forest asks a hundred slightly different trees and lets them vote.
+
+## 🗺️ The map of this lesson
+
+```mermaid
+flowchart LR
+    A["1 · A tree is<br/>a flow chart"] --> B["2 · Choosing the question:<br/>Gini"]
+    B --> C["3 · Too deep<br/>= memorising"]
+    C --> D["4 · A forest:<br/>many trees vote"]
+    D --> E["5 · Importance"]
+    E --> F["6 · Real results"]
+```
+
 ## The story
 
 > New staff at the bank's help desk don't know Rana's points system. So Rana draws them a **flow chart**: *"Is there
@@ -10,13 +24,14 @@
 > question should come first? Which ones after? A **decision tree** builds this flow chart by itself, from thousands of
 > labelled URLs — and a **random forest** asks a hundred slightly different flow charts and lets them vote.
 
-## 🎯 By the end, the student can
+### 🌍 Real world
 
-1. Read a decision tree and follow one URL down to its answer.
-2. Compute Gini impurity and the gain of a split by hand, and explain how the tree chooses its question.
-3. Explain, with the animation, why a very deep tree overfits.
-4. Explain the two random ingredients of a forest and why voting helps.
-5. Read a feature-importance chart — and say what it does **not** tell you.
+* The game **"20 questions"** (and the app *Akinator*, which guesses the character you're thinking of) is a decision tree:
+  every good question splits the remaining possibilities roughly in half.
+* **Hospitals** use triage flow charts: "breathing? → bleeding? → conscious?" to decide who is treated first.
+* **Banks** have used decision trees for loan decisions for decades, because a tree can be **explained** to a customer.
+* **Random forests** are a favourite in industry for tables of numbers — fraud detection, medicine, credit risk — because
+  they work well with almost no tuning.
 
 ## Words you need
 
@@ -46,6 +61,23 @@ This tree was learned from the 20 PhishGuard features of real URLs (orange = mos
 2. "num_digits ≤ 9.5?" → it has 14 digits → **False** → right.
 3. "num_hyphens ≤ 2.5?" → 1 hyphen → **True** → left.
 4. Leaf: 1,036 training URLs ended here, **986 of them phishing** → answer: phishing (986 / 1,036 = 95 %).
+
+Watch the same journey, one question at a time:
+
+![follow one URL down the tree](figs/follow_url.gif)
+
+The same tree as a flow chart:
+
+```mermaid
+flowchart TD
+    Q1{"digit_ratio ≤ 0.013?"} -- yes --> Q2{"num_subdomains ≤ 0.5?"}
+    Q1 -- no --> Q3{"num_digits ≤ 9.5?"}
+    Q3 -- no --> Q4{"num_hyphens ≤ 2.5?"}
+    Q4 -- yes --> L1["🟧 PHISHING<br/>986 phish / 50 legit"]
+    Q4 -- no --> L2["🟧 PHISHING<br/>136 / 57"]
+    Q3 -- yes --> Q5["… more questions …"]
+    Q2 -- "…" --> Q6["… more questions …"]
+```
 
 Trees can learn **combinations** a points system can't: "hyphens matter only when there are many digits". And they need no
 scaling — a question like "≤ 9.5?" doesn't care about units.
@@ -118,8 +150,22 @@ Each tree makes its own mistakes; when you average, **different mistakes cancel*
 
 ![more trees](figs/forest_growing.gif)
 
-**Analogy — guess the number of sweets in a jar.** Each student is far off; the **class average** is usually close —
-*if they guessed independently*. The two random ingredients are what keep the trees independent.
+### The two random ingredients, drawn
+
+![bootstrap samples as cards](figs/bootstrap.png)
+
+Each tree gets its own "deck": some URLs twice, some not at all. Different decks → different trees → different mistakes.
+
+### Why voting works — the wisdom of the crowd
+
+**Guess the number of sweets in a jar.** Each student is far off; the **class's middle guess** is usually close — *if they
+guessed independently*:
+
+![the wisdom of the crowd](figs/crowd.png)
+
+In 1906 the scientist Francis Galton saw this at a country fair: about 800 people guessed the weight of an ox, and the middle
+guess was within 1 % of the true weight — closer than almost every single guesser, including cattle experts. A forest is a
+crowd of trees; the two random ingredients are what keep the trees independent.
 
 ## 5. Feature importance
 
@@ -132,7 +178,36 @@ For each feature: add up how much Gini it removed, over all the splits of all 30
 for **one** URL. That's why PhishGuard's explanation for the forest is only an approximation, while for logistic
 regression it is exact (Lesson 12).
 
-## 6. Common mistakes
+## 6. The real comparison on PhishGuard
+
+All models trained on the same 70 % of the real URLs, graded on the other 30 %:
+
+![model comparison](figs/model_compare.png)
+
+* **Logistic regression (Lesson 12):** 0.77 — a straight-line boundary is not enough here.
+* **One tree, no limit:** 0.99 on training, 0.81 on new URLs — the overfitting of Part 3, on real data.
+* **Random forest:** also 0.99 on training (each tree is deep), but **0.85** on new URLs — the vote cancels the trees'
+  individual mistakes. That's why the forest is PhishGuard's strongest model.
+
+## 🧪 Worked example: Gini gain in Python
+
+```python
+def gini(counts):
+    n = sum(counts)
+    return 1 - sum((c / n) ** 2 for c in counts)
+
+def gain(parent, left, right):
+    n = sum(parent)
+    weighted = sum(left) / n * gini(left) + sum(right) / n * gini(right)
+    return gini(parent) - weighted
+
+parent = [5, 5]                                   # [good, phishing]
+print("A: has HTTPS?   ", round(gain(parent, [4, 1], [1, 4]), 2))    # 0.18
+print("B: > 2 dots?    ", round(gain(parent, [3, 3], [2, 2]), 2))    # 0.0
+print("perfect question", round(gain(parent, [5, 0], [0, 5]), 2))    # 0.5
+```
+
+## 7. Common mistakes
 
 | student says | the truth |
 |---|---|
@@ -140,8 +215,18 @@ regression it is exact (Lesson 12).
 | "A forest is one big tree" | Many independent trees + a vote. |
 | "More trees can overfit" | More trees only cost time. Depth and leaf size are what overfit. |
 | "Important feature = it *causes* phishing" | Only "it helped separate in this data". |
+| "Trees need scaled features" | No — "≤ 9.5?" works in any units. |
 
-## 7. Activities
+## 📝 Summary
+
+> * A **tree** = a flow chart of yes/no questions, learned from data.
+> * It chooses the question with the biggest **Gini gain** (Gini = 1 − Σ share²: 0 pure, 0.5 half-half), then repeats inside
+>   each group.
+> * Unlimited depth = **memorising** (100 % train, worse test). Brakes: `max_depth`, `min_samples_leaf`.
+> * A **forest** = many trees on **bootstrap samples** with **random features**, voting — their mistakes cancel.
+> * **Importance** says which features helped, not in which direction or why for one URL.
+
+## 8. Activities
 
 1. **20 questions (5 min).** One student thinks of an animal; the class asks yes/no questions. Which first question splits
    best? That's Gini gain.
@@ -149,7 +234,7 @@ regression it is exact (Lesson 12).
    questions, choose the best, then split once more.
 3. **Sweets jar (5 min).** Collect guesses, compare the average with the truth.
 
-## 8. Do it yourself
+## 9. Do it yourself
 
 <details><summary>1. A group: 6 phishing, 2 good. Gini?</summary>
 
@@ -166,7 +251,29 @@ parent 0.5 · left: 0.8/0.2 → 0.32 · right: pure → 0 · weighted: 5/8 × 0.
 So they make different mistakes. Identical trees would vote identically and averaging would change nothing.
 </details>
 
-## 9. In your project
+<details><summary>4. 🟢 Follow the tree in Part 1 for a URL with digit_ratio 0.05, num_digits 4. Which question comes next?</summary>
+
+digit_ratio ≤ 0.013? No → right. num_digits ≤ 9.5? **Yes** → left → the next question is "num_hyphens ≤ 3.5?".
+</details>
+
+<details><summary>5. 🟡 5 trees vote: phishing, legit, phishing, phishing, legit. The forest's answer? Its probability?</summary>
+
+3 of 5 say phishing → **phishing**, probability 3 ÷ 5 = **0.6**.
+</details>
+
+<details><summary>6. 🟡 A bootstrap sample of 1,000 rows. About how many different rows does it contain?</summary>
+
+About **632** (≈ 63 %); the other ~368 rows are left out of this tree. (The chance a row is never picked is (1 − 1/1000)¹⁰⁰⁰
+≈ 0.37.)
+</details>
+
+<details><summary>7. 🔴 Why can't logistic regression learn "hyphens matter only when there are many digits", but a tree can?</summary>
+
+Logistic regression gives each feature one fixed weight, added up — the effect of hyphens is the same whatever the digits
+are. A tree asks about digits first and then asks about hyphens **only in one branch**, so it can learn combinations.
+</details>
+
+## 10. In your project
 
 | Project | Where |
 |---|---|
@@ -174,6 +281,12 @@ So they make different mistakes. Identical trees would vote identically and aver
 
 ## 🎬 Watch & explore
 
-* R2D3 — [A visual introduction to machine learning](https://r2d3.us/visual-intro-to-machine-learning-part-1/) (a tree, scroll-animated)
+| | |
+|---|---|
+| <a href="https://www.youtube.com/watch?v=_L39rN6gz7Y"><img src="https://img.youtube.com/vi/_L39rN6gz7Y/mqdefault.jpg" width="240" alt="video"></a> | **StatQuest — Decision and Classification Trees, Clearly Explained!!!** Gini and choosing the question, step by step. |
+| <a href="https://www.youtube.com/watch?v=J4Wdy0Wc_xQ"><img src="https://img.youtube.com/vi/J4Wdy0Wc_xQ/mqdefault.jpg" width="240" alt="video"></a> | **StatQuest — Random Forests Part 1**. Bootstrap, random features and voting. |
+
+**Play with it:**
+* R2D3 — [A visual introduction to machine learning](https://r2d3.us/visual-intro-to-machine-learning-part-1/) — a tree
+  grows as you scroll. The best page on the internet for this lesson.
 * MLU-Explain — [Decision Trees](https://mlu-explain.github.io/decision-tree/) and [Random Forest](https://mlu-explain.github.io/random-forest/)
-* StatQuest — *Decision Trees* · *Random Forests* — [search on YouTube](https://www.youtube.com/results?search_query=StatQuest+decision+trees+random+forests)
