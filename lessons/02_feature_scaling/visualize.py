@@ -144,6 +144,85 @@ if L.wanted("gradient_descent"):
         axes[1].set_xlabel("walks straight to the minimum ★")
     L.animate(fig, upd, 30, "gradient_descent", fps=5)
 
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 6. squeezing SO2 step by step: the neighbours change
+if L.wanted("squeeze"):
+    factors = [1, 1.5, 2, 3, 4, 6, 8, 11, 15, 20, 26, 33, X[:, 1].std() / X[:, 0].std()]
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    def upd(i):
+        f = factors[min(i, len(factors) - 1)]
+        A = X / np.array([1, f])
+        p = q / np.array([1, f])
+        nn = nearest(A, p)
+        ax.clear()
+        ax.scatter(A[:, 0], A[:, 1], s=18, color=MUTED, alpha=0.5)
+        ax.scatter(A[nn, 0], A[nn, 1], s=80, color=ORANGE, edgecolor="white", zorder=3, label="7 nearest wines")
+        ax.scatter(*p, s=300, marker="*", color=BLUE, edgecolor="white", zorder=4, label="the customer's wine")
+        ax.set_xlabel("alcohol (%)")
+        ax.set_ylabel(f"total SO₂ ÷ {f:.1f}")
+        spread_alc = A[nn, 0].max() - A[nn, 0].min()
+        ax.set_title(f"SO₂ divided by {f:.1f}:  the 7 nearest differ by {spread_alc:.1f} % alcohol")
+        ax.legend(loc="upper right")
+    frames = list(range(len(factors))) + [len(factors) - 1] * 4
+    L.animate(fig, lambda i: upd(frames[i]), len(frames), "squeeze", fps=2)
+
+# ---------------------------------------------------------------- 7. real histograms: raw vs z
+if L.wanted("hist_raw_vs_z"):
+    fig, axes = plt.subplots(2, 2, figsize=(13, 6.5))
+    for j, (k, name, col) in enumerate([(ALC, "alcohol (%)", BLUE), (SO2, "total SO₂ (mg/l)", ORANGE)]):
+        v = white[:, k]
+        axes[0, j].hist(v, 40, color=col)
+        axes[0, j].set_title(f"{name}: average {v.mean():.1f}, std {v.std():.1f}", fontsize=12)
+        z = (v - v.mean()) / v.std()
+        axes[1, j].hist(z, 40, color=col)
+        axes[1, j].set_xlim(-4, 6)
+        axes[1, j].set_title(f"after z-score: average 0, std 1", fontsize=12)
+        axes[1, j].set_xlabel("z = how many 'typical steps' from the average")
+    axes[0, 0].set_ylabel("number of wines")
+    axes[1, 0].set_ylabel("number of wines")
+    caption(fig, "Real white wines (4,898). The SHAPE never changes - only the ruler under it. After scaling both live on "
+                 "the same ruler: −3 … +3.")
+    L.save(fig, "hist_raw_vs_z")
+
+# ---------------------------------------------------------------- 8. raw, min-max, z side by side
+if L.wanted("three_ways"):
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.8))
+    mm = (X - X.min(0)) / (X.max(0) - X.min(0))
+    Z = zscore(X, X)
+    for ax, A, title in [(axes[0], X, "raw numbers"), (axes[1], mm, "min-max: (x − min) ÷ (max − min)"),
+                         (axes[2], Z, "z-score: (x − average) ÷ std")]:
+        ax.scatter(A[:, 0], A[:, 1], s=14, color=BLUE, alpha=0.6)
+        ax.set_title(title, fontsize=12)
+        ax.set_xlabel("alcohol")
+        ax.set_ylabel("total SO₂")
+        ax.set_aspect("equal", adjustable="datalim")
+    caption(fig, "Same 300 wines. Raw: SO₂ (0-300) dwarfs alcohol (8-14). Min-max: both 0…1. z-score: both centred on 0, "
+                 "spread 1.")
+    L.save(fig, "three_ways")
+
+# ---------------------------------------------------------------- 9. real world: comparing grades from two different exams
+if L.wanted("exam_curving"):
+    fig, axes = plt.subplots(1, 2, figsize=(13, 4.8))
+    r = np.random.default_rng(4)
+    for ax, avg, sd, me, who, name, col in [(axes[0], 60, 10, 80, "Rami", "Hard maths exam (Class A)", BLUE),
+                                            (axes[1], 85, 5, 90, "Lina", "Easy maths exam (Class B)", ORANGE)]:
+        g = np.clip(r.normal(avg, sd, 400), 0, 100)
+        ax.hist(g, np.arange(20, 101, 2.5), color=col, alpha=0.7)
+        ax.axvline(me, color=INK, lw=3)
+        ax.axvline(avg, color=MUTED, ls="--")
+        ax.text(me + 1, ax.get_ylim()[1] * 0.85, f"{who}: {me}\nz = ({me} − {avg}) ÷ {sd}\n= {(me - avg) / sd:+.1f}",
+                fontsize=12, weight="bold")
+        ax.text(avg - 1, ax.get_ylim()[1] * 0.95, f"average {avg}", ha="right", fontsize=11, color=INK2)
+        ax.set_title(name)
+        ax.set_xlabel("grade")
+        ax.set_xlim(20, 100)
+    fig.suptitle("Who did better? 80 on the hard exam (2 steps above average) beats 90 on the easy one (1 step).",
+                 fontsize=13, weight="bold")
+    fig.tight_layout()
+    L.save(fig, "exam_curving")
+
 # ---------------------------------------------------------------- live
 if L.live:
     from matplotlib.widgets import Slider
