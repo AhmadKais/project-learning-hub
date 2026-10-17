@@ -159,3 +159,31 @@ if L.wanted("strategy_pattern"):
     box(ax, 0.76, 0.62, 0.22, 0.24, "create(name)\nfactory: name → object\n(from config)", color=AQUA)
     ax.set_title("Strategy pattern: swap the rule without touching the service.  A 4th strategy = one new class.")
     L.save(fig, "strategy_pattern")
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 6. the story's Friday, both ways
+if L.wanted("friday"):
+    rooms = [("102", 2, "double, garden"), ("201", 2, "double, sea"), ("301", 4, "family room")]
+    events = [("2 pm: a couple (2)", 2), ("6 pm: a family (4)", 4)]
+    plans = {"the new receptionist: the first room she sees (301)": ["301", None],
+             "Best-Fit (smallest room that fits)": ["102", "301"]}
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5.2))
+
+    def upd(k):
+        for ax, (title, choice) in zip(axes, plans.items()):
+            blank(ax, (0, 10), (0, 7))
+            ax.set_title(title, fontsize=12)
+            for i, (num, cap, desc) in enumerate(rooms):
+                x = 0.5 + i * 3.2
+                taken = [ev for ev_i, ev in enumerate(events[:k]) if choice[ev_i] == num]
+                fill = LIGHT_ORANGE if taken else PAPER
+                box(ax, x, 3.0, 2.8, 2.6, f"room {num}\n{desc}\nsleeps {cap}", color=INK2, fill=fill, fontsize=11)
+                if taken:
+                    ax.text(x + 1.4, 2.6, taken[0][0].split(": ")[1], ha="center", fontsize=11, color=ORANGE,
+                            weight="bold")
+            for ev_i, (name, g) in enumerate(events[:k]):
+                got = choice[ev_i]
+                msg = f"{name} → room {got}" if got else f"{name} → NO ROOM, they leave"
+                ax.text(0.5, 1.4 - ev_i * 0.7, msg, fontsize=12, color=GREEN if got else RED, weight="bold")
+    frames = [0, 0, 1, 1, 1, 2, 2, 2, 2, 2]
+    L.animate(fig, lambda i: upd(frames[i]), len(frames), "friday", fps=1)

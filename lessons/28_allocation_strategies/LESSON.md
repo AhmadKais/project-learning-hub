@@ -3,6 +3,21 @@
 > **For:** Eran (HotelManager stage 3) &nbsp;·&nbsp; **Time:** 2 × 45 min
 > **Before:** Lesson 27; Python `min`/`max` with `key` &nbsp;·&nbsp; **After this:** the experiment chapter of the book; Lesson 29
 
+**In one sentence:** when several rooms are free, the rule for choosing one decides who gets turned away later — so we
+write three rules, measure them on 200 simulated months, and program them so the hotel can swap the rule with one line.
+
+## 🗺️ The map of this lesson
+
+```mermaid
+flowchart LR
+    R["request:<br/>dates, guests,<br/>wishes"] --> C["candidates:<br/>free & big enough<br/>(Lesson 27)"]
+    C --> S{"strategy.choose()"}
+    S -->|First-Fit| A["lowest number"]
+    S -->|Best-Fit| B["smallest that fits"]
+    S -->|Preference| P["best score"]
+    A & B & P --> ROOM["one room<br/>(or None)"]
+```
+
 ## The story
 
 > Friday 2 pm at reception. A young **couple** asks for a room. Free right now: room 102 (a double), room 201 (a double
@@ -11,12 +26,15 @@
 > leave. Nobody did anything "wrong" — but the **rule for choosing the room** cost the hotel a family. This lesson compares
 > three rules, measures which is best, and shows how to program them so the rule can be swapped with one line.
 
-## 🎯 By the end, the student can
+![the story's Friday, both ways](figs/friday.gif)
 
-1. Apply the three strategies by hand to a list of free rooms, including the tie-breaks.
-2. Explain why Best-Fit refuses fewer guests, with the timeline picture.
-3. Read the 200-month experiment and explain why "best" depends on what you measure.
-4. Explain the Strategy pattern and the factory.
+### 🌍 Real world
+
+* A **restaurant** on Friday night doesn't seat a couple at the 6-person table — a big group may come.
+* **Parking**: a small car in a small spot leaves the big spot for the van.
+* **Computers** use exactly these names: the operating system chooses where to put each program in memory with "first-fit"
+  or "best-fit".
+* **Airlines** keep rows of 3 free for families as long as they can.
 
 ## Words you need
 
@@ -121,12 +139,57 @@ Why 200 months and not 1? One random month is luck (Lesson 05).
 
 ## 4. The Strategy pattern — swap the rule with one line
 
+```mermaid
+classDiagram
+    class AllocationStrategy {
+        <<interface>>
+        +choose(candidates, guests, preferences) Room
+    }
+    class FirstFreeStrategy
+    class BestFitStrategy
+    class PreferenceStrategy {
+        +score(room, guests, preferences) int
+    }
+    AllocationStrategy <|-- FirstFreeStrategy
+    AllocationStrategy <|-- BestFitStrategy
+    AllocationStrategy <|-- PreferenceStrategy
+    HotelService --> AllocationStrategy : uses one
+```
+
 ![strategy pattern](figs/strategy_pattern.png)
 
 `HotelService` holds **an** `AllocationStrategy` and calls `choose(candidates, guests, preferences)` — it doesn't know which
 one. A factory `create("best_fit")` turns the name from the config file into the right object. Adding a fourth strategy
 ("lowest floor first") = writing **one** new class; nothing else changes. This is the **open/closed principle**: open to
 extension, closed to modification.
+
+## 🧪 Worked example: the three strategies in a few lines
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Room:
+    number: str
+    capacity: int
+    rate: int
+    view: str
+    floor: int
+
+cands = [Room("102", 2, 450, "garden", 1), Room("201", 2, 450, "sea", 2), Room("301", 4, 620, "sea", 3)]
+guests, wish = 2, {"view": "sea", "floor": 2}
+
+first_fit = min(cands, key=lambda r: int(r.number))
+best_fit = min(cands, key=lambda r: (r.capacity, r.rate, int(r.number)))
+
+def score(r):
+    return (3 if r.view == wish["view"] else 0) + (2 if r.floor == wish["floor"] else 0) - (r.capacity - guests)
+
+preference = max(cands, key=lambda r: (score(r), -int(r.number)))
+print(first_fit.number, best_fit.number, preference.number)        # 102 102 201
+print({r.number: score(r) for r in cands})                         # {'102': 0, '201': 5, '301': 1}
+print("10" < "9", int("10") < int("9"))                            # True False  - why we use int()
+```
 
 ## 5. Common mistakes
 
@@ -135,6 +198,16 @@ extension, closed to modification.
 | "Best-Fit is always best" | Best for guests and beds, not for income. Measure, then decide. |
 | "Sort the rooms first" | `min`/`max` with a key is one pass over the list. |
 | "Return the first room if the list is empty" | Return None — "no room" is a normal answer. |
+| "One simulated month shows which is best" | One month is luck. 200 months, then compare averages. |
+
+## 📝 Summary
+
+> * **Candidates** = free for the dates and big enough. A **strategy** picks one (or None).
+> * **First-Fit**: lowest number. **Best-Fit**: smallest (capacity, price, number). **Preference**: highest score, −1 per
+>   wasted bed.
+> * Tuples compare left to right → fixed tie-breaks → the same request always gets the same room.
+> * 200 months: Best-Fit refuses and wastes least, First-Fit earns most — "best" is a business choice.
+> * **Strategy pattern + factory**: swap the rule from the config; add a rule = add a class.
 
 ## 6. Activities
 
