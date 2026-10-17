@@ -132,3 +132,102 @@ if L.wanted("real_cv"):
     caption(fig, f"CV {rows[i]['id']} ({rows[i]['role']}) among the project's {Nr} CVs.  Rare skills rise - and so does "
                  "the candidate's NAME: that is why ResumeMatch scrubs personal data first.")
     L.save(fig, "real_cv")
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 5. TF x IDF as a map: frequent here AND rare elsewhere
+if L.wanted("tf_idf_map"):
+    fig, ax = plt.subplots(figsize=(11, 6.5))
+    tf = np.linspace(0, 6, 200)
+    idfv = np.linspace(1, 5.7, 200)
+    TT, II = np.meshgrid(tf, idfv)
+    cs = ax.contourf(TT, II, TT * II, levels=14, cmap="Oranges")
+    fig.colorbar(cs, ax=ax, label="TF × IDF  (the weight)")
+    words = [("experience", 5, 1.05, "in this CV 5×,\nbut in 190 of 200 CVs", (-150, 22)),
+             ("python", 2, 2.2, "2×, in 60 CVs", (8, 6)),
+             ("kubernetes", 3, 4.5, "3×, in only 5 CVs\n→ the strongest", (8, 6)), ("figma", 1, 4.9, "1×, in 3 CVs", (8, 6))]
+    for w, x, y, note, off in words:
+        ax.plot(x, y, "o", color=INK, ms=9)
+        ax.annotate(f"{w}\n{note}", (x, y), xytext=off, textcoords="offset points", fontsize=11)
+    ax.set_xlabel("TF: how often in THIS document")
+    ax.set_ylabel("IDF: how rare in the OTHER documents")
+    ax.set_xlim(0, 6.9)
+    ax.set_title("A word weighs a lot only when it is frequent here AND rare elsewhere (the dark corner)")
+    L.save(fig, "tf_idf_map")
+
+# ---------------------------------------------------------------- 6. L2 normalisation: the long CV shrinks to the same circle
+if L.wanted("l2_arrows"):
+    fig, ax = plt.subplots(figsize=(7.5, 7.5))
+    a = np.array([2.58, 1.69])                 # CV 1: python, docker
+    b = 4 * a                                  # the same CV pasted 4 times
+    c = np.array([1.29, 1.69 * 1.0])           # CV 3-like: python 1, pandas-ish
+    steps = np.linspace(0, 1, 12)
+
+    def upd(k):
+        t = steps[min(k, len(steps) - 1)]
+        ax.clear()
+        th = np.linspace(0, np.pi / 2, 100)
+        ax.plot(np.cos(th), np.sin(th), color=MUTED, ls="--")
+        ax.text(0.72, 0.78, "length 1", color=MUTED, fontsize=11)
+        for v, col, name in [(a, BLUE, "CV 1"), (b, RED, "CV 1 pasted 4×"), (c, AQUA, "CV 3")]:
+            n = np.linalg.norm(v)
+            w = v * ((1 - t) + t / n)
+            ax.annotate("", w, (0, 0), arrowprops=dict(arrowstyle="-|>", color=col, lw=3, mutation_scale=20))
+            lim = 11.5 * (1 - t) + 1.5 * t
+            dy = -0.12 * lim if name.endswith("4×") else 0.02 * lim
+            ax.text(w[0] + 0.01 * lim, w[1] + dy, f"{name}\nlength {np.linalg.norm(w):.2f}", color=col, fontsize=11)
+        ax.set_xlim(0, lim)
+        ax.set_ylim(0, lim * 0.65)
+        ax.set_aspect("equal")
+        ax.set_xlabel("weight of 'python'")
+        ax.set_ylabel("weight of 'docker'")
+        ax.set_title("dividing by the length: every arrow shrinks to length 1" if t > 0 else
+                     "before: the pasted CV is 4× longer - it would win every comparison")
+    frames = [0] * 4 + list(range(len(steps))) + [len(steps) - 1] * 5
+    L.animate(fig, lambda i: upd(frames[i]), len(frames), "l2_arrows", fps=3)
+
+# ---------------------------------------------------------------- 7. the set() bug: DF counts documents, not occurrences
+if L.wanted("df_bug"):
+    docs_b = [["free"] * 500 + ["win"], ["meeting", "tomorrow"], ["free", "lunch"], ["call", "me"]]
+    good = Counter(t for d in docs_b for t in set(d))
+    bad = Counter(t for d in docs_b for t in d)
+    fig, axes = plt.subplots(1, 2, figsize=(13, 4.2))
+    for ax, cnt, title, col in [(axes[0], bad, "WITHOUT set():  df['free'] = 501", RED),
+                                (axes[1], good, "WITH set():  df['free'] = 2   (2 of 4 documents)", GREEN)]:
+        ws = ["free", "win", "meeting", "lunch"]
+        ax.bar(ws, [cnt[w] for w in ws], color=col)
+        ax.set_yscale("log")
+        ax.set_ylabel("DF (log scale)")
+        ax.set_title(title, fontsize=13)
+    caption(fig, "4 messages; one spam e-mail shouts 'free' 500 times. DF must count DOCUMENTS - otherwise 'free' "
+                 "looks like the commonest word in the world.")
+    L.save(fig, "df_bug")
+
+# ---------------------------------------------------------------- 8. real SMS: the words with the highest TF-IDF in spam vs ham
+if L.wanted("spam_ham_words"):
+    with open(data("08_SpamClassifier", "sms_spam.csv"), encoding="utf-8") as f:
+        sms = list(csv.DictReader(f))
+    toks = [[w for w in re.findall(r"[a-z']+", r["text"].lower()) if len(w) >= 3 and w not in STOP] for r in sms]
+    lab = np.array([r["label"] == "spam" for r in sms])
+    Ns = len(toks)
+    dfs = Counter(t for d in toks for t in set(d))
+    idfs = {t: math.log(Ns / (1 + c)) + 1 for t, c in dfs.items()}
+    score = {0: Counter(), 1: Counter()}
+    for d, y in zip(toks, lab):
+        if not d:
+            continue
+        cnt = Counter(d)
+        vec = {t: (c / len(d)) * idfs[t] for t, c in cnt.items()}
+        norm = math.sqrt(sum(v * v for v in vec.values()))
+        for t, v in vec.items():
+            score[int(y)][t] += v / norm
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5.6))
+    for ax, y, col, name in [(axes[0], 0, BLUE, "ham"), (axes[1], 1, ORANGE, "spam")]:
+        n = (lab == y).sum()
+        top = [(t, s / n) for t, s in score[y].most_common(12)]
+        ax.barh(range(12)[::-1], [s for _, s in top], color=col)
+        ax.set_yticks(range(12)[::-1], [t for t, _ in top])
+        ax.set_xlabel("average TF-IDF weight per message")
+        ax.set_title(f"the 12 heaviest words in {name} ({n:,} SMS)")
+    caption(fig, "Laith's real SMS, Laith's formula (count ÷ length, ln(N / (1 + df)) + 1, L2). Each class has its own "
+                 "'fingerprint' of heavy words - that's what the models learn from.")
+    L.save(fig, "spam_ham_words")
