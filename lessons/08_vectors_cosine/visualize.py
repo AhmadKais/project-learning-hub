@@ -123,3 +123,107 @@ if L.wanted("real_ranking"):
     hits10 = sum(res[i]["id"] in rel for i in order[:10])
     ax.set_title(f"Job '{j['title']}': green = a CV a human marked relevant   (P@10 = {hits10}/10)")
     L.save(fig, "real_ranking")
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 5. the dot product as matching boxes
+if L.wanted("dot_boxes"):
+    words = ["python", "sql", "docker", "java"]
+    a = [2, 1, 1, 0]
+    b = [1, 1, 0, 2]
+    fig, ax = plt.subplots(figsize=(13, 4.6))
+    blank(ax)
+    for j, w in enumerate(words):
+        x = 0.16 + j * 0.17
+        ax.text(x + 0.06, 0.9, w, ha="center", fontsize=13, weight="bold")
+        box(ax, x, 0.66, 0.12, 0.14, str(a[j]), color=BLUE, fill=LIGHT_BLUE, fontsize=16)
+        box(ax, x, 0.42, 0.12, 0.14, str(b[j]), color=ORANGE, fill=LIGHT_ORANGE, fontsize=16)
+        p = a[j] * b[j]
+        box(ax, x, 0.12, 0.12, 0.14, f"{a[j]}×{b[j]} = {p}", color=GREEN if p else MUTED, fontsize=13)
+        ax.text(x + 0.06, 0.32, "↓", ha="center", fontsize=18)
+    ax.text(0.02, 0.73, "CV", fontsize=14, color=BLUE, weight="bold")
+    ax.text(0.02, 0.49, "advert", fontsize=14, color=ORANGE, weight="bold")
+    ax.text(0.02, 0.19, "multiply", fontsize=13, color=INK2)
+    ax.text(0.85, 0.19, f"add: {sum(x * y for x, y in zip(a, b))}", fontsize=18, weight="bold", color=GREEN)
+    ax.set_title("dot product = multiply the numbers in matching positions, then add them all", fontsize=14)
+    caption(fig, "A word only adds to the dot product when it is in BOTH texts (docker and java add 0).")
+    L.save(fig, "dot_boxes")
+
+# ---------------------------------------------------------------- 6. three words = three dimensions (same maths)
+if L.wanted("arrows_3d"):
+    from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
+    fig = plt.figure(figsize=(9, 7.5))
+    ax = fig.add_subplot(projection="3d")
+    J3 = np.array([1, 1, 0.0])
+    vs = [("advert (1, 1, 0)", J3, INK), ("CV A (2, 1, 0)", np.array([2, 1, 0.0]), BLUE),
+          ("CV D (1, 1, 2)", np.array([1, 1, 2.0]), AQUA), ("CV E (0, 0, 3)", np.array([0, 0, 3.0]), ORANGE)]
+    for name, v, col in vs:
+        ax.quiver(0, 0, 0, *v, color=col, lw=3, arrow_length_ratio=0.12)
+        c = cos(J3, v)
+        ax.text(*(v * 1.05), f"{name}\ncos = {c:.2f}" if name[:3] != "adv" else name, color=col, fontsize=11)
+    ax.set_xlim(0, 3)
+    ax.set_ylim(0, 3)
+    ax.set_zlim(0, 3)
+    ax.set_xlabel("python")
+    ax.set_ylabel("sql")
+    ax.set_zlabel("figma")
+    ax.view_init(22, 35)
+    ax.set_title("3 words = 3 dimensions. 5,000 words = 5,000 dimensions:\nwe can't draw it, but the arithmetic is identical")
+    L.save(fig, "arrows_3d")
+
+# ---------------------------------------------------------------- 7. real CVs: who resembles whom? (cosine matrix)
+if L.wanted("cv_matrix"):
+    import math
+    import re
+    from collections import Counter
+    with open(data("31_ResumeMatch", "resumes.csv"), encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    roles = ["python_backend", "data_science", "frontend", "devops", "qa"]
+    pick = [r for role in roles for r in [x for x in rows if x["role"] == role][:6]]
+    toks = [re.findall(r"[a-z][a-z+#.]*[a-z+#]", r["text"].lower().split(". ", 1)[1]) for r in rows]
+    Nr = len(rows)
+    dfr = Counter(t for d in toks for t in set(d))
+    idf = {t: math.log((1 + Nr) / (1 + c)) + 1 for t, c in dfr.items()}
+    vocab = sorted(idf)
+    pos = {t: i for i, t in enumerate(vocab)}
+
+    def vec(text):
+        v = np.zeros(len(vocab))
+        for t, c in Counter(re.findall(r"[a-z][a-z+#.]*[a-z+#]", text.lower().split(". ", 1)[1])).items():
+            v[pos[t]] = c * idf[t]
+        return v / np.linalg.norm(v)
+    V = np.array([vec(r["text"]) for r in pick])
+    S = V @ V.T
+    fig, ax = plt.subplots(figsize=(9.5, 8.5))
+    im = ax.imshow(S, cmap="Blues", vmin=0, vmax=1)
+    ax.grid(False)
+    for k, role in enumerate(roles):
+        ax.text(-1, k * 6 + 2.5, role.replace("_", " "), ha="right", va="center", fontsize=11)
+        ax.add_patch(plt.Rectangle((k * 6 - 0.5, k * 6 - 0.5), 6, 6, fill=False, ec=ORANGE, lw=2))
+    ax.set_xticks([])
+    ax.set_yticks([])
+    fig.colorbar(im, ax=ax, label="cosine similarity", shrink=0.8)
+    ax.set_title("30 real CVs, every pair compared (TF-IDF + cosine)\nCVs of the same job type light up the orange squares")
+    L.save(fig, "cv_matrix")
+
+# ---------------------------------------------------------------- 8. cosine in everyday life
+if L.wanted("cosine_world"):
+    tiles = [("Spotify 'similar songs'", "a song = (tempo, energy, dance, ...)", "songs pointing the same way"),
+             ("Face recognition", "a face = 128 numbers from a network", "today's face vs the saved one: high cos → open"),
+             ("Plagiarism checker", "an essay = its TF-IDF row", "two essays with cos 0.95 → copied?"),
+             ("Shop: 'you may also like'", "a customer = what they bought", "customers pointing your way bought…"),
+             ("News: 'related articles'", "an article = its TF-IDF row", "the 5 articles with the highest cos"),
+             ("Kosai's ResumeMatch", "a CV / an advert = TF-IDF row", "sort the 200 CVs by cos with the advert")]
+    fig, axes = plt.subplots(2, 3, figsize=(15, 6.6))
+    for ax, (title, what, how), col in zip(axes.ravel(), tiles, SERIES):
+        blank(ax)
+        ax.add_patch(FancyBboxPatch((0.02, 0.02), 0.96, 0.96, boxstyle="round,pad=0,rounding_size=0.05", lw=2.5,
+                                    edgecolor=col, facecolor=PAPER))
+        ax.add_patch(FancyBboxPatch((0.02, 0.74), 0.96, 0.24, boxstyle="round,pad=0,rounding_size=0.05", lw=0,
+                                    facecolor=col))
+        ax.text(0.5, 0.86, title, ha="center", va="center", color="white", fontsize=13.5, weight="bold")
+        ax.text(0.06, 0.56, "the arrow:", fontsize=10.5, color=MUTED)
+        ax.text(0.06, 0.45, what, fontsize=11.5)
+        ax.text(0.06, 0.28, "cosine finds:", fontsize=10.5, color=MUTED)
+        ax.text(0.06, 0.17, how, fontsize=11.5)
+    fig.suptitle("Turn things into arrows, compare the angle - one idea behind many apps", fontsize=15, weight="bold")
+    L.save(fig, "cosine_world")
