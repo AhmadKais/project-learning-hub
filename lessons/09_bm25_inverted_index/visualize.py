@@ -171,6 +171,151 @@ if L.wanted("b_experiment"):
     caption(fig, "The project's 200 CVs and 5 jobs, k1 = 1.5.  Kosai's 'b = 0' experiment: report BOTH charts - an honest result.")
     L.save(fig, "b_experiment")
 
+
+# ================================================================ expanded lesson: more pictures
+with open(data("31_ResumeMatch", "resumes.csv"), encoding="utf-8") as f:
+    RES = list(csv.DictReader(f))
+with open(data("31_ResumeMatch", "jobs.csv"), encoding="utf-8") as f:
+    JOBS = list(csv.DictReader(f))
+TOK = lambda s: [w for w in re.findall(r"[a-z][a-z+#.]*[a-z+#]|[a-z]", s.lower()) if w not in STOP]
+
+
+def build(texts):
+    D = [Counter(TOK(t)) for t in texts]
+    lens = np.array([sum(d.values()) for d in D], float)
+    dfc = Counter(t for d in D for t in d)
+    return D, lens, dfc
+
+
+def score_bm25(D, lens, dfc, q, b=B):
+    N, avg = len(D), lens.mean()
+    sc = np.zeros(N)
+    for t in set(TOK(q)):
+        if t not in dfc:
+            continue
+        idf = math.log((N - dfc[t] + 0.5) / (dfc[t] + 0.5) + 1)
+        for i, d in enumerate(D):
+            if t in d:
+                sc[i] += idf * d[t] * (K1 + 1) / (d[t] + K1 * (1 - b + b * lens[i] / avg))
+    return sc
+
+
+def score_tfidf(D, dfc, q):
+    N = len(D)
+    idf = {t: math.log((1 + N) / (1 + c)) + 1 for t, c in dfc.items()}
+
+    def vec(c):
+        v = {t: n * idf.get(t, 0) for t, n in c.items()}
+        n = math.sqrt(sum(x * x for x in v.values())) or 1
+        return {t: x / n for t, x in v.items()}
+    qv = vec(Counter(TOK(q)))
+    return np.array([sum(w * vec(d).get(t, 0) for t, w in qv.items()) for d in D])
+
+
+# ---------------------------------------------------------------- 6. each extra mention adds less (the pizza picture)
+if L.wanted("extra_mention"):
+    fig, ax = plt.subplots(figsize=(12, 4.8))
+    tfs = np.arange(1, 11)
+    gain_bm = [sat(t, K1) - sat(t - 1, K1) for t in tfs]
+    ax.bar(tfs - 0.2, [1] * 10, 0.4, color=MUTED, label="TF-IDF: every mention adds the same")
+    ax.bar(tfs + 0.2, gain_bm, 0.4, color=ORANGE, label="BM25 (k1 = 1.5): each mention adds less")
+    for t, g in zip(tfs, gain_bm):
+        ax.text(t + 0.2, g + 0.02, f"{g:.2f}", ha="center", fontsize=10)
+    ax.set_xticks(tfs, [f"{t}{'st' if t == 1 else 'nd' if t == 2 else 'rd' if t == 3 else 'th'}" for t in tfs])
+    ax.set_xlabel("the mention of 'python' in the CV")
+    ax.set_ylabel("how much this mention adds")
+    ax.set_title("Like slices of pizza: the 1st is wonderful, the 10th adds almost nothing")
+    ax.legend()
+    L.save(fig, "extra_mention")
+
+# ---------------------------------------------------------------- 7. the keyword stuffer: TF-IDF vs BM25 on the real CVs
+if L.wanted("stuffer"):
+    job = JOBS[0]
+    D0, l0, d0 = build([r["text"] for r in RES])
+    base = score_tfidf(D0, d0, job["text"])
+    order = list(np.argsort(-base))
+    weak = next(RES[i] for i in order[80:] if RES[i]["role"] == "qa")      # a QA CV far down the list
+    stuffed = weak["text"] + " Python" * 15
+    texts = [r["text"] for r in RES] + [stuffed]
+    D, lens, dfc = build(texts)
+    st = len(texts) - 1
+    rank_t = int((score_tfidf(D, dfc, job["text"]) > score_tfidf(D, dfc, job["text"])[st]).sum()) + 1
+    rank_b = int((score_bm25(D, lens, dfc, job["text"]) > score_bm25(D, lens, dfc, job["text"])[st]).sum()) + 1
+    orig_t = int((score_tfidf(D0, d0, job["text"]) > score_tfidf(D0, d0, job["text"])[RES.index(weak)]).sum()) + 1
+    orig_b = int((score_bm25(D0, l0, d0, job["text"]) > score_bm25(D0, l0, d0, job["text"])[RES.index(weak)]).sum()) + 1
+    print(f"  stuffer: QA CV {weak['id']} rank before tfidf {orig_t} bm25 {orig_b}; after stuffing tfidf {rank_t} bm25 {rank_b}")
+    fig, ax = plt.subplots(figsize=(12, 4.2))
+    for row, (name, before, after, col) in enumerate([("TF-IDF + cosine", orig_t, rank_t, RED),
+                                                       ("BM25", orig_b, rank_b, GREEN)]):
+        ax.annotate("", (after, row), (before, row), arrowprops=dict(arrowstyle="-|>", color=col, lw=4,
+                                                                     mutation_scale=25))
+        ax.plot(before, row, "o", color=MUTED, ms=14)
+        ax.text(before, row + 0.22, f"before: {before}", ha="center", fontsize=12)
+        ax.text(after, row + 0.22, f"after: {after}", ha="center", fontsize=12, weight="bold", color=col)
+    ax.set_yticks([0, 1], ["TF-IDF + cosine", "BM25"])
+    ax.set_ylim(-0.5, 1.6)
+    ax.set_xlim(201, 0)
+    ax.set_xlabel("rank for 'Backend Python developer' (1 = top of the list, out of 201)")
+    ax.set_title(f"A QA tester's CV + 'Python' pasted 15 times: TF-IDF lifts it {orig_t - rank_t} places, "
+                 f"BM25 only {orig_b - rank_b}")
+    L.save(fig, "stuffer")
+
+# ---------------------------------------------------------------- 8. where a CV's score comes from (sum of term scores)
+if L.wanted("score_parts"):
+    job = JOBS[0]
+    D, lens, dfc = build([r["text"] for r in RES])
+    total = score_bm25(D, lens, dfc, job["text"])
+    top = np.argsort(-total)[:5]
+    terms = [t for t in dict.fromkeys(TOK(job["text"])) if t in dfc]
+    N, avg = len(D), lens.mean()
+    fig, ax = plt.subplots(figsize=(13, 5.4))
+    left = np.zeros(len(top))
+    SKILLS = {"python", "django", "rest", "apis", "postgresql", "docker", "redis"}
+    skill = [t for t in terms if t in SKILLS]
+    common = [t for t in terms if t not in SKILLS]
+    groups = [(t, [t]) for t in skill] + [("the advert's other words (looking, strong, experience, ...)", common)]
+    for k, (t, members) in enumerate(groups):
+        part = np.zeros(len(top))
+        for m in members:
+            idf = math.log((N - dfc[m] + 0.5) / (dfc[m] + 0.5) + 1)
+            part += np.array([idf * D[i][m] * (K1 + 1) / (D[i][m] + K1 * (1 - B + B * lens[i] / avg))
+                              if m in D[i] else 0 for i in top])
+        if part.sum() == 0:
+            continue
+        col = MUTED if t.startswith("the advert") else SERIES[k % len(SERIES)]
+        ax.barh(range(len(top)), part, left=left, color=col, label=t, edgecolor="white")
+        left += part
+    ax.set_yticks(range(len(top)), [f"{RES[i]['id']} ({RES[i]['role']})" for i in top])
+    ax.invert_yaxis()
+    ax.set_xlabel("BM25 score = sum of one piece per job word")
+    ax.set_title(f"The top 5 CVs for '{job['title']}': which words earned the points?\n"
+                 "(the first two copied the advert's sentences: most of their points are grey, not skills)")
+    ax.legend(loc="lower right", ncols=3, fontsize=10)
+    L.save(fig, "score_parts")
+
+# ---------------------------------------------------------------- 9. how many CVs the index actually touches (real jobs)
+if L.wanted("touched"):
+    D, lens, dfc = build([r["text"] for r in RES])
+    fig, ax = plt.subplots(figsize=(12, 4.8))
+    names, touched = [], []
+    for j in JOBS:
+        qs = set(TOK(j["text"]))
+        hit = sum(1 for d in D if qs & set(d))
+        rare = [t for t in qs if t in dfc and dfc[t] < 100]
+        hit_rare = sum(1 for d in D if set(rare) & set(d))
+        names.append(j["title"])
+        touched.append((hit, hit_rare))
+    x = np.arange(len(names))
+    ax.bar(x, [t[0] for t in touched], 0.55, color=ORANGE)
+    for xx, t in zip(x, touched):
+        ax.text(xx, t[0] + 3, f"{t[0]} of {len(D)}", ha="center", fontsize=12)
+    ax.axhline(len(D), color=INK, ls="--")
+    ax.text(-0.4, len(D) + 3, f"all {len(D)} CVs", fontsize=11)
+    ax.set_xticks(x, names, fontsize=10)
+    ax.set_ylabel("CVs the ranker must look at")
+    ax.set_title("The inverted index only walks the lists of the job's words - the other CVs are never opened")
+    L.save(fig, "touched")
+
 if L.live:
     from matplotlib.widgets import Slider
     fig, ax = plt.subplots(figsize=(12, 6))
