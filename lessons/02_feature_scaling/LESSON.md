@@ -256,27 +256,42 @@ That's why the SVM in Laith's project prints *"failed to converge"* without a sc
 
 ---
 
-## 🧪 Worked example: Sami's "most similar wine" on all 4,898 wines
+## 🧪 Worked example: does scaling find better "similar wines"?
+
+Sami runs a fair test on his real wines, with **all 11 measurements**. He takes every 10th wine, pretends it's a customer's
+wine, finds the most similar **other** wine (once with raw numbers, once with z-scores) and checks two things: how different
+is the alcohol, and do the two wines have the **same quality grade**?
 
 ```python
 import numpy as np
 w = np.genfromtxt("32_WineGrader/data/winequality-white.csv", delimiter=";", skip_header=1)
-X = w[:, [10, 6]]                                   # columns: alcohol, total SO₂
-customer = np.array([10.4, 140])
+X, quality = w[:, :11], w[:, 11]                  # 11 measurements, and the grade 3 … 9
+Z = (X - X.mean(axis=0)) / X.std(axis=0)          # z-scores
 
-def nearest(A, p):
-    return np.argmin(np.sqrt(((A - p) ** 2).sum(axis=1)))
+def most_similar(A, k):
+    d = np.sqrt(((A - A[k]) ** 2).sum(axis=1))     # distance from wine k to every wine
+    d[k] = np.inf                                 # not itself
+    return d.argmin()
 
-i = nearest(X, customer)                                       # RAW
-print("raw    :", X[i])
-
-mean, std = X.mean(axis=0), X.std(axis=0)
-j = nearest((X - mean) / std, (customer - mean) / std)         # SCALED
-print("scaled :", X[j])
+for name, A in [("raw", X), ("scaled", Z)]:
+    alc, same = [], []
+    for k in range(0, len(X), 10):
+        j = most_similar(A, k)
+        alc.append(abs(X[j, 10] - X[k, 10]))
+        same.append(quality[j] == quality[k])
+    print(f"{name:7s} alcohol differs by {np.mean(alc):.2f} %   same grade: {np.mean(same):.0%}")
 ```
 
-Run it and compare the two wines it prints. Then try with all 11 columns (`X = w[:, :11]`) — the difference is even bigger,
-because density (≈ 0.99) and chlorides (≈ 0.04) are completely invisible without scaling.
+Output:
+
+```
+raw     alcohol differs by 0.39 %   same grade: 59%
+scaled  alcohol differs by 0.16 %   same grade: 66%
+```
+
+With raw numbers, the "most similar" wine is chosen almost only by SO₂ and sugar (the big numbers). After scaling, all 11
+measurements count — the neighbour is closer in alcohol and **more often has the same grade**. That is exactly what Seif's
+k-NN needs (Lesson 15).
 
 ## Try it yourself
 
