@@ -66,7 +66,9 @@ if L.wanted("why_layers"):
     for ax, (m, title) in zip(axes, models):
         m.fit(X, y)
         P = m.predict_proba(G)[:, 1].reshape(gx.shape)
-        ax.contourf(gx, gy, P, levels=np.linspace(0, 1, 11), cmap="RdBu_r", alpha=0.45)
+        from matplotlib.colors import LinearSegmentedColormap
+        cm = LinearSegmentedColormap.from_list("bo", [LIGHT_BLUE, PAPER, LIGHT_ORANGE])
+        ax.contourf(gx, gy, P, levels=np.linspace(0, 1, 11), cmap=cm)
         ax.contour(gx, gy, P, levels=[0.5], colors=INK, linewidths=2)
         ax.scatter(X[y == 0, 0], X[y == 0, 1], s=14, color=BLUE)
         ax.scatter(X[y == 1, 0], X[y == 1, 1], s=14, color=ORANGE)
@@ -155,3 +157,69 @@ if L.wanted("softmax_example"):
     for ax in axes:
         ax.set_xticks(range(3), ["class 0", "class 1", "class 2"])
     L.save(fig, "softmax_example")
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 7. the factory: rooms of workers
+if L.wanted("factory"):
+    fig, ax = plt.subplots(figsize=(15, 6.4))
+    blank(ax)
+    rooms = [("ROOM 1 (input)\n2,304 workers", "each reads ONE pixel", ["0.12", "0.80", "0.75", "…"], MUTED),
+             ("ROOM 2 (layer 1)", "'a dark edge here'", ["edge ↗", "edge —", "dark blob", "…"], BLUE),
+             ("ROOM 3 (layer 2)", "'parts of a face'", ["eye", "mouth corner ↑", "raised brow", "…"], AQUA),
+             ("ROOM 4 (output)\n7 workers", "one per emotion, shouts a score", ["happy 3.1", "sad −0.4", "surprise 0.9", "…"],
+              ORANGE)]
+    for r_, (title, job, notes, col) in enumerate(rooms):
+        x0 = 0.02 + r_ * 0.245
+        ax.add_patch(FancyBboxPatch((x0, 0.1), 0.21, 0.72, boxstyle="round,pad=0,rounding_size=0.02", ec=col, fc=PAPER,
+                                    lw=2.5))
+        ax.text(x0 + 0.105, 0.9, title, ha="center", fontsize=12.5, weight="bold", color=col)
+        ax.text(x0 + 0.105, 0.75, job, ha="center", fontsize=11, style="italic", color=INK2)
+        for j, n_ in enumerate(notes):
+            box(ax, x0 + 0.025, 0.56 - j * 0.12, 0.16, 0.085, n_, color=col, fontsize=11, radius=0.01)
+        if r_ < 3:
+            arrow(ax, (x0 + 0.215, 0.45), (x0 + 0.24, 0.45), lw=3)
+    ax.text(0.5, 0.02, "Nobody tells the workers what to look for - they learn it from 28,709 labelled faces "
+                       "(Lesson 21).", ha="center", fontsize=12, color=INK2)
+    ax.set_title("A neural network as a factory: each room combines the notes of the room before", fontsize=14)
+    L.save(fig, "factory")
+
+# ---------------------------------------------------------------- 8. a small network learning a curved border
+if L.wanted("learning_border"):
+    from sklearn.neural_network import MLPClassifier
+    r = np.random.default_rng(0)
+    n = 300
+    t = r.uniform(0, 2 * np.pi, n)
+    rad = np.r_[r.normal(1.0, 0.18, n // 2), r.normal(2.0, 0.18, n // 2)]
+    Xc = np.c_[rad * np.cos(t), rad * np.sin(t)]
+    yc = np.r_[np.zeros(n // 2), np.ones(n // 2)]
+    net = MLPClassifier((16, 16), activation="relu", learning_rate_init=0.01, random_state=1)
+    gx, gy = np.meshgrid(np.linspace(-3, 3, 150), np.linspace(-3, 3, 150))
+    G = np.c_[gx.ravel(), gy.ravel()]
+    snaps = []
+    epochs = [1, 2, 3, 5, 8, 12, 18, 25, 35, 50, 70, 100, 140, 200]
+    done = 0
+    import warnings
+    warnings.filterwarnings("ignore")
+    for e in epochs:
+        while done < e:
+            net.partial_fit(Xc, yc, classes=[0, 1])
+            done += 1
+        snaps.append((e, net.predict_proba(G)[:, 1].reshape(gx.shape), net.score(Xc, yc), net.loss_))
+    fig, ax = plt.subplots(figsize=(8, 7.5))
+
+    def upd(k):
+        e, P, acc, loss = snaps[min(k, len(snaps) - 1)]
+        ax.clear()
+        from matplotlib.colors import LinearSegmentedColormap
+        cm = LinearSegmentedColormap.from_list("bo", [LIGHT_BLUE, PAPER, LIGHT_ORANGE])
+        ax.contourf(gx, gy, P, levels=np.linspace(0, 1, 11), cmap=cm)
+        ax.contour(gx, gy, P, levels=[0.5], colors=[INK], linewidths=2.5)
+        ax.scatter(Xc[yc == 0, 0], Xc[yc == 0, 1], s=18, color=BLUE, edgecolor="white")
+        ax.scatter(Xc[yc == 1, 0], Xc[yc == 1, 1], s=18, color=ORANGE, edgecolor="white")
+        ax.set_aspect("equal")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title(f"after {e} rounds of training: {acc:.0%} right, loss {loss:.2f}\n"
+                     "(2 hidden layers of 16 ReLU neurons)", fontsize=12)
+    frames = list(range(len(snaps))) + [len(snaps) - 1] * 4
+    L.animate(fig, lambda i: upd(frames[i]), len(frames), "learning_border", fps=2)

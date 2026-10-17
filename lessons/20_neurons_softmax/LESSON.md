@@ -3,6 +3,20 @@
 > **For:** Ryan (FaceEmotion stage 3) · background for everyone &nbsp;·&nbsp; **Time:** 3 × 45 min
 > **Before:** Lesson 00 §5, §8; Lessons 12 (logistic regression), 19 &nbsp;·&nbsp; **After this:** Lessons 21, 22
 
+**In one sentence:** a neural network is many tiny "multiply, add, bend" units arranged in layers, each layer building
+more complex clues from the one before, ending in one score per class that softmax turns into probabilities.
+
+## 🗺️ The map of this lesson
+
+```mermaid
+flowchart LR
+    A["1 · One neuron:<br/>Σ w·x + b, then ReLU"] --> B["2 · Why the bend"]
+    B --> C["3 · Why layers"]
+    C --> D["4 · Forward pass"]
+    D --> E["5 · Softmax:<br/>scores → probabilities"]
+    E --> F["6 · Cross-entropy:<br/>how wrong?"]
+```
+
 ## The story
 
 > Ryan's little sister asks: *"How can a computer know that a face is happy?"* Ryan explains with a **factory**. At the
@@ -11,12 +25,16 @@
 > workers — one per emotion — who each shout how sure they are. Nobody told the workers what to look for: they **learned**
 > it from 28,709 labelled faces. Each worker is a **neuron**, each room a **layer**, the factory a **neural network**.
 
-## 🎯 By the end, the student can
+![the factory](figs/factory.png)
 
-1. Compute one neuron's output by hand (weights, bias, ReLU).
-2. Explain why a network needs **layers** and a **bend** (activation) between them.
-3. Compute softmax and the cross-entropy loss for 3 classes by hand, step by step.
-4. Explain why `forward()` returns **logits** and not probabilities.
+### 🌍 Real world
+
+Neural networks are behind most "smart" things you use: **face unlock**, **voice assistants** (Siri, Google), **Google
+Translate**, **photo search** ("show me my photos of dogs"), self-driving features in cars, and chatbots like ChatGPT and
+Claude. All of them are built from the same small unit you'll compute by hand in Part 1 — just billions of them.
+
+**Is it a brain?** The name comes from brain cells (neurons), which receive signals and "fire" when the total is strong
+enough. Artificial neurons borrow only that idea; a network is a lot of simple arithmetic, not a thinking brain.
 
 ## Words you need
 
@@ -63,6 +81,16 @@ build curved, complicated decisions. ReLU is the simplest bend: keep positive nu
 * 1 neuron: one straight line → 88 % on this curved problem.
 * 1 hidden layer of 4 ReLU neurons: a few straight pieces glued together.
 * 2 layers of 32: follows the curve → 97 %.
+
+### Watch a network learn a curved border
+
+Two hidden layers of 16 ReLU neurons, trained on dots in two rings (blue inside, orange outside). A straight line could
+never separate them:
+
+![a network learning a curved border](figs/learning_border.gif)
+
+At first the border is meaningless; after a few hundred rounds it wraps around the inner ring. Look closely: the border is
+made of **straight pieces** — each ReLU neuron contributes one "fold", and many folds make a curve.
 
 Each layer builds new, more complex features from the previous layer's features. In a face network: edges → eyes and
 mouth corners → whole expressions (Lesson 22).
@@ -116,6 +144,30 @@ p − y = (0.785, −0.825, 0.039)
 That's why PyTorch joins them in one layer — `nn.CrossEntropyLoss` takes the **logits** — and why Ryan's `forward()` returns
 logits; softmax is applied only to display the percentages.
 
+## 🧪 Worked example: one neuron, softmax and cross-entropy in numpy
+
+```python
+import numpy as np
+
+# Part 1: one neuron
+x = np.array([0.5, -1.0, 2.0])
+w = np.array([0.8, 0.3, -0.4])
+b = 0.1
+z = x @ w + b
+print("z =", round(z, 2), " ReLU =", max(0.0, z))          # z = -0.6  ReLU = 0.0
+
+# Part 5: softmax
+logits = np.array([2.0, 0.5, -1.0])
+p = np.exp(logits) / np.exp(logits).sum()
+print("softmax =", p.round(3))                             # [0.786 0.175 0.039]
+
+# Part 6: cross-entropy when the truth is class 1
+print("loss =", round(-np.log(p[1]), 3))                   # 1.741
+print("p - y =", (p - np.array([0, 1, 0])).round(3))       # [ 0.786 -0.825  0.039]
+```
+
+(The hand calculation rounds to 3 digits on the way, so it gets 0.785 and 1.743; numpy keeps every digit: 0.786 and 1.741.)
+
 ## 7. Common mistakes
 
 | student says | the truth |
@@ -123,6 +175,16 @@ logits; softmax is applied only to display the percentages.
 | "Put softmax in forward() *and* use CrossEntropyLoss — double safe" | Softmax twice → a wrong loss and slow learning. |
 | "0.9 probability = right 90 % of the time" | Only if the model is calibrated (Lessons 14, 24). |
 | "ReLU(−0.6) = −0.6" | 0. Negative in → 0 out. |
+| "More layers are always better" | More layers need more data and time, and can overfit (Lessons 23, 24). |
+
+## 📝 Summary
+
+> * A **neuron**: z = Σ wᵢxᵢ + b, then a bend — **ReLU** = max(0, z).
+> * Without bends, any number of layers = one straight line. Bends + layers → curved, complex decisions.
+> * **Forward pass**: compute layer by layer, left to right.
+> * The last layer gives **logits**; **softmax** eᶻ ÷ Σeᶻ turns them into probabilities that add to 1.
+> * **Cross-entropy** = −ln(p of the correct class); its push on the logits is simply **p − y**.
+> * `forward()` returns logits; `nn.CrossEntropyLoss` does softmax inside.
 
 ## 8. Activities
 
@@ -149,6 +211,27 @@ All equal → (⅓, ⅓, ⅓); loss = −ln ⅓ = **1.099**. For 7 emotions: ln 
 to recognise at the start of training.
 </details>
 
+<details><summary>4. 🟢 ReLU of −3, 0 and 2.5?</summary>
+
+**0, 0, 2.5**.
+</details>
+
+<details><summary>5. 🟡 Add 10 to every logit: (12, 10.5, 9). Does softmax change?</summary>
+
+No — e^(z+10) = e^z × e^10, and the e^10 cancels in the division. Softmax only cares about the **differences** between
+logits. (Real code subtracts the largest logit first for exactly this reason: it avoids overflow.)
+</details>
+
+<details><summary>6. 🟡 A layer has 2,304 inputs and 64 neurons. How many weights and biases?</summary>
+
+2,304 × 64 = **147,456** weights + **64** biases.
+</details>
+
+<details><summary>7. 🔴 Show that two layers without activation are one layer: y = W₂(W₁x).</summary>
+
+W₂(W₁x) = (W₂W₁)x — multiplying two matrices gives one matrix, so it's a single linear layer. That's why we need the bend.
+</details>
+
 ## 10. In your project
 
 | Project | Where |
@@ -157,6 +240,12 @@ to recognise at the start of training.
 
 ## 🎬 Watch & explore
 
-* 3Blue1Brown — *But what is a neural network?* — [search on YouTube](https://www.youtube.com/results?search_query=3Blue1Brown+but+what+is+a+neural+network)
+| | |
+|---|---|
+| <a href="https://www.youtube.com/watch?v=aircAruvnKk"><img src="https://img.youtube.com/vi/aircAruvnKk/mqdefault.jpg" width="240" alt="video"></a> | **3Blue1Brown — But what is a neural network?** (19 min). Layers of neurons recognising handwritten digits — the best visual explanation there is. Watch first. |
+| <a href="https://www.youtube.com/watch?v=CqOfi41LfDw"><img src="https://img.youtube.com/vi/CqOfi41LfDw/mqdefault.jpg" width="240" alt="video"></a> | **StatQuest — The Essential Main Ideas of Neural Networks**. How bent pieces add up to a curve (Part 3). |
+| <a href="https://www.youtube.com/watch?v=KpKog-L9veg"><img src="https://img.youtube.com/vi/KpKog-L9veg/mqdefault.jpg" width="240" alt="video"></a> | **StatQuest — Neural Networks Part 5: ArgMax and SoftMax**. Part 5, slowly. |
+
+**Play with it:**
 * TensorFlow Playground — [playground.tensorflow.org](https://playground.tensorflow.org/)
 * 3Blue1Brown — [Neural networks lessons](https://www.3blue1brown.com/topics/neural-networks)
