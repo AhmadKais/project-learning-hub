@@ -161,3 +161,43 @@ if L.wanted("cascade_numbers"):
     a2.set_title(f"the real face fires {len(hits)} overlapping windows;\nminNeighbors = 5 keeps groups of ≥ 5", fontsize=12)
     a2.axis("off")
     L.save(fig, "cascade_numbers")
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 5. the REAL OpenCV detector on a drawn scene, minNeighbors 0 / 2 / 5
+if L.wanted("opencv_real"):
+    import cv2
+    casc = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+    r = np.random.default_rng(3)
+    scene = np.clip(r.normal(120, 35, (320, 560)), 0, 255)
+    scene = cv2.GaussianBlur(scene.astype(np.uint8), (5, 5), 0)
+    for (x, y, s, m) in [(30, 50, 130, "smile"), (230, 100, 95, "frown"), (400, 170, 72, "open")]:
+        scene[y:y + s, x:x + s] = cartoon_face(s, m, seed=x)
+    fig, axes = plt.subplots(1, 3, figsize=(16, 4.4))
+    for ax, mn in zip(axes, (0, 2, 5)):
+        boxes = casc.detectMultiScale(scene, scaleFactor=1.1, minNeighbors=mn, minSize=(40, 40))
+        ax.imshow(scene, cmap="gray", vmin=0, vmax=255)
+        for (x, y, w, h) in boxes:
+            ax.add_patch(plt.Rectangle((x, y), w, h, fill=False, ec=ORANGE if mn else YELLOW, lw=1.2 if mn == 0 else 3))
+        ax.set_title(f"minNeighbors = {mn}:  {len(boxes)} box{'es' if len(boxes) != 1 else ''}", fontsize=13)
+        ax.axis("off")
+        print(f"  minNeighbors {mn}: {len(boxes)} boxes")
+    caption(fig, "OpenCV's real haarcascade_frontalface_default.xml (the one Ryan's HaarCascadeDetector loads) on a drawn "
+                 "scene. 0 = every window that passed all stages; grouping keeps the real faces.")
+    L.save(fig, "opencv_real")
+
+# ---------------------------------------------------------------- 6. the funnel: windows surviving each stage
+if L.wanted("funnel"):
+    fig, ax = plt.subplots(figsize=(12, 5))
+    stages = np.arange(0, 23)
+    nonface = 100_000 * 0.5 ** stages
+    face = 10 * 0.995 ** stages
+    ax.semilogy(stages, nonface, "o-", color=RED, lw=2.5, label="non-face windows (start: 100,000)")
+    ax.semilogy(stages, face, "o-", color=GREEN, lw=2.5, label="real face windows (start: 10)")
+    ax.axhline(1, color=MUTED, ls=":")
+    ax.text(22, 1.3, "1 window", ha="right", color=INK2)
+    ax.set_xlabel("after stage …")
+    ax.set_ylabel("windows still alive (log scale)")
+    ax.set_title("The cascade as a funnel: each stage halves the non-faces and keeps 99.5 % of the faces")
+    ax.legend()
+    caption(fig, "After 17 stages fewer than one non-face window is left per picture - the faces lose only 8 %.")
+    L.save(fig, "funnel")

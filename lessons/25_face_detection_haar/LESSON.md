@@ -3,6 +3,23 @@
 > **For:** Ryan (FaceEmotion stage 2) &nbsp;·&nbsp; **Time:** 2 × 45 min
 > **Before:** Lesson 00 §5; Lesson 19 &nbsp;·&nbsp; **After this:** Lesson 26
 
+**In one sentence:** to find a face fast, check simple light/dark patterns (computed in 4 reads each thanks to the
+integral image) in a chain of quick tests that throws away almost every non-face window at the first steps.
+
+## 🗺️ The map of this lesson
+
+```mermaid
+flowchart LR
+    F["camera frame"] --> W["slide a window<br/>at many sizes<br/>(~100,000 windows)"]
+    W --> S1{"stage 1<br/>(2 features)"}
+    S1 -- fail --> X["❌ not a face"]
+    S1 -- pass --> S2{"stage 2"}
+    S2 -- fail --> X
+    S2 -- pass --> SN{"… stage 22"}
+    SN -- pass --> G["group overlapping hits<br/>(minNeighbors)"]
+    G --> FACE["✅ face box"]
+```
+
 ## The story
 
 > Before EmotionNet can say "happy", someone must find **where** the face is in the 640 × 480 camera picture and cut it
@@ -11,12 +28,13 @@
 > hand? → out"), and only those who pass get a closer look, and only a few get the full check. The **Viola–Jones face
 > detector** (2001) works exactly like that guard — and it's what Ryan's `HaarCascadeDetector` uses.
 
-## 🎯 By the end, the student can
+### 🌍 Real world
 
-1. Explain a Haar feature (sum of white − sum of black) and point at two on a face.
-2. Build an integral image by hand and get any rectangle's sum with 4 reads.
-3. Explain the cascade with its numbers (0.995²² vs 0.5²²).
-4. Explain `scaleFactor`, `minNeighbors` and `minSize`.
+* The **Viola–Jones** detector (2001) was the first to find faces in real time on an ordinary computer. Within a few years
+  it was inside **digital cameras** — the little squares that appear around faces to focus on them.
+* Early **social-media face filters** and **webcam face tracking** used Haar cascades; today phones mostly use small neural
+  networks, but OpenCV's cascade is still everywhere because it's tiny and fast.
+* The cascade idea — **cheap checks first** — is how airport security, spam filters and doctors' triage work too.
 
 ## Words you need
 
@@ -99,6 +117,8 @@ of 100,000 windows:                   100,000 × 0.00000024 ≈ 0.02 false detec
 And the work: most windows die at stage 1 or 2 (after 2–10 features), so on average only ~20–30 features are checked per
 window instead of 6,000.
 
+![the cascade funnel](figs/funnel.png)
+
 **The idea:** don't make each test more accurate — put cheap tests first, so the expensive work happens only on the few
 windows that survive.
 
@@ -108,11 +128,46 @@ A real face makes **many** overlapping windows pass (shift 2 pixels, a bit bigge
 usually makes one or two. `detectMultiScale` groups overlapping windows; `minNeighbors = 5` throws away groups with fewer than
 5.
 
+### The real detector, on a drawn scene
+
+This is OpenCV's actual `haarcascade_frontalface_default.xml` — the file Ryan's `HaarCascadeDetector` loads — on three
+drawn faces in a noisy background:
+
+![the real OpenCV cascade](figs/opencv_real.png)
+
+With `minNeighbors = 0` you see every window that passed all stages: **144** boxes, piled up around the three faces. Grouping
+with `minNeighbors = 2` or `5` leaves exactly **3**.
+
 | parameter (config.py) | meaning | too low | too high |
 |---|---|---|---|
 | `scaleFactor = 1.1` | the window grows 10 % per round | slow | misses sizes in between |
 | `minNeighbors = 5` | how many windows must agree | false faces | missed faces |
 | `minSize = (60, 60)` | ignore smaller faces | slow, background noise | misses people far away |
+
+## 🧪 Worked example: the integral image and a Haar feature in numpy
+
+```python
+import numpy as np
+
+img = np.array([[1, 2, 3],
+                [4, 5, 6],
+                [7, 8, 9]])
+ii = img.cumsum(axis=0).cumsum(axis=1)          # the integral image
+print(ii)                                       # [[1 3 6] [5 12 21] [12 27 45]]
+
+def rect_sum(ii, top, left, bottom, right):     # inclusive corners, 4 reads
+    D = ii[bottom, right]
+    B = ii[top - 1, right] if top > 0 else 0
+    C = ii[bottom, left - 1] if left > 0 else 0
+    A = ii[top - 1, left - 1] if top > 0 and left > 0 else 0
+    return D - B - C + A
+
+print(rect_sum(ii, 1, 1, 2, 2))                 # 28  (5 + 6 + 8 + 9)
+
+# a two-rectangle Haar feature: top row (white) minus middle row (black)
+print(rect_sum(ii, 0, 0, 0, 2) - rect_sum(ii, 1, 0, 1, 2))      # 6 - 15 = -9
+print(0.995 ** 22, 0.5 ** 22 * 100_000)         # 0.896..., 0.0238...
+```
 
 ## 5. Common mistakes
 
@@ -121,6 +176,16 @@ usually makes one or two. `detectMultiScale` groups overlapping windows; `minNei
 | "Haar is a neural network" | No: rectangle features + AdaBoost + a cascade. Nothing is trained in the project. |
 | "It recognises who you are" | It only answers "is there a frontal face here?" |
 | "Works for any head angle" | Frontal only — that's why the DNN detector is the alternative in the book. |
+| "minNeighbors = 0 is the most sensitive, so the best" | It returns every raw window — dozens of boxes per face. |
+
+## 📝 Summary
+
+> * **Haar feature** = sum(white rectangle) − sum(black rectangle): a simple light/dark face pattern.
+> * **Integral image**: each cell = sum above-and-left → any rectangle in **4 reads**: D − B − C + A.
+> * **Sliding windows** at many sizes (`scaleFactor`) → ~100,000 windows per frame.
+> * **Cascade**: ~22 cheap stages, each keeps 99.5 % of faces and drops 50 % of the rest → 0.995²² ≈ 90 % of faces,
+>   0.5²² ≈ almost no false windows.
+> * **minNeighbors** groups overlapping hits; **minSize** ignores tiny windows.
 
 ## 6. Activities
 
@@ -156,5 +221,11 @@ No — it *is* a frontal face pattern. Mention it as a limitation.
 
 ## 🎬 Watch & explore
 
-* Computerphile — *Detecting Faces (Viola Jones Algorithm)* — [search on YouTube](https://www.youtube.com/results?search_query=Computerphile+Viola+Jones+face+detection)
+| | |
+|---|---|
+| <a href="https://www.youtube.com/watch?v=2enqKcx5b6w"><img src="https://img.youtube.com/vi/2enqKcx5b6w/mqdefault.jpg" width="240" alt="video"></a> | **Viola–Jones algorithm for face detection (explained)**. Haar features, integral image, AdaBoost and the cascade. |
+| <a href="https://www.youtube.com/watch?v=L0JkjIwz2II"><img src="https://img.youtube.com/vi/L0JkjIwz2II/mqdefault.jpg" width="240" alt="video"></a> | **HAAR cascade visualization**. Watch the windows and stages run on a real picture — Part 3 in motion. |
+| <a href="https://www.youtube.com/watch?v=wIfKeL-CYIE"><img src="https://img.youtube.com/vi/wIfKeL-CYIE/mqdefault.jpg" width="240" alt="video"></a> | **Lecture: Viola–Jones face detection**. A university lecture, for the defence. |
+
+**Read more:**
 * OpenCV docs — [Cascade Classifier tutorial](https://docs.opencv.org/4.x/db/d28/tutorial_cascade_classifier.html)
