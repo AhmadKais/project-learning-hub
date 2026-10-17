@@ -3,6 +3,21 @@
 > **For:** Dani (PhishGuard — first model, explanations) · the gradient-descent part also for Ryan (Lesson 21)
 > **Time:** 3 × 45 min &nbsp;·&nbsp; **Before:** Lesson 00 §5, §7, §8, §9; Lessons 02, 03, 18 &nbsp;·&nbsp; **After this:** Lessons 13, 21
 
+**In one sentence:** give every warning sign some points, add them up, squash the total into a probability with the
+sigmoid — and let the computer find the best points by walking downhill on its mistakes.
+
+## 🗺️ The map of this lesson
+
+```mermaid
+flowchart LR
+    X["features x<br/>(Lesson 18)"] --> Z["1 · points:<br/>z = Σ w·x + b"]
+    Z --> S["2 · sigmoid:<br/>p = σ(z)"]
+    S --> LO["3 · loss:<br/>how wrong?"]
+    LO --> G["4 · gradient descent:<br/>fix the points"]
+    G -->|repeat| Z
+    G --> R["5 · brake (C)<br/>6 · scaling"]
+```
+
 ## The story
 
 > Rana at the bank (Lesson 04) used to judge links by experience: *"An @ in the address? Suspicious. The word 'paypal'
@@ -11,13 +26,13 @@
 > each sign get? She guesses. **Logistic regression is a points system that learns the best points from thousands of
 > examples**, and then turns the total into a probability.
 
-## 🎯 By the end, the student can
+### 🌍 Points systems are everywhere
 
-1. Compute a link's total score z = Σ weight × feature + bias, by hand.
-2. Turn z into a probability with the sigmoid, and explain what the sigmoid does.
-3. Compute the log-loss for one example and explain why "confident and wrong" costs a lot.
-4. Do **one gradient-descent step by hand** and explain the update rule.
-5. Read the weights as an explanation, and explain what C (regularisation) does.
+![points systems in everyday life](figs/points_world.png)
+
+Banks, insurance companies, universities and doctors all use **points systems**: each fact about you gets some points, the
+total decides. Many of them are, in fact, logistic regressions whose points were learned from past data. Dani's PhishGuard
+is one more.
 
 ## Words you need
 
@@ -86,7 +101,12 @@ URL B:  z = −2.40  →  e^(2.40)  = 11.02   →  1 / (1 + 11.02) = 1 / 12.02 =
 ![sigmoid](figs/sigmoid.png)
 
 What the sigmoid does: very negative z → close to 0; z = 0 → exactly 0.5; very positive z → close to 1. It never goes
-below 0 or above 1 — exactly what a probability needs.
+below 0 or above 1 — exactly what a probability needs. Watch a total travel along the curve:
+
+![the sigmoid as a machine](figs/sigmoid_walk.gif)
+
+Think of it as a **dimmer switch**: far to the left the light is off (0), far to the right fully on (1), and in the middle
+it changes smoothly. Doubling the points near 0 changes p a lot; doubling 10 into 20 changes almost nothing (already sure).
 
 ## 3. How wrong was it? The log-loss
 
@@ -117,7 +137,10 @@ $$w_{\text{new}} = w - \text{lr}\times\text{slope}$$
 
 ![learning rate](figs/gd_1d.png)
 
-The step size (lr) matters: too small → crawls; good → arrives; too big → jumps over the bottom and gets worse.
+The step size (lr) matters: too small → crawls; good → arrives; too big → jumps over the bottom and gets worse. Watch three
+marbles race from the same place:
+
+![three learning rates race downhill](figs/lr_race.gif)
 
 For logistic regression, the slope for each weight has a beautifully simple form — **error × input**:
 
@@ -155,6 +178,19 @@ for epoch in range(2000):
     b -= lr * (p - y).mean()
 ```
 
+### The points it really learned
+
+On all 20 PhishGuard features (scaled first, Part 6), trained on 70 % of the real URLs:
+
+![the real learned weights](figs/real_weights.png)
+
+Long URLs, an "@", suspicious words and many digits push towards phishing; HTTPS pushes (a little) towards legitimate. Some
+weights look surprising (many hyphens → legitimate?). That happens when features are **correlated**: url_length already
+counts the hyphens, so the hyphen weight "corrects" it. Read single weights carefully — and say so in the defence.
+
+The accuracy, 77 %, is honest: telling phishing from real URLs by the text of the URL alone is **hard**. Lesson 13's trees
+do better.
+
 ## 5. Regularisation — a brake on big weights
 
 ![regularisation path](figs/regularisation.png)
@@ -169,6 +205,32 @@ strong brake** → all weights pulled toward 0. Dani tries C ∈ {0.01, 0.1, 1, 
 compared. So a `StandardScaler` comes first, inside the `Pipeline` — fitted on training URLs only and saved with the
 model.
 
+## 🧪 Worked example: logistic regression from scratch
+
+```python
+import numpy as np
+
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+# 6 tiny URLs, 2 features: has_at_symbol, brand_in_subdomain.  y = 1 phishing
+X = np.array([[1, 1], [1, 0], [0, 1], [0, 0], [0, 0], [0, 0]], float)
+y = np.array([1, 1, 1, 0, 0, 0], float)
+
+w, b, lr = np.zeros(2), 0.0, 0.5
+for epoch in range(500):
+    p = sigmoid(X @ w + b)                       # 1. points → probability
+    w -= lr * X.T @ (p - y) / len(y)             # 2. step downhill: average of error × input
+    b -= lr * (p - y).mean()
+
+loss = -np.mean(y * np.log(p) + (1 - y) * np.log(1 - p))
+print("weights", w.round(2), "bias", round(b, 2), "loss", round(loss, 3))
+print("P(phishing) for '@ only':", sigmoid(np.array([1, 0]) @ w + b).round(2))
+print("P(phishing) for nothing :", sigmoid(b).round(2))
+```
+
+Both weights come out positive (both signs mean phishing) and the bias negative (a URL with no warning sign is probably fine).
+
 ## 7. Common mistakes
 
 | student says | the truth |
@@ -177,6 +239,16 @@ model.
 | "Bigger weight = more important feature" | Only if the features are scaled the same. |
 | "A bigger learning rate learns faster" | Too big jumps over the minimum. |
 | "It can learn any pattern" | It draws a straight line (a flat boundary). For curves: trees (Lesson 13) or networks (Lesson 20). |
+| "A negative weight is a bug" | It means "this feature points towards legitimate" — or it's correcting a correlated feature. |
+
+## 📝 Summary
+
+> * **z = Σ wᵢ·xᵢ + b** — add up the points.
+> * **p = σ(z) = 1 ÷ (1 + e⁻ᶻ)** — squash to 0…1; z = 0 → 0.5.
+> * **log-loss**: −ln(p) if phishing, −ln(1 − p) if not — confident mistakes cost a lot.
+> * **Gradient descent**: w ← w − lr × (p − y) × x — "said too little → raise the weights of the features it has".
+> * **C** is a brake on big weights (small C = strong brake). **Scale** the features first.
+> * The weights **are** the explanation.
 
 ## 8. Activities
 
@@ -202,6 +274,28 @@ z = 0.8 + 1.2 + 0 + 0.25 − 1.0 = **1.25** · e^(−1.25) = 0.287 · p = 1 / 1.
 p = 0.5, error = +0.5, slopes 0.5, 0.5, 0.5 → w = (−0.25, −0.25), b = −0.25 → z = −0.75 → p = 0.32 (closer to 0 ✓).
 </details>
 
+<details><summary>4. 🟢 Log-loss when the truth is legitimate and p = 0.9?</summary>
+
+−ln(1 − 0.9) = −ln(0.1) = **2.30** — confident and wrong.
+</details>
+
+<details><summary>5. 🟡 What z gives p = 0.5? p = 0.73? p = 0.27?</summary>
+
+**0**; **+1** (σ(1) = 1 ÷ 1.368 = 0.73); **−1** (the sigmoid is symmetric: σ(−z) = 1 − σ(z)).
+</details>
+
+<details><summary>6. 🟡 After training, the weight of has_https is −0.18. A URL changes from http to https. What happens to z? To p?</summary>
+
+z goes down by 0.18 (if the features are scaled, by 0.18 × one scaled step). p goes down a little — https makes it look a
+bit less like phishing.
+</details>
+
+<details><summary>7. 🔴 Why is the update "error × input" and not just "error"?</summary>
+
+A feature that was 0 in this example played no part in the mistake, so its weight shouldn't change (× 0). A feature with a
+big value contributed a lot, so it changes more. That is exactly what the slope (derivative) of the log-loss says.
+</details>
+
 ## 10. In your project
 
 | Project | Where |
@@ -210,6 +304,12 @@ p = 0.5, error = +0.5, slopes 0.5, 0.5, 0.5 → w = (−0.25, −0.25), b = −0
 
 ## 🎬 Watch & explore
 
-* StatQuest — *Logistic Regression* — [search on YouTube](https://www.youtube.com/results?search_query=StatQuest+logistic+regression)
-* StatQuest — *Gradient Descent, Step-by-Step* — [search on YouTube](https://www.youtube.com/results?search_query=StatQuest+gradient+descent+step+by+step)
+| | |
+|---|---|
+| <a href="https://www.youtube.com/watch?v=yIYKR4sgzI8"><img src="https://img.youtube.com/vi/yIYKR4sgzI8/mqdefault.jpg" width="240" alt="video"></a> | **StatQuest — Logistic Regression** (9 min). The S-curve and what the weights mean. |
+| <a href="https://www.youtube.com/watch?v=sDv4f4s2SB8"><img src="https://img.youtube.com/vi/sDv4f4s2SB8/mqdefault.jpg" width="240" alt="video"></a> | **StatQuest — Gradient Descent, Step-by-Step** (23 min). Part 4, slowly, with every number. |
+| <a href="https://www.youtube.com/watch?v=IHZwWFHWa-w"><img src="https://img.youtube.com/vi/IHZwWFHWa-w/mqdefault.jpg" width="240" alt="video"></a> | **3Blue1Brown — Gradient descent, how neural networks learn**. The same "walk downhill" idea for networks (Ryan, Lesson 21). |
+
+**Play with it:**
 * MLU-Explain — [Logistic Regression](https://mlu-explain.github.io/logistic-regression/) (interactive)
+* At home: in the worked example change lr to 5 and to 0.01 — what happens to the loss after 500 steps?
