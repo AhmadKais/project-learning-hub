@@ -158,7 +158,7 @@ print(equalize(tiny))                                # [  0   0   0   0 128 128 
 
 MEAN, STD = 0.5013, 0.2916                           # from config.py - never recompute them on the camera
 pixels = np.array([0, 30, 128, 200, 255])
-print(((pixels / 255 - MEAN) / STD).round(2))        # [-1.72 -1.31  0.    0.97  1.71]
+print(((pixels / 255 - MEAN) / STD).round(2))        # [-1.72 -1.32  0.    0.97  1.71]
 ```
 
 ## 5. Common mistakes
