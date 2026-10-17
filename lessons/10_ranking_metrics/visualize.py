@@ -81,6 +81,75 @@ if L.wanted("p_vs_rr"):
 # ---------------------------------------------------------------- 3. TF-IDF+cosine vs BM25, real data
 STOP = {"and", "the", "of", "in", "to", "a", "with", "for", "on", "as", "an", "at", "by", "is", "it", "i", "we",
         "you", "our", "are", "be", "will", "my", "that", "this", "from", "have", "has", "was"}
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 4. people only look at the top: a results page
+if L.wanted("results_page"):
+    fig, ax = plt.subplots(figsize=(12, 7.2))
+    blank(ax)
+    looks = [100, 96, 85, 70, 58, 45, 36, 28, 22, 18]          # an illustrative "attention" curve
+    ax.add_patch(FancyBboxPatch((0.03, 0.9), 0.6, 0.07, boxstyle="round,pad=0,rounding_size=0.02", ec=INK2,
+                                fc=PAPER, lw=1.5))
+    ax.text(0.05, 0.935, "search:  backend python developer", fontsize=13, va="center")
+    for i in range(10):
+        y = 0.8 - i * 0.08
+        ax.add_patch(plt.Rectangle((0.03, y), 0.6, 0.06, color="#f1f0ec"))
+        ax.text(0.05, y + 0.03, f"{i + 1}.  CV result number {i + 1}", fontsize=12, va="center")
+        ax.add_patch(plt.Rectangle((0.68, y + 0.005), 0.28 * looks[i] / 100, 0.05, color=ORANGE, alpha=0.85))
+        ax.text(0.69 + 0.28 * looks[i] / 100, y + 0.03, f"{looks[i]}%", fontsize=11, va="center")
+    ax.text(0.68, 0.87, "how often people look at it", fontsize=12, color=INK2)
+    ax.text(0.03, 0.0, "Page 2 …  (almost nobody goes there)", fontsize=12, color=MUTED, style="italic")
+    ax.set_title("A ranking is judged at the TOP: that's why we measure P@k and the position of the first hit",
+                 fontsize=13)
+    caption(fig, "The attention numbers are illustrative - real eye-tracking studies of search pages show the same shape: "
+                 "the first results get most of the looks.")
+    L.save(fig, "results_page")
+
+# ---------------------------------------------------------------- 5. 1 / position: steep at the top, flat further down
+if L.wanted("rr_curve"):
+    fig, ax = plt.subplots(figsize=(11, 4.6))
+    pos = np.arange(1, 21)
+    ax.bar(pos, 1 / pos, color=[GREEN if p == 1 else AQUA for p in pos])
+    for p in [1, 2, 3, 4, 5, 10, 20]:
+        ax.text(p, 1 / p + 0.03, f"1/{p}\n= {1 / p:.2f}", ha="center", fontsize=10)
+    ax.set_xticks(pos)
+    ax.set_ylim(0, 1.25)
+    ax.set_xlabel("position of the FIRST relevant CV")
+    ax.set_ylabel("reciprocal rank")
+    ax.set_title("Moving the first hit from 2nd to 1st is worth +0.5; from 20th to 19th only +0.003")
+    L.save(fig, "rr_curve")
+
+# ---------------------------------------------------------------- 6. MRR over three jobs, animated
+if L.wanted("mrr_jobs"):
+    jobs3 = [("Job 1", ["R4", "R2", "R9", "R1", "R7"], {"R4", "R1"}),
+             ("Job 2", ["R3", "R8", "R5", "R6", "R0"], {"R8"}),
+             ("Job 3", ["R6", "R0", "R2", "R5", "R9"], {"R5", "R9"})]
+    fig, ax = plt.subplots(figsize=(14, 5.6))
+
+    def upd(k):
+        blank(ax)
+        rrs = []
+        for j, (name, rank, rel) in enumerate(jobs3):
+            x0 = 0.03 + j * 0.33
+            ax.text(x0, 0.95, name, fontsize=14, weight="bold")
+            first = next(i for i, c in enumerate(rank) if c in rel)
+            for i, c in enumerate(rank):
+                y = 0.82 - i * 0.12
+                hit = c in rel
+                show = j < k
+                box(ax, x0, y, 0.12, 0.09, f"{i + 1}. {c}", color=GREEN if hit and show else MUTED,
+                    fill="#d5ecd5" if hit and show else PAPER, fontsize=12)
+                if show and i == first:
+                    ax.text(x0 + 0.13, y + 0.045, f"← RR = 1/{i + 1}\n    = {1 / (i + 1):.2f}", fontsize=12,
+                            color=GREEN, va="center")
+            if j < k:
+                rrs.append(1 / (first + 1))
+        if k == len(jobs3):
+            ax.text(0.5, 0.06, f"MRR = ({' + '.join(f'{r:.2f}' for r in rrs)}) ÷ 3 = {np.mean(rrs):.2f}", ha="center",
+                    fontsize=16, weight="bold")
+    frames = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3, 3]
+    L.animate(fig, lambda i: upd(frames[i]), len(frames), "mrr_jobs", fps=2)
+
 if L.wanted("compare"):
     with open(data("31_ResumeMatch", "resumes.csv"), encoding="utf-8") as f:
         res = list(csv.DictReader(f))
@@ -140,3 +209,23 @@ if L.wanted("compare"):
     a2.set_title("MRR")
     caption(fig, "Simple versions of both methods on the project's 200 CVs and 5 labelled jobs.")
     L.save(fig, "compare")
+
+    # per job: where does the first relevant CV sit?
+    fig, ax = plt.subplots(figsize=(13, 4.8))
+    x = np.arange(len(jobs))
+    for off, (name, fn, col) in zip([-0.2, 0.2], [("TF-IDF + cosine", cosine_rank, BLUE), ("BM25", bm25_rank, ORANGE)]):
+        firsts = []
+        for j in jobs:
+            rk = fn(j["text"])
+            rel = set(j["relevant_ids"].split())
+            firsts.append(next(i for i, c in enumerate(rk, 1) if c in rel))
+        ax.bar(x + off, firsts, 0.38, color=col, label=name)
+        for xx, f_ in zip(x + off, firsts):
+            ax.text(xx, f_ + 0.05, f"pos {f_}\nRR {1 / f_:.2f}", ha="center", fontsize=10)
+        print(f"  {name} first relevant per job: {firsts}")
+    ax.set_xticks(x, [j["title"] for j in jobs], fontsize=10)
+    ax.set_ylabel("position of the first relevant CV")
+    ax.set_ylim(0, 4)
+    ax.set_title("Per job: in 4 of 5 jobs CVs that copied the advert push the first real hit down to position 2 or 3")
+    ax.legend(loc="upper right")
+    L.save(fig, "per_job")
