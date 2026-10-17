@@ -3,6 +3,19 @@
 > **For:** Eran (HotelManager) · Liraz (LanGame) · every project with SQLite &nbsp;·&nbsp; **Time:** 2 × 45 min
 > **Before:** basic SQL (SELECT, INSERT, WHERE) &nbsp;·&nbsp; **After this:** the database chapter of the book
 
+**In one sentence:** let the database itself refuse bad rows (constraints), group changes so they happen all-or-nothing
+(transactions), find rows without reading them all (indexes), and never paste user text into SQL (parameters).
+
+## 🗺️ The map of this lesson
+
+```mermaid
+flowchart LR
+    M["Monday:<br/>impossible booking"] --> C["1 · constraints"]
+    W["Wednesday:<br/>half an invoice"] --> T["2 · transactions"]
+    F["Friday:<br/>slow search"] --> I["3 · indexes"]
+    X["the search box<br/>attack"] --> P["4 · ? parameters"]
+```
+
 ## The story
 
 > Three bad days at the hotel:
@@ -16,12 +29,13 @@
 > Plus, a student types `x' OR '1'='1` into the guest search box and sees **every guest's** details. This lesson gives one
 > database tool for each problem: **constraints**, **transactions**, **indexes** and **parameters**.
 
-## 🎯 By the end, the student can
+### 🌍 Real world
 
-1. Explain primary key, foreign key and CHECK constraints, and why the database checks what Python already checks.
-2. Explain a transaction (all or nothing) and write one with `with db.connection() as conn:`.
-3. Explain what an index is, read `EXPLAIN QUERY PLAN`, and show the speed-up with a measurement.
-4. Explain SQL injection and why queries always use `?` parameters.
+* **Banks** run every transfer as a transaction — money leaves one account **and** arrives in the other, or neither happens.
+* **Every phone has SQLite inside**: your contacts, messages and browser history are SQLite databases — it is one of the most
+  used pieces of software in the world.
+* **SQL injection** is still one of the most common ways websites get hacked; the famous xkcd cartoon "Bobby Tables" is about
+  a school that lost its student table to it.
 
 ## Words you need
 
@@ -39,6 +53,44 @@
 | **parameter (`?`)** | a placeholder: the value is sent separately and is never treated as SQL |
 
 ---
+
+## 0. Eran's tables at a glance
+
+```mermaid
+erDiagram
+    ROOMS ||--o{ BOOKINGS : "is booked in"
+    GUESTS ||--o{ BOOKINGS : "makes"
+    BOOKINGS ||--o| INVOICES : "is billed by"
+    INVOICES ||--|{ INVOICE_LINES : "has"
+    ROOMS {
+        int id PK
+        text number "UNIQUE"
+        int capacity "CHECK > 0"
+        real base_rate "CHECK >= 0"
+    }
+    GUESTS {
+        int id PK
+        text email "UNIQUE"
+    }
+    BOOKINGS {
+        int id PK
+        int room_id FK "RESTRICT"
+        int guest_id FK "RESTRICT"
+        text check_in
+        text check_out "CHECK > check_in"
+        text status "CHECK IN (...)"
+    }
+    INVOICES {
+        int id PK
+        int booking_id FK "CASCADE"
+        real total
+    }
+    INVOICE_LINES {
+        int id PK
+        int invoice_id FK "CASCADE"
+        text description
+    }
+```
 
 ## 1. Constraints — the database says no (Monday's problem)
 
@@ -84,6 +136,21 @@ def connection(self):
 
 **Analogy:** a bank transfer — take 100 ₪ from account A **and** add 100 ₪ to account B. Never just one of them.
 
+```mermaid
+sequenceDiagram
+    participant App as HotelService.check_out
+    participant DB as SQLite
+    App->>DB: BEGIN
+    App->>DB: UPDATE bookings SET status='checked_out'
+    App->>DB: INSERT INTO invoices ...
+    App->>DB: INSERT INTO invoice_lines ... (× 5)
+    alt everything worked
+        App->>DB: COMMIT  → all changes are real
+    else an error (or the power goes out)
+        App->>DB: ROLLBACK → none of them happened
+    end
+```
+
 ## 3. Indexes — measured (Friday's problem)
 
 ![index measured](figs/index.png)
@@ -91,6 +158,13 @@ def connection(self):
 "Is room 5 free between these dates?" on 20,000 bookings: about **0.9 ms** reading every row (`SCAN bookings`) vs about
 **0.03 ms** with an index (`SEARCH … USING INDEX`) — some 35× faster, and the gap grows with the table (100,000 rows: ~4.5 ms
 vs ~0.12 ms). Other computers give other milliseconds; the shape is always the same.
+
+And as the table grows:
+
+![index growth](figs/index_growth.png)
+
+At 200,000 bookings the scan takes about 10 ms per question, the index well under 0.1 ms — and a receptionist's screen asks
+this question for every room.
 
 ![what an index is](figs/btree.png)
 
@@ -116,6 +190,48 @@ SQLite looks for a guest literally named `x' OR '1'='1` → none.
 Store dates as `'2026-03-02'` (year-month-day). Text in this format sorts in date order, so `check_in < ?` works and the index
 can use it. Never `'2/3/2026'`.
 
+## 🧪 Worked example: all four tools in one script (no files needed)
+
+```python
+import sqlite3
+
+con = sqlite3.connect(":memory:")
+con.execute("PRAGMA foreign_keys = ON")
+con.executescript('''
+CREATE TABLE rooms (id INTEGER PRIMARY KEY, number TEXT NOT NULL UNIQUE);
+CREATE TABLE bookings (id INTEGER PRIMARY KEY,
+    room_id INTEGER NOT NULL REFERENCES rooms(id) ON DELETE RESTRICT,
+    check_in TEXT NOT NULL, check_out TEXT NOT NULL, CHECK (check_out > check_in));
+INSERT INTO rooms (number) VALUES ('102');
+''')
+
+# 1. constraints: the database refuses an impossible stay
+try:
+    con.execute("INSERT INTO bookings (room_id, check_in, check_out) VALUES (1, '2026-03-09', '2026-03-02')")
+except sqlite3.IntegrityError as e:
+    print("refused:", e)                                   # CHECK constraint failed
+
+# 2. a transaction: both inserts or neither
+try:
+    with con:                                              # commits at the end, rolls back on an error
+        con.execute("INSERT INTO bookings (room_id, check_in, check_out) VALUES (1, '2026-03-02', '2026-03-09')")
+        raise RuntimeError("power cut!")
+except RuntimeError:
+    pass
+print("bookings after the failed transaction:", con.execute("SELECT COUNT(*) FROM bookings").fetchone()[0])   # 0
+
+# 3. the query plan, before and after an index
+q = "SELECT * FROM bookings WHERE room_id = ? AND check_in < ? AND ? < check_out"
+print(con.execute("EXPLAIN QUERY PLAN " + q, (1, "2026-03-09", "2026-03-02")).fetchall()[0][-1])   # SCAN bookings
+con.execute("CREATE INDEX ix ON bookings (room_id, check_in, check_out)")
+print(con.execute("EXPLAIN QUERY PLAN " + q, (1, "2026-03-09", "2026-03-02")).fetchall()[0][-1])   # SEARCH ... USING ... INDEX
+
+# 4. parameters vs string formatting
+evil = "x' OR '1'='1"
+print(len(con.execute(f"SELECT * FROM rooms WHERE number = '{evil}'").fetchall()))     # 1 - every room leaks!
+print(len(con.execute("SELECT * FROM rooms WHERE number = ?", (evil,)).fetchall()))    # 0 - safe
+```
+
 ## 6. Common mistakes
 
 | student says | the truth |
@@ -124,6 +240,17 @@ can use it. Never `'2/3/2026'`.
 | "I'll commit after every INSERT, it's safer" | Then a crash leaves half a game / half an invoice. Commit once per action. |
 | "Index every column" | Each index costs space and insert time. Index what you search by. |
 | "Foreign keys work by default" | Not in SQLite. `PRAGMA foreign_keys = ON` on every connection. |
+| "Dates as '2/3/2026' are fine" | They don't sort as dates. ISO `'2026-03-02'` does. |
+
+## 📝 Summary
+
+> * **Constraints** (PRIMARY KEY, UNIQUE, CHECK, FOREIGN KEY with RESTRICT / CASCADE): the database refuses bad data — even
+>   from future bugs. SQLite needs `PRAGMA foreign_keys = ON`.
+> * **Transactions**: all changes of one action commit together or roll back together.
+> * **Indexes**: a sorted tree of some columns → `SEARCH … USING INDEX` instead of `SCAN`; measured: ~100× faster at 200,000
+>   rows.
+> * **Parameters `?`**: user text is only ever a value — no SQL injection.
+> * Dates as ISO text so they sort and compare correctly.
 
 ## 7. Activities
 
@@ -159,6 +286,10 @@ SQLite reads every row. Add an index on the `WHERE` columns and check that the p
 | all the others | `database/db.py` + `repositories.py` in every skeleton — the same ideas |
 
 ## 🎬 Watch & explore
+
+| | |
+|---|---|
+| <a href="https://www.youtube.com/watch?v=HubezKbFL7E"><img src="https://img.youtube.com/vi/HubezKbFL7E/mqdefault.jpg" width="240" alt="video"></a> | **Things every developer needs to know about database indexing** (a conference talk). How the index tree works and when the database uses it. For the defence. |
 
 * *Database indexes explained* — [search on YouTube](https://www.youtube.com/results?search_query=database+index+explained+b-tree)
 * SQLite docs — [EXPLAIN QUERY PLAN](https://sqlite.org/eqp.html) · [Foreign key support](https://sqlite.org/foreignkeys.html)

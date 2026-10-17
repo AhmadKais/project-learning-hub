@@ -172,3 +172,46 @@ if L.wanted("constraints"):
     ax.set_title("Constraints: the database refuses nonsense even if a Python bug tries  (PRAGMA foreign_keys = ON!)",
                  fontsize=13)
     L.save(fig, "constraints")
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 6. how the gap grows with the table (measured)
+if L.wanted("index_growth"):
+    import sqlite3
+    import time
+    sizes = [1_000, 5_000, 20_000, 50_000, 100_000, 200_000]
+    scan, idx = [], []
+    r = np.random.default_rng(0)
+    for n in sizes:
+        res = []
+        for with_index in (False, True):
+            con = sqlite3.connect(":memory:")
+            con.execute("CREATE TABLE bookings (id INTEGER PRIMARY KEY, room_id INT, check_in TEXT, check_out TEXT)")
+            rows = []
+            for i in range(n):
+                room = int(r.integers(1, 200))
+                day = int(r.integers(0, 3000))
+                rows.append((room, f"{2020 + day // 365:04d}-{(day % 365) // 31 + 1:02d}-{day % 28 + 1:02d}",
+                             f"{2020 + day // 365:04d}-{(day % 365) // 31 + 1:02d}-{day % 28 + 1:02d}~"))
+            con.executemany("INSERT INTO bookings (room_id, check_in, check_out) VALUES (?, ?, ?)", rows)
+            if with_index:
+                con.execute("CREATE INDEX ix ON bookings (room_id, check_in, check_out)")
+            q = "SELECT COUNT(*) FROM bookings WHERE room_id = ? AND check_in < ? AND ? < check_out"
+            t0 = time.perf_counter()
+            for k in range(200):
+                con.execute(q, (k % 200 + 1, "2024-06-10", "2024-06-03")).fetchone()
+            res.append((time.perf_counter() - t0) / 200 * 1000)
+            con.close()
+        scan.append(res[0])
+        idx.append(res[1])
+    fig, ax = plt.subplots(figsize=(11, 5))
+    ax.loglog(sizes, scan, "o-", color=RED, lw=3, label="no index: SCAN (read every row)")
+    ax.loglog(sizes, idx, "o-", color=GREEN, lw=3, label="with index: SEARCH … USING INDEX")
+    for n, a, b in zip(sizes, scan, idx):
+        ax.text(n, a * 1.25, f"{a:.2f} ms", ha="center", fontsize=10, color=RED)
+        ax.text(n, b * 0.65, f"{b:.3f} ms", ha="center", fontsize=10, color=GREEN)
+    ax.set_xlabel("bookings in the table (log)")
+    ax.set_ylabel("ms per 'is room 5 free?' (log)")
+    ax.set_title("Measured with SQLite on this computer: the scan grows with the table, the index hardly moves")
+    ax.legend()
+    print("  scan ms:", np.round(scan, 3), " index ms:", np.round(idx, 4))
+    L.save(fig, "index_growth")
