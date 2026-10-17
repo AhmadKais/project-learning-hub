@@ -3,35 +3,51 @@
 Thirty-four lessons: a maths toolkit (Lesson 00) and one lesson per algorithm or idea the projects need. They assume the
 students **know no machine learning and are weak in maths**: every lesson starts from a **story** (a person with a real
 problem), defines every word before using it, and does every calculation step by step, saying *why* each step is done. Each lesson is built **around pictures and
-animations**: the text only explains what you are looking at. Use them to teach in class (projector), and give the
+animations**: the text only explains what you are looking at. Every lesson is also written so a student can **learn it alone**: real-world examples, a runnable worked example, checked videos and graded exercises with answers. Use them to teach in class (projector), and give the
 students the same pages to revise from.
 
 **Two helpers for every lesson:** [Lesson 00 — the maths toolkit](00_math_toolkit/LESSON.md) (percentages, averages,
 probability, Σ, powers, logarithms, eˣ, slope, distance — with pictures) and the [glossary](GLOSSARY.md) (every term in plain
 words).
 
-**The quickest way in:** open [`LESSONS.html`](LESSONS.html) in a browser (all 33 lessons in one page, the animations
+**The quickest way in:** open [`LESSONS.html`](LESSONS.html) in a browser (all 34 lessons in one page, the animations
 play) and press F11. Or open any lesson's `LESSON.md` on GitHub / in VS Code.
 
 ## What every lesson contains
 
 | Part | What it is for |
 |---|---|
-| **The story** | a person with a real problem (a shop owner, a recruiter, a bank clerk …) that the algorithm solves |
+| **In one sentence** | the whole lesson in one line — read it first, and again at the end |
+| 🗺️ **The map** | a diagram of the lesson's parts, so you always know where you are |
+| **The story** | a person with a real problem (a shop owner, a recruiter, a bank clerk …) that the algorithm solves — it returns in every part (📖) |
 | **Words you need** | every new term defined *before* it is used, with the story's example |
-| 🎯 **Goals** | 3–5 things the student can do at the end — check them in the defence-style questions |
-| **The picture** | every lesson starts from an illustration, never from a formula |
+| 🌍 **Real world** | where you already meet this idea: Gmail, Netflix, face unlock, banks, maps, a supermarket receipt … |
+| **Parts, one idea each** | the idea in plain words (🧠), a picture or animation (🖼️), a calculation by hand (✍️), and a quick check with a hidden answer (✅) |
 | **Animations** (`figs/*.gif`) | the algorithm *moving*: a filter sliding, a tree growing, a threshold sweeping, a race between threads |
 | **Videos** (`videos/*.mp4`) | the same animations for the projector — pause and step with the arrow keys |
-| **Definitions** | one table of the words, with the project's own example for each |
-| **The maths, by hand** | worked examples with the **projects' real numbers** (4,445.06 · 1.2877 · P(spam\|free) = 0.75 …) |
-| **The algorithm** | short pseudocode / Python sketch, the same shape as the skeleton's TODO |
-| **Misconceptions** | what students typically believe, the truth, and how to show it |
-| **Activities** | unplugged games (human k-NN, paper convolution, be-the-cascade …), predict-then-run, break-it-on-purpose |
-| **Check yourself** | questions with hidden answers (click to open) |
+| **Diagrams** | flow charts, state diagrams, sequence diagrams and tables drawn with Mermaid (they render on GitHub and in `LESSONS.html`) |
+| **Real data** | most pictures and numbers come from the projects' own data: the SMS, the URLs, the CVs, the wines, the trained face network |
+| 🧪 **Worked example** | a short, **runnable** program that does the lesson's calculation — every printed number was checked |
+| **Try it yourself** | 🟢 easy → 🟡 medium → 🔴 hard questions, answers hidden (click to open) |
+| **Common mistakes** | what students typically believe, and the truth |
+| 📝 **Summary** | the whole lesson on one card — for revision before the defence |
+| **Class activities** | unplugged games (human k-NN, paper convolution, be-the-cascade …), predict-then-run, break-it-on-purpose |
 | **In your project** | the exact files, functions, tests, exercises and notebooks of the student's skeleton |
-| 🎬 **Watch & explore** | short videos (StatQuest, 3Blue1Brown, Computerphile …) and interactive sites |
+| 🎬 **Watch & explore** | real, checked videos (StatQuest, 3Blue1Brown, Computerphile …) with thumbnails, and interactive sites |
+| 🎓 **For the defence** | the advanced material, folded away until you need it |
 | `visualize.py` | the code that draws every picture — runnable, and part of the lesson: change a number, run again |
+
+## Learning alone? Follow this route for every lesson
+
+1. Read **In one sentence** and **the map**. Don't worry if it isn't clear yet.
+2. Read **the story** and the **Words you need** table.
+3. For each Part: read the idea, **watch the animation twice**, do the ✍️ calculation yourself on paper **before** reading
+   the solution, then open the ✅ quick check.
+4. Watch the first video in 🎬 *Watch & explore*.
+5. Run the 🧪 worked example; then change one number and predict the new output before running it again.
+6. Do *Try it yourself* — all the 🟢, then the 🟡. Leave the 🔴 for a second reading.
+7. Read the 📝 summary. Can you explain each line to a friend without looking? If not, go back to that Part.
+8. Only then open your skeleton's stage (`TASKS.md`) and the matching notebook.
 
 Most pictures use the **projects' real data** (the SMS corpus, the PhishGuard URLs, the 200 CVs, the wines, the hotel's
 24 rooms). FER-2013 faces may not be redistributed, so the face lessons draw their own faces.

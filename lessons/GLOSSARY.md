@@ -35,6 +35,9 @@ If a lesson uses a word you don't know, look here first.
 | **leakage** | information from the test set sneaks into training — the score becomes falsely good | seeing the exam before the exam | 05 |
 | **pipeline** | the fixed chain of steps from raw input to answer | wash → cut → cook | 06 |
 | **train/serve skew** | the app prepares the input differently from training — silent wrong answers | studying in English, exam in Hebrew | 18, 19 |
+| **learning curve** | a chart of how good the model gets as it sees more examples | 10 SMS → 87 %, 3,901 SMS → 98 % | 01 |
+| **lazy learner** | a model that only stores the examples and does the work when asked | k-NN | 15 |
+| **domain shift** | the new examples look different from the training examples | a network trained on photos shown a drawing | 19, 23 |
 
 ## Measuring
 
@@ -56,6 +59,9 @@ If a lesson uses a word you don't know, look here first.
 | **calibration** | when the model says 70 %, it is right about 70 % of the time | a weather forecaster you can trust | 14, 24 |
 | **P@k (precision at k)** | of the first k results, how many are right | 8 of the top 10 CVs are good → 0.8 | 10 |
 | **MRR** | how high the first good result is, on average (1/position) | first good result at position 2 → 0.5 | 10 |
+| **base rate** | how common the positive class is before any test | 1 in 100 people has the disease | 03 |
+| **harmonic mean** | a strict average that is pulled down by the weakest value | F1 of precision and recall | 03 |
+| **calibration / reliability** | when the model says 70 %, it is right 70 % of the time | an honest weather forecaster | 14 |
 
 ## Maths words (all explained in Lesson 00)
 
@@ -64,7 +70,7 @@ If a lesson uses a word you don't know, look here first.
 | **average / mean** | add all, divide by how many | (2+4+6)/3 = 4 |
 | **standard deviation (std)** | the typical distance from the average | heights within about ±7 cm |
 | **probability P(x)** | how likely, between 0 and 1 | P(heads) = 0.5 |
-| **P(A \| B)** | probability of A, counting only the cases where B is true | P(spam \| contains "free") |
+| **P(A \ | B)** — e.g. probability of A, counting only the cases where B is true | P(spam \ |
 | **Σ (sigma)** | add them all up | Σ of 3, 5, 2 = 10 |
 | **x²**, **√x** | x times x; and the opposite | 5² = 25, √25 = 5 |
 | **log / ln** | how many times you multiply; turns × into + | ln(e) = 1, log₁₀(1000) = 3 |
@@ -75,6 +81,10 @@ If a lesson uses a word you don't know, look here first.
 | **dot product** | multiply matching numbers and add | (1,2)·(3,4) = 3 + 8 = 11 |
 | **distance** | how far apart two points are (Pythagoras) | (0,0) to (3,4) = 5 |
 | **cosine similarity** | how much two arrows point the same way, 0 … 1 for text | 1 = same direction |
+| **median** | the middle value after sorting (Lesson 00) | the middle salary, not pulled up by one millionaire |
+| **variance** | the average squared distance from the average (std²) (Lesson 00) | (4 + 0 + 0 + 4) ÷ 4 = 2 |
+| **cumulative** | adding up as you go (Lesson 19) | the share of pixels darker than or equal to each grey level |
+| **half-open interval [a, b)** | from a, up to but not including b (Lesson 27) | a hotel stay: nights, not days; Python's `range(a, b)` |
 
 ## Text and search
 
@@ -121,6 +131,9 @@ If a lesson uses a word you don't know, look here first.
 | **kd-tree** | a structure that splits space so a search can skip far regions | 16 |
 | **feature weight (k-NN)** | how much a feature counts in the distance | 17 |
 | **entropy** | how unpredictable a string is | 18 |
+| **bootstrap sample** | a random sample drawn with replacement — some rows twice, some never — e.g. each tree of a forest gets its own | 13 |
+| **wisdom of the crowd** | the average of many independent guesses beats most single guesses — e.g. the forest's vote | 13 |
+| **support vector** | an example on the edge of the SVM's street; only these decide the fence | 14 |
 
 ## Deep learning and vision
 
@@ -153,6 +166,10 @@ If a lesson uses a word you don't know, look here first.
 | **early stopping / checkpoint** | stop when validation stops improving; keep the best weights | 24 |
 | **Haar feature, integral image, cascade** | the fast face detector | 25 |
 | **temporal smoothing** | averaging the last few frames' answers | 26 |
+| **dead ReLU** | a neuron whose input stays negative, so its slope is 0 and it stops learning | 21 |
+| **weight decay** | pulling every weight a little toward 0 each step — a brake against memorising — e.g. AdamW | 21 |
+| **receptive field** | how much of the original picture one number of a layer depends on — e.g. 3 × 3 → 5 × 5 → 7 × 7 | 22 |
+| **filter / stencil** | a small table of weights slid over the picture — e.g. a vertical-edge detector | 22 |
 
 ## Systems
 
@@ -176,3 +193,7 @@ If a lesson uses a word you don't know, look here first.
 | **transaction** | a group of changes that happen all together or not at all | 33 |
 | **index** | a sorted copy of some columns for fast search | 33 |
 | **SQL injection** | user text becoming part of the SQL command | 33 |
+| **Observer pattern** | an object announces events; listeners decide what to do — e.g. callbacks after every pass | 17 |
+| **critical section** | code that only one thread may run at a time — e.g. read–add–write a shared score | 32 |
+| **UDP** | single packets that may be lost or arrive out of order — no connection — e.g. video calls | 31 |
+| **ER diagram** | a drawing of the tables and how they point at each other — e.g. rooms → bookings → invoices | 33 |
