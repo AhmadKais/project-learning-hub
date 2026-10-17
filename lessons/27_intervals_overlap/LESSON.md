@@ -3,6 +3,20 @@
 > **For:** Eran (HotelManager stage 1 — "the heart") &nbsp;·&nbsp; **Time:** 2 × 45 min
 > **Before:** Python `date`, `and` / `or` / `not` &nbsp;·&nbsp; **After this:** Lessons 28, 30, 33
 
+**In one sentence:** write a stay as [check-in, check-out) — nights, not days — and two stays collide exactly when
+`a < d and c < b`: two comparisons that cover every possible case.
+
+## 🗺️ The map of this lesson
+
+```mermaid
+flowchart LR
+    A["1 · Half-open:<br/>[in, out)"] --> B["2 · The rule:<br/>a < d and c < b"]
+    B --> C["3 · All 8 cases"]
+    C --> D["4 · The proof<br/>(De Morgan)"]
+    D --> E["5 · Brute-force check"]
+    E --> F["6 · 'Is the room free?'"]
+```
+
 ## The story
 
 > At a small hotel, two guests arrive on the same evening — and both have a booking for **room 102**. The receptionist
@@ -11,12 +25,14 @@
 > room 102 from the 9th, the previous guest leaves on the morning of the 9th — and the program says "occupied". Lost money.
 > This lesson writes the collision rule correctly — it's just **two comparisons** — and proves it's right.
 
-## 🎯 By the end, the student can
+### 🌍 Real world
 
-1. Explain why a stay is written [check-in, check-out) and count its nights.
-2. Write the overlap rule `a < d and c < b` and prove it with De Morgan's law.
-3. Check the rule on all eight cases, and explain why case F breaks careless code.
-4. Explain how the booking's **state** decides whether it blocks the room.
+The same rule runs **every** booking system: hotel sites, car rentals, meeting rooms in Outlook / Google Calendar ("this
+room is busy"), doctors' appointment slots, cinema halls. A double booking anywhere is this rule written wrong.
+
+And you already know half-open intervals from Python: `range(2, 9)` gives 2, 3, 4, 5, 6, 7, 8 — **7 numbers**, without 9;
+`text[2:9]` is 7 characters. Python chose half-open for the same reason the hotel does: lengths are just `end − start`, and
+pieces fit back to back.
 
 ## Words you need
 
@@ -43,6 +59,13 @@ Writing the stay as **[2, 9)** ("from 2, up to but not including 9") makes every
 
 * nights = 9 − 2 = **7** — no "+1" anywhere;
 * guest 2's stay [9, 12) shares **nothing** with [2, 9) — back-to-back stays fit perfectly.
+
+### A month of one room
+
+![a month of room 102](figs/room_month.png)
+
+Amir arrives on the 4th, the morning Noa leaves — they **touch** but share no night. Request A fits exactly into the gap
+[9, 11). Request C arrives the day Lina leaves: free. Request B overlaps two stays.
 
 ## 2. The rule
 
@@ -90,7 +113,9 @@ collide = NOT ( d ≤ a  OR  b ≤ c )
 ```
 
 **De Morgan's law:** NOT (P or Q) = (NOT P) and (NOT Q). Example: "it's not true that (it rains or it's cold)" = "it
-doesn't rain **and** it isn't cold". And NOT (d ≤ a) is simply a < d. So:
+doesn't rain **and** it isn't cold". Check every possibility:
+
+![De Morgan truth table](figs/truth_table.png) And NOT (d ≤ a) is simply a < d. So:
 
 ```
 collide = NOT(d ≤ a)  AND  NOT(b ≤ c)  =  a < d  AND  c < b        ∎
@@ -126,6 +151,30 @@ def is_room_free(room_id, stay, bookings, ignore_booking_id=None):     # a sketc
 deleting, no special case, the history stays. In SQL the same rule becomes
 `WHERE room_id = ? AND check_in < :their_out AND :their_in < check_out` — fast with an index (Lesson 33).
 
+## 🧪 Worked example: the rule, the nights and the brute-force check
+
+```python
+from datetime import date
+
+def overlaps(a, b, c, d):                       # stays [a, b) and [c, d)
+    return a < d and c < b
+
+print((date(2026, 3, 9) - date(2026, 3, 2)).days)                 # 7 nights
+print(overlaps(3, 7, 5, 9), overlaps(3, 7, 7, 9), overlaps(3, 7, 1, 3))   # True False False
+
+# brute force: compare with the slow, obvious definition on every pair of stays in days 1..12
+mismatches = 0
+for a in range(1, 13):
+    for b in range(a + 1, 13):
+        for c in range(1, 13):
+            for d in range(c + 1, 13):
+                share_a_night = bool(set(range(a, b)) & set(range(c, d)))
+                mismatches += overlaps(a, b, c, d) != share_a_night
+print("mismatches:", mismatches)                                  # 0
+```
+
+Change `<` to `<=` in `overlaps` and run it again.
+
 ## 7. Common mistakes
 
 | student says | the truth |
@@ -134,6 +183,15 @@ deleting, no special case, the history stays. In SQL the same rule becomes
 | "I need an `if` for each of the 8 cases" | Two comparisons cover all of them. |
 | "`<=` is safer" | It refuses back-to-back bookings (case F). |
 | "Cancel = delete the row" | Change the status; availability ignores it; history is kept. |
+| "Check-out day counts as a night" | It's the morning you leave — the night belongs to the next guest. |
+
+## 📝 Summary
+
+> * A stay is **[check-in, check-out)**: nights = out − in; back-to-back stays fit.
+> * Collide ⇔ **a < d and c < b** — strictly `<`, or case F (arrive the day the other leaves) is wrongly refused.
+> * Proof: free = (d ≤ a) or (b ≤ c); collide = NOT free → De Morgan → the rule.
+> * Checked on all 8 cases and by brute force on 4,356 pairs.
+> * Only CONFIRMED and CHECKED_IN bookings block a room; cancelling changes the status, never deletes.
 
 ## 8. Activities
 
@@ -159,6 +217,22 @@ deleting, no special case, the history stays. In SQL the same rule becomes
 Yes — CANCELLED doesn't block the room, so availability skips it.
 </details>
 
+<details><summary>4. 🟢 How many numbers does `range(5, 12)` give? How many nights is [5, 12)?</summary>
+
+**7** and **7** — the same idea.
+</details>
+
+<details><summary>5. 🟡 Ours [10, 15). For which check-in days c does a 2-night stay [c, c + 2) collide?</summary>
+
+Need 10 < c + 2 and c < 15 → c > 8 and c < 15 → **c = 9, 10, 11, 12, 13, 14**.
+</details>
+
+<details><summary>6. 🔴 Write the SQL WHERE clause for "bookings of room 102 that collide with [2026-03-05, 2026-03-08)".</summary>
+
+`WHERE room_id = 102 AND status IN ('CONFIRMED', 'CHECKED_IN') AND check_in < '2026-03-08' AND '2026-03-05' < check_out`
+(with `?` placeholders in real code — Lesson 33).
+</details>
+
 ## 10. In your project
 
 | Project | Where |
@@ -169,4 +243,5 @@ Yes — CANCELLED doesn't block the room, so availability skips it.
 
 * *Check if two intervals overlap* — [search on YouTube](https://www.youtube.com/results?search_query=check+if+two+intervals+overlap)
 * *De Morgan's laws explained* — [search on YouTube](https://www.youtube.com/results?search_query=De+Morgan%27s+laws+explained)
+* At home: run the worked example with `<=` and count the mismatches — each one is a lost booking.
 * Wikipedia — [Allen's interval algebra](https://en.wikipedia.org/wiki/Allen%27s_interval_algebra)

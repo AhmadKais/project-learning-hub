@@ -127,3 +127,50 @@ if L.wanted("brute_force"):
                  f"{mism} mismatches", fontsize=12.5)
     print(f"  {pairs} pairs, {mism} mismatches")
     L.save(fig, "brute_force")
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 6. a month of room 102 as a timeline, and a new request
+if L.wanted("room_month"):
+    stays = [("Noa", 1, 4), ("Amir", 4, 9), ("Dana", 11, 13), ("Yossi", 13, 18), ("Lina", 20, 27)]
+    requests = [("request A", 9, 11, "free: fits the gap exactly"), ("request B", 16, 21, "collides with Yossi and Lina"),
+                ("request C", 27, 30, "free: arrives the day Lina leaves")]
+    fig, ax = plt.subplots(figsize=(15, 5.2))
+    for i, (name, a, b) in enumerate(stays):
+        ax.add_patch(plt.Rectangle((a, 2.6), b - a, 0.8, fc=[BLUE, VIOLET][i % 2], ec="white", lw=4, zorder=2))
+        ax.text((a + b) / 2, 3.0, f"{name}\n[{a}, {b})", ha="center", va="center", color="white", fontsize=10, weight="bold", zorder=3)
+    for k, (name, a, b, verdict) in enumerate(requests):
+        y = 1.4 - k * 0.0
+        clash = any(overlaps(a, b, c, d) for _, c, d in stays)
+        x0 = [0.0, 0.0, 0.0][k]
+        ax.add_patch(plt.Rectangle((a, 1.2 - k * 0.55), b - a, 0.42, fc=RED if clash else GREEN, ec="white", lw=2,
+                                   zorder=2))
+        ax.text(b + 0.3, 1.41 - k * 0.55, f"{name} [{a}, {b}) → {verdict}", va="center", fontsize=11,
+                color=RED if clash else GREEN, weight="bold")
+    for d in range(1, 32):
+        ax.axvline(d, color=GRID, lw=0.8, zorder=0)
+    ax.set_xlim(1, 37)
+    ax.set_ylim(-0.3, 3.7)
+    ax.set_xticks(range(1, 32))
+    ax.set_yticks([3.0, 0.8], ["booked", "new\nrequests"])
+    ax.set_xlabel("day of the month (a block from 4 to 9 = the nights 4, 5, 6, 7, 8)")
+    ax.set_title("Room 102 in one month: back-to-back stays touch but never share a night")
+    L.save(fig, "room_month")
+
+# ---------------------------------------------------------------- 7. De Morgan as a truth table
+if L.wanted("truth_table"):
+    fig, ax = plt.subplots(figsize=(12, 4.2))
+    blank(ax)
+    heads = ["P: rains", "Q: cold", "P or Q", "NOT (P or Q)", "NOT P", "NOT Q", "NOT P and NOT Q"]
+    xs = np.linspace(0.07, 0.93, len(heads))
+    for x, h in zip(xs, heads):
+        ax.text(x, 0.88, h, ha="center", fontsize=12, weight="bold",
+                color=ORANGE if h in ("NOT (P or Q)", "NOT P and NOT Q") else INK)
+    for r_, (p, q) in enumerate([(1, 1), (1, 0), (0, 1), (0, 0)]):
+        vals = [p, q, p or q, not (p or q), not p, not q, (not p) and (not q)]
+        y = 0.68 - r_ * 0.17
+        for x, v, h in zip(xs, vals, heads):
+            hot = h in ("NOT (P or Q)", "NOT P and NOT Q")
+            ax.text(x, y, "yes" if v else "no", ha="center", fontsize=13, color=(GREEN if v else RED) if hot else INK2,
+                    weight="bold" if hot else "normal")
+    ax.set_title("De Morgan's law: the two orange columns are always the same", fontsize=14)
+    L.save(fig, "truth_table")
