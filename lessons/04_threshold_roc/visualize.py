@@ -176,6 +176,110 @@ if L.wanted("cost"):
     ax.legend()
     L.save(fig, "cost")
 
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 6. Rana's ten links: the line slides, the ROC point moves
+TEN_S = [0.95, 0.90, 0.80, 0.70, 0.60, 0.45, 0.40, 0.30, 0.20, 0.10]
+TEN_Y = [1, 1, 0, 1, 1, 0, 1, 0, 0, 0]
+
+
+def ten_rates(k):
+    """block the first k links (the k highest scores)"""
+    tp = sum(TEN_Y[:k])
+    fp = k - tp
+    return fp / 5, tp / 5
+
+
+def draw_ten(a1, a2, k):
+    a1.clear()
+    a1.set_xlim(1.02, 0.03)
+    a1.set_ylim(-1.2, 1.6)
+    a1.set_yticks([])
+    a1.grid(False)
+    a1.spines["left"].set_visible(False)
+    for i, (sc, yy) in enumerate(zip(TEN_S, TEN_Y)):
+        blocked = i < k
+        hy = 0.3 + 0.55 * (i % 2)
+        a1.scatter(sc, hy, s=650, color=ORANGE if yy else BLUE, alpha=1 if blocked else 0.35, zorder=3)
+        a1.text(sc, hy, str(i + 1), ha="center", va="center", color="white", fontsize=11, weight="bold", zorder=4)
+        a1.text(sc, hy - 0.38, "fake" if yy else "good", ha="center", fontsize=10, color=ORANGE if yy else BLUE)
+    line = 1.0 if k == 0 else (TEN_S[k - 1] + (TEN_S[k] if k < 10 else 0.0)) / 2
+    a1.axvline(line, color=INK, lw=3)
+    a1.axvspan(1.02, line, color=YELLOW, alpha=0.18)
+    a1.text(line, 1.42, f"line at {line:.2f}", ha="center", fontsize=12, weight="bold")
+    a1.text(1.0, -0.85, "← BLOCKED (score above the line)", fontsize=11, color=INK2)
+    fpr, tpr = ten_rates(k)
+    a1.set_xlabel("danger score (high on the left)")
+    a1.set_title(f"blocked {k} links: caught {int(tpr * 5)} of 5 fakes, {int(fpr * 5)} of 5 good blocked by mistake",
+                 fontsize=12)
+    a2.clear()
+    pts = [ten_rates(j) for j in range(k + 1)]
+    a2.plot([0, 1], [0, 1], ls="--", color=MUTED, lw=1.2)
+    a2.plot([q[0] for q in pts], [q[1] for q in pts], "o-", color=ORANGE, lw=2.5, ms=7)
+    a2.plot(*pts[-1], "o", color=INK, ms=12)
+    a2.set_xticks(np.arange(0, 1.01, 0.2))
+    a2.set_yticks(np.arange(0, 1.01, 0.2))
+    a2.set_xlim(-0.02, 1.02)
+    a2.set_ylim(-0.02, 1.02)
+    a2.set_aspect("equal")
+    a2.set_xlabel("false-alarm rate (good blocked ÷ 5)")
+    a2.set_ylabel("catch rate (fakes blocked ÷ 5)")
+    a2.set_title("fake → step UP,  good → step RIGHT", fontsize=12)
+
+
+if L.wanted("ten_links"):
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(15, 5.6), gridspec_kw={"width_ratios": [1.6, 1]})
+    frames = [k for k in range(11) for _ in range(2)] + [10] * 4
+    L.animate(fig, lambda i: draw_ten(a1, a2, frames[i]), len(frames), "ten_links", fps=2)
+
+# ---------------------------------------------------------------- 7. the two piles of scores and the two kinds of mistake
+if L.wanted("score_piles"):
+    fig, ax = plt.subplots(figsize=(12, 5.4))
+    bins = np.linspace(0, 1, 41)
+    t = 0.5
+    ax.hist(neg, bins=bins, color=BLUE, alpha=0.8, label=f"legitimate URLs ({len(neg):,})")
+    ax.hist(pos, bins=bins, color=ORANGE, alpha=0.8, label=f"phishing URLs ({len(pos):,})")
+    ax.set_yscale("log")
+    ax.axvline(t, color=INK, lw=3)
+    fp = int((neg >= t).sum())
+    fn = int((pos < t).sum())
+    ax.annotate(f"{fn} phishing URLs BELOW the line\n= missed (FN)", (0.3, 8), xytext=(0.02, 700), fontsize=12,
+                arrowprops=dict(arrowstyle="->", color=INK))
+    ax.annotate(f"{fp} legitimate URLs ABOVE the line\n= false alarms (FP)", (0.7, 8), xytext=(0.6, 700), fontsize=12,
+                arrowprops=dict(arrowstyle="->", color=INK))
+    ax.text(t + 0.01, 120, "line = 0.5", fontsize=12, weight="bold")
+    ax.set_ylim(0.8, 3000)
+    ax.set_xlabel("the model's danger score")
+    ax.set_ylabel("number of URLs (log scale)")
+    ax.set_title("Real PhishGuard scores: two piles that overlap a little - no line can separate them perfectly")
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, 0.82))
+    L.save(fig, "score_piles")
+    print(f"   score_piles: FN={fn} FP={fp} AUC={auc:.3f}")
+
+# ---------------------------------------------------------------- 8. AUC = pairs in the right order (the 10 links)
+if L.wanted("auc_grid"):
+    fakes = [(i + 1, s) for i, (s, yy) in enumerate(zip(TEN_S, TEN_Y)) if yy]
+    goods = [(i + 1, s) for i, (s, yy) in enumerate(zip(TEN_S, TEN_Y)) if not yy]
+    fig, ax = plt.subplots(figsize=(8.5, 7.6))
+    blank(ax, (-1.6, 5.2), (-0.4, 6.2))
+    ax.set_aspect("equal")
+    ok = 0
+    for r_, (fi, fs) in enumerate(fakes):
+        for c_, (gi, gs) in enumerate(goods):
+            good_order = fs > gs
+            ok += good_order
+            ax.add_patch(plt.Rectangle((c_ + 0.04, 4 - r_ + 0.04), 0.92, 0.92, color=GREEN if good_order else RED,
+                                       alpha=0.75))
+            ax.text(c_ + 0.5, 4 - r_ + 0.5, "✓" if good_order else "✗", ha="center", va="center", color="white",
+                    fontsize=20, weight="bold")
+        ax.text(-0.15, 4 - r_ + 0.5, f"fake #{fi} ({fs:.2f})", ha="right", va="center", fontsize=11, color=ORANGE)
+    for c_, (gi, gs) in enumerate(goods):
+        ax.text(c_ + 0.5, 5.15, f"good #{gi}\n({gs:.2f})", ha="center", va="bottom", fontsize=10.5, color=BLUE)
+    ax.set_title(f"Every (fake, good) pair: did the fake get the higher score?\n{ok} of 25 pairs ✓  →  AUC = {ok} ÷ 25 = "
+                 f"{ok / 25:.2f}", fontsize=13)
+    L.save(fig, "auc_grid")
+
+
 if L.live:
     from matplotlib.widgets import Slider
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(14, 6))
