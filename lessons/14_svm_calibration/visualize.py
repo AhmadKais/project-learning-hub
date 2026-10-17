@@ -147,3 +147,110 @@ if L.wanted("calibration") or L.wanted("pr_compare"):
         ax.set_title("Same validation SMS, same rule (Lesson 04): which model catches more spam?")
         ax.legend(loc="lower left")
         L.save(fig, "pr_compare")
+
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 5. tomorrow's animals: the widest street makes fewer mistakes
+if L.wanted("tomorrow"):
+    svm = SVC(kernel="linear", C=1000).fit(Xs, ys)
+    w, b = svm.coef_[0], svm.intercept_[0]
+    # a fence that also separates today's animals, but hugs the ham flock
+    hug = (np.array([-0.62, -1.0]), 0.0)
+    m_h = A[:, 0] * 0.62 + A[:, 1]
+    hug_b = -(m_h.max() + 0.05)                     # just above the highest ham point along that direction
+    fences = [("SVM: widest street", lambda P: P @ w + b > 0, GREEN),
+              ("a fence close to the ham flock", lambda P: P @ np.array([0.62, 1.0]) + hug_b > 0, RED)]
+    r = np.random.default_rng(10)
+    days = []
+    for d in range(12):
+        An = r.normal([-1.6, -1.0], 0.55, (25, 2))
+        Bn = r.normal([1.4, 1.2], 0.55, (25, 2))
+        days.append((An, Bn))
+    fig, ax = plt.subplots(figsize=(9.5, 7.5))
+
+    def upd(k):
+        ax.clear()
+        An, Bn = days[k]
+        Pn = np.vstack([An, Bn])
+        yn = np.r_[np.zeros(25), np.ones(25)]
+        ax.scatter(An[:, 0], An[:, 1], s=50, color=BLUE, edgecolor="white")
+        ax.scatter(Bn[:, 0], Bn[:, 1], s=50, color=ORANGE, edgecolor="white", marker="s")
+        xs = np.linspace(-3.5, 3.5, 2)
+        tot = []
+        for name, f_, col in fences:
+            errs_all = sum(int((f_(np.vstack(days[j])) != np.r_[np.zeros(25), np.ones(25)]).sum()) for j in range(k + 1))
+            tot.append(errs_all)
+        ax.plot(xs, -(w[0] * xs + b) / w[1], color=GREEN, lw=3, label=f"SVM (widest street): {tot[0]} mistakes so far")
+        ax.plot(xs, -(0.62 * xs + hug_b), color=RED, lw=3, label=f"fence close to ham: {tot[1]} mistakes so far")
+        ax.set_xlim(-3.5, 3.5)
+        ax.set_ylim(-3, 3.2)
+        ax.set_aspect("equal")
+        ax.set_title(f"day {k + 1}: the animals moved - both fences were perfect on day 0")
+        ax.legend(loc="lower right")
+    L.animate(fig, upd, len(days), "tomorrow", fps=1)
+
+# ---------------------------------------------------------------- 6. only the support vectors matter
+if L.wanted("support_only"):
+    svm0 = SVC(kernel="linear", C=1000).fit(Xs, ys)
+    sv_idx = set(svm0.support_)
+    oa = [i for i in range(25) if i not in sv_idx]
+    ob = [i for i in range(25, 50) if i not in sv_idx]
+    others = [v for pair in zip(oa, ob) for v in pair]          # alternate ham / spam
+    steps = [("all 50 points", list(range(len(Xs)))),
+             ("remove 20 ordinary points", [i for i in range(len(Xs)) if i not in others[:20]]),
+             ("remove 36 ordinary points", [i for i in range(len(Xs)) if i not in others[:36]]),
+             ("now remove ONE support vector", [i for i in range(len(Xs)) if i not in others[:36] and i != min(sv_idx)])]
+    fig, ax = plt.subplots(figsize=(9.5, 7.5))
+
+    def upd(k):
+        title, keep = steps[k]
+        ax.clear()
+        m = SVC(kernel="linear", C=1000).fit(Xs[keep], ys[keep])
+        scatter(ax, Xs[keep], ys[keep])
+        D = m.decision_function(np.c_[gx.ravel(), gy.ravel()]).reshape(gx.shape)
+        ax.contourf(gx, gy, D, levels=[-1, 1], colors=[YELLOW], alpha=0.18)
+        ax.contour(gx, gy, D, levels=[-1, 0, 1], colors=[INK2, INK, INK2], linestyles=["--", "-", "--"],
+                   linewidths=[1.5, 3, 1.5])
+        D0 = svm0.decision_function(np.c_[gx.ravel(), gy.ravel()]).reshape(gx.shape)
+        ax.contour(gx, gy, D0, levels=[0], colors=[MUTED], linestyles=[":"], linewidths=[2])
+        ax.scatter(m.support_vectors_[:, 0], m.support_vectors_[:, 1], s=260, facecolor="none", edgecolor=INK, lw=2)
+        ax.set_xlim(-3.5, 3.5)
+        ax.set_ylim(-3, 3.2)
+        ax.set_aspect("equal")
+        ax.set_title(f"{title}  ({len(keep)} points)\n(dotted grey = the original fence)", fontsize=13)
+    frames = [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3]
+    L.animate(fig, lambda i: upd(frames[i]), len(frames), "support_only", fps=1)
+
+
+# ---------------------------------------------------------------- 7. calibration explained with two weather forecasters
+if L.wanted("forecasters"):
+    r = np.random.default_rng(3)
+    true_p = r.uniform(0, 1, 3000)                      # the real chance of rain on each day
+    rain = r.random(3000) < true_p
+    honest = np.clip(true_p + r.normal(0, 0.05, 3000), 0, 1)
+    extreme = np.where(true_p > 0.5, 0.97, 0.03)        # always says "almost sure"
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5.6))
+    for ax, said, name, col in [(axes[0], honest, "Forecaster A (honest)", GREEN),
+                                (axes[1], extreme, "Forecaster B (always 'sure')", RED)]:
+        bins = np.linspace(0, 1, 11)
+        idx = np.clip(np.digitize(said, bins) - 1, 0, 9)
+        xs, ys_, ns = [], [], []
+        for k in range(10):
+            m = idx == k
+            if m.sum() > 20:
+                xs.append(said[m].mean())
+                ys_.append(rain[m].mean())
+                ns.append(m.sum())
+        ax.plot([0, 1], [0, 1], ls="--", color=MUTED)
+        ax.plot(xs, ys_, "o-", color=col, lw=3, ms=10)
+        for x_, y_, n_ in zip(xs, ys_, ns):
+            ax.annotate(f"{n_} days", (x_, y_), xytext=(6, -14), textcoords="offset points", fontsize=9)
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.set_aspect("equal")
+        ax.set_xlabel("what the forecaster SAID: chance of rain")
+        ax.set_ylabel("how often it REALLY rained on those days")
+        ax.set_title(name)
+    caption(fig, "3,000 simulated days. A: on '30 %' days it rained 30 % of the time - you can trust the number. "
+                 "B: '97 %' days were often dry - the order is right, the numbers are not.")
+    L.save(fig, "forecasters")

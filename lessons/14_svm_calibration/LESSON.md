@@ -3,6 +3,20 @@
 > **For:** Laith (SpamClassifier stage 5) &nbsp;·&nbsp; **Time:** 2 × 45 min
 > **Before:** Lessons 02, 04, 05, 11, 12 &nbsp;·&nbsp; **After this:** the comparison chapter of Laith's book
 
+**In one sentence:** the SVM draws the fence between two classes that stays as far as possible from both — and because
+its answer is a distance, not a probability, we "calibrate" it into an honest percentage.
+
+## 🗺️ The map of this lesson
+
+```mermaid
+flowchart LR
+    A["1 · Many fences:<br/>which one?"] --> B["2 · The widest street<br/>& support vectors"]
+    B --> C["3 · Overlap:<br/>the C knob"]
+    C --> D["4 · NB vs SVM"]
+    D --> E["5 · Distance →<br/>probability (calibration)"]
+    E --> F["6 · The fair comparison"]
+```
+
 ## The story
 
 > A farmer has sheep on one side of a field and goats on the other, and wants to build a **straight fence** between them.
@@ -11,12 +25,12 @@
 > correct tomorrow. The **SVM** (support vector machine) builds exactly that fence between spam and ham — in thousands of
 > dimensions instead of a field.
 
-## 🎯 By the end, the student can
+### 🌍 Real world
 
-1. Explain the SVM as "the widest street", and what support vectors are.
-2. Explain the C parameter with the animation.
-3. Explain why the SVM's output is a distance, not a probability, and what calibration does.
-4. Explain why Laith compares the SVM with Naive Bayes, and why NB stays the main model.
+* A **road** between two neighbourhoods: planners put it where it leaves the most room on both sides.
+* A **football referee** standing between two teams: the fairest place is in the middle of the gap.
+* SVMs were *the* best classifiers for text and handwriting in the late 1990s and 2000s (before deep learning), and are still
+  used for small and medium text problems — like Laith's.
 
 ## Words you need
 
@@ -39,6 +53,22 @@
 Left: four different lines all separate today's examples perfectly. Right: the SVM's choice — the line in the middle of
 the **widest street** (yellow). Only the circled examples, the **support vectors**, touch the edges of the street. Move any
 other example (without crossing the street) and the fence doesn't move at all.
+
+### Why the widest street? Because tomorrow the animals move
+
+Both fences below separated **yesterday's** animals perfectly. Each new day the animals move a little (new random sheep and
+goats from the same fields). Count the mistakes:
+
+![tomorrow's animals](figs/tomorrow.gif)
+
+The fence that hugs one flock starts making mistakes as soon as the animals move; the widest street keeps working. That's
+the whole reason for the SVM: **leave the most room for tomorrow's examples** — generalisation (Lesson 01).
+
+### Only the support vectors matter
+
+Remove ordinary points and retrain: the fence doesn't move. Remove **one** support vector and it moves at once:
+
+![only the support vectors matter](figs/support_only.gif)
 
 The width of the street is 2 / |w| (|w| = the length of the weight vector, Lesson 00 §10) — so "widest street" =
 "smallest weights", the same idea as the regularisation brake of Lesson 12.
@@ -93,7 +123,14 @@ self._model = CalibratedClassifierCV(base, method="sigmoid", cv=5)    # sigmoid 
 `cv=5` means the S-curve is fitted on messages the SVM didn't train on — on its own training data the SVM is
 over-confident.
 
-**Right panel:** Naive Bayes' probabilities are almost only 0 or 1 (it multiplies the evidence of every word as if they
+### What "calibrated" means — two weather forecasters
+
+![two forecasters](figs/forecasters.png)
+
+A calibrated model is like forecaster A: on all the days it says "30 %", it rains on about 30 % of them. Forecaster B always
+says "3 %" or "97 %": the **order** of his days is right (rainier days get 97 %), but his numbers can't be trusted.
+
+**Right panel (above):** Naive Bayes' probabilities are almost only 0 or 1 (it multiplies the evidence of every word as if they
 were independent → over-confident). The calibrated SVM uses the whole range. **Analogy:** a weather forecaster who says
 "0 % or 100 %" every day vs. one who says "30 %" when unsure — the second can be trusted.
 
@@ -107,6 +144,24 @@ the same. **Fair** means: the same split, the same cleaning, scaler and C chosen
 **Why NB stays Laith's main model** even if the SVM were a little better: the project requires an **exact reason** for
 every verdict. In NB the reason *is* the model; after calibration, the SVM's reason is only an approximation.
 
+## 🧪 Worked example: the widest street in scikit-learn
+
+```python
+import numpy as np
+from sklearn.svm import SVC
+
+# 6 messages, 2 features (e.g. scaled 'number of digits', scaled 'number of !')
+X = np.array([[-2, -1], [-1.5, -2], [-1, -0.5], [1, 1.2], [1.5, 0.5], [2, 2]])
+y = np.array([0, 0, 0, 1, 1, 1])                        # 0 ham, 1 spam
+
+svm = SVC(kernel="linear", C=1000).fit(X, y)
+w, b = svm.coef_[0], svm.intercept_[0]
+print("fence: %.2f·x1 + %.2f·x2 + %.2f = 0" % (w[0], w[1], b))
+print("street width:", round(2 / np.linalg.norm(w), 2))
+print("support vectors:", svm.support_vectors_.tolist())
+print("signed distances:", svm.decision_function([[0, 0], [2, 1], [-2, -2]]).round(2))   # [-0.16  1.53 -2.29]
+```
+
 ## 6. Common mistakes
 
 | student says | the truth |
@@ -114,6 +169,16 @@ every verdict. In NB the reason *is* the model; after calibration, the SVM's rea
 | "The SVM gives a probability" | It gives a distance. Calibration makes a probability. |
 | "Higher C is better — fewer training errors" | Fewer *training* errors, often more test errors. |
 | "Calibration changes which messages are spam" | It keeps the order; it only changes the numbers, so one threshold works for both models. |
+| "All training points shape the fence" | Only the support vectors do. |
+
+## 📝 Summary
+
+> * The SVM picks the fence in the middle of the **widest street** — the safest for tomorrow's examples.
+> * Only the **support vectors** (on the street's edges) decide it.
+> * **C** = the price of a mistake: small C → wide street, some mistakes; big C → narrow street, overfitting risk.
+> * The SVM needs **scaling** (it measures distances).
+> * Its output is a **signed distance**; **Platt scaling** (a sigmoid fitted on held-out data) turns it into a probability.
+> * **Calibrated** = "when it says 70 %, it's right 70 % of the time".
 
 ## 7. Activities
 
@@ -140,6 +205,27 @@ The SVM measures distances to the fence, so a feature in the thousands dominates
 from counts — no distances.
 </details>
 
+<details><summary>4. 🟢 The SVM's output for a message is −2.4. Which side, and how sure?</summary>
+
+The ham side (negative), fairly deep — but "−2.4" is not a percentage; calibrate it to get one.
+</details>
+
+<details><summary>5. 🟡 With p = σ(6.7 × d + 1.3), compute p for d = +0.2.</summary>
+
+z = 6.7 × 0.2 + 1.3 = 2.64 · e^(−2.64) = 0.071 · p = 1 ÷ 1.071 = **0.93**.
+</details>
+
+<details><summary>6. 🟡 Your training accuracy goes up as you raise C from 0.1 to 100, but validation accuracy goes down. Which C do you keep?</summary>
+
+The C with the best **validation** (cross-validated) score — higher training accuracy with lower validation is overfitting.
+</details>
+
+<details><summary>7. 🔴 Why is Platt's sigmoid fitted with cv=5 instead of on the SVM's own training messages?</summary>
+
+On its own training messages the SVM is too sure (they are far from the fence because it learned them). The sigmoid would
+learn "distance 1 = 100 % sure" and be over-confident on new messages. Held-out distances look like real new messages.
+</details>
+
 ## 9. In your project
 
 | Project | Where |
@@ -148,6 +234,10 @@ from counts — no distances.
 
 ## 🎬 Watch & explore
 
-* StatQuest — *Support Vector Machines Part 1: Main Ideas* — [search on YouTube](https://www.youtube.com/results?search_query=StatQuest+support+vector+machines+main+ideas)
-* MIT 6.034 (Patrick Winston) — *Support Vector Machines* — [search on YouTube](https://www.youtube.com/results?search_query=MIT+6.034+support+vector+machines+Winston)
+| | |
+|---|---|
+| <a href="https://www.youtube.com/watch?v=efR1C6CvhmE"><img src="https://img.youtube.com/vi/efR1C6CvhmE/mqdefault.jpg" width="240" alt="video"></a> | **StatQuest — Support Vector Machines Part 1: Main Ideas** (20 min). Margins, support vectors, and the soft margin (C). |
+| <a href="https://www.youtube.com/watch?v=_PwhiWxHK8o"><img src="https://img.youtube.com/vi/_PwhiWxHK8o/mqdefault.jpg" width="240" alt="video"></a> | **MIT 6.034 — Patrick Winston: Support Vector Machines** (50 min). A famous university lecture — "the widest street" is his phrase. For the curious. |
+
+**Read more:**
 * scikit-learn — [Probability calibration](https://scikit-learn.org/stable/modules/calibration.html)
