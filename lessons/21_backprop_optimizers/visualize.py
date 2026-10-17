@@ -133,3 +133,66 @@ if L.wanted("schedule"):
     ax.set_ylim(0, 1.2e-3)
     ax.set_title("FaceEmotion's schedule: 3 warm-up epochs, then cosine over 47 (lr_max = 1e-3)")
     L.save(fig, "schedule")
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 5. gears: effects along a chain multiply
+if L.wanted("gears"):
+    fig, ax = plt.subplots(figsize=(13, 4.6))
+    blank(ax, (0, 12.5), (-0.6, 5))
+    ax.set_aspect("equal")
+    gears = [(1.8, 2.6, 1.4, "A", "w1", BLUE), (4.55, 2.6, 0.7, "B", "z1, h", AQUA), (7.0, 2.6, 1.4, "C", "y", YELLOW),
+             (9.9, 2.6, 0.7, "D", "loss", ORANGE)]
+    for x, y_, r, name, what, col in gears:
+        th = np.linspace(0, 2 * np.pi, 300)
+        teeth = r + 0.12 * (np.sin(th * (24 if r > 1 else 12)) > 0)
+        ax.fill(x + teeth * np.cos(th), y_ + teeth * np.sin(th), color=col, alpha=0.85)
+        ax.add_patch(plt.Circle((x, y_), 0.18, color=PAPER))
+        ax.text(x, y_ - r - 0.45, f"{name}: {what}", ha="center", fontsize=12, weight="bold")
+    for x, txt in [(3.4, "× 2"), (5.8, "× (−1)"), (8.6, "× (−2)")]:
+        ax.text(x, 4.5, txt, ha="center", fontsize=14, color=INK2, weight="bold")
+    ax.text(6.0, -0.5, "turn w1 a little → the loss turns 2 × (−1) × (−2) = 4 times as much  →  dL/dw1 = 4",
+            ha="center", fontsize=13, weight="bold")
+    ax.set_title("The chain rule: effects along a chain of gears MULTIPLY (the numbers of Part 2)")
+    L.save(fig, "gears")
+
+# ---------------------------------------------------------------- 6. real training curves: SGD vs Adam vs a too-big step (wines)
+if L.wanted("real_training"):
+    import torch
+    from torch import nn
+    red = np.genfromtxt(data("32_WineGrader", "winequality-red.csv"), delimiter=";", skip_header=1)
+    wht = np.genfromtxt(data("32_WineGrader", "winequality-white.csv"), delimiter=";", skip_header=1)
+    Wd = np.vstack([red, wht])
+    Xw = (Wd[:, :-1] - Wd[:, :-1].mean(0)) / Wd[:, :-1].std(0)
+    yw = np.digitize(Wd[:, -1], [6, 7])
+    Xt, yt = torch.tensor(Xw, dtype=torch.float32), torch.tensor(yw)
+    runs = [("SGD, lr 0.01 (too careful)", "sgd", 0.01, BLUE), ("SGD + momentum, lr 0.05", "mom", 0.05, AQUA),
+            ("Adam, lr 0.003", "adam", 0.003, GREEN), ("SGD, lr 3.0 (too big)", "sgd", 3.0, RED)]
+    fig, ax = plt.subplots(figsize=(12, 5.4))
+    for name, kind, lr, col in runs:
+        torch.manual_seed(0)
+        net = nn.Sequential(nn.Linear(11, 32), nn.ReLU(), nn.Linear(32, 32), nn.ReLU(), nn.Linear(32, 3))
+        opt = {"sgd": lambda: torch.optim.SGD(net.parameters(), lr=lr),
+               "mom": lambda: torch.optim.SGD(net.parameters(), lr=lr, momentum=0.9),
+               "adam": lambda: torch.optim.Adam(net.parameters(), lr=lr)}[kind]()
+        lossf = nn.CrossEntropyLoss()
+        g = torch.Generator().manual_seed(0)
+        hist = []
+        for epoch in range(15):
+            perm = torch.randperm(len(Xt), generator=g)
+            for s in range(0, len(Xt), 128):
+                idx = perm[s:s + 128]
+                opt.zero_grad()
+                loss = lossf(net(Xt[idx]), yt[idx])
+                loss.backward()
+                opt.step()
+                hist.append(min(loss.item(), 3.0))
+        sm = np.convolve(hist, np.ones(10) / 10, mode="valid")
+        ax.plot(sm, color=col, lw=2.2, label=f"{name}: final loss {np.mean(hist[-50:]):.2f}")
+    ax.axhline(np.log(3), color=MUTED, ls="--")
+    ax.text(5, np.log(3) + 0.03, "ln 3 = 1.10: the loss of pure guessing", color=INK2, fontsize=11)
+    ax.set_xlabel("training step (one batch of 128 wines)")
+    ax.set_ylabel("cross-entropy loss (smoothed)")
+    ax.set_ylim(0.6, 1.8)
+    ax.set_title("A real network learning the 6,497 wines: same network, four ways of stepping")
+    ax.legend(loc="upper right", fontsize=10)
+    L.save(fig, "real_training")

@@ -3,6 +3,19 @@
 > **For:** Ryan (FaceEmotion stage 4 — the training loop) &nbsp;·&nbsp; **Time:** 3 × 45 min
 > **Before:** Lesson 00 §9 (slope); Lessons 12 (gradient descent), 20 &nbsp;·&nbsp; **After this:** Lesson 24
 
+**In one sentence:** after each wrong answer, backpropagation passes the blame backwards through the network to find how
+every weight should change, and the optimiser moves every weight a small step in that direction — a million times.
+
+## 🗺️ The map of this lesson
+
+```mermaid
+flowchart LR
+    F["forward pass:<br/>input → output → loss"] --> B["backward pass:<br/>blame flows back<br/>(chain rule)"]
+    B --> S["optimiser step:<br/>every weight moves a little"]
+    S --> F
+    S -.-> LR["how big a step?<br/>learning rate, schedule"]
+```
+
 ## The story
 
 > Back in Ryan's factory (Lesson 20): a smiling face came in, and the last room shouted "sad". Wrong. Someone has to tell
@@ -12,12 +25,14 @@
 > mattered. That is **backpropagation**. Then every worker adjusts a little — that's one **step** of training. Repeat a
 > million times.
 
-## 🎯 By the end, the student can
+### 🌍 Real world: learning from mistakes, step by step
 
-1. Do a full forward pass, backward pass and update **by hand** on the guide's tiny network.
-2. Explain the chain rule with the "gear" analogy.
-3. Say what `zero_grad()`, `backward()` and `step()` each do.
-4. Explain the learning rate, momentum, Adam, and the warm-up + cosine schedule.
+* **Throwing darts:** you miss to the left, so next time you aim a little to the right — not all the way to the right, a
+  little. That's one gradient step.
+* **The shower:** too cold → turn the knob. Turn it too far (a too-big learning rate) and it's boiling, so you turn back too
+  far again — the loss goes up and down.
+* **A sports team after a lost match:** the coach doesn't blame everyone equally; each player's share of the blame depends on
+  how much they affected the result. That's backpropagation.
 
 ## Words you need
 
@@ -38,7 +53,9 @@
 
 Three gears in a row. Turn gear A once → gear B turns 2 times. Gear B once → gear C turns 3 times. How many times does C
 turn when A turns once? **2 × 3 = 6**. Effects along a chain **multiply**. That's the chain rule — the only maths behind
-backpropagation.
+backpropagation. With the numbers of Part 2:
+
+![gears](figs/gears.png)
 
 ## 2. Backpropagation with numbers
 
@@ -133,7 +150,17 @@ epochs 4–50 (cosine):     lr = 0.5 × lr_max × (1 + cos(π × t / 47))  falls
 Start gently (random weights → wild gradients); big steps in the middle to travel; tiny steps at the end to settle into
 the bottom instead of shaking around it.
 
-## 6. Batches, steps, epochs
+## 6. Watch a real network train
+
+The same small network (11 → 32 → 32 → 3) learning the wine grades, with four different ways of stepping:
+
+![real training curves](figs/real_training.png)
+
+* **SGD with a tiny lr** (blue) barely moves away from "pure guessing" (1.10).
+* **SGD with lr 3.0** (red) jumps around — the shower knob turned too far each time.
+* **Momentum** and **Adam** (greens) go down fastest and smoothest.
+
+## 7. Batches, steps, epochs
 
 | word | FaceEmotion |
 |---|---|
@@ -141,22 +168,53 @@ the bottom instead of shaking around it.
 | step | one `zero_grad → backward → step` |
 | epoch | one pass over all 28,709 training faces ≈ 225 steps |
 
-## 7. Common mistakes
+## 8. Common mistakes
 
 | student says | the truth |
 |---|---|
 | "`backward()` updates the weights" | It only computes gradients. `step()` updates. |
 | "I can skip `zero_grad()`" | Gradients pile up — each step uses the sum of all previous batches. |
 | "Loss became `nan`, the data is broken" | Usually the learning rate is too high. Lower it first. |
+| "Backprop is a different algorithm from gradient descent" | Backprop **computes** the slopes; gradient descent **uses** them. |
 
-## 8. Activities
+## 🧪 Worked example: Part 2 in PyTorch — let the computer check your hand calculation
+
+```python
+import torch
+
+x, t = torch.tensor(2.0), torch.tensor(1.0)
+w1 = torch.tensor(0.5, requires_grad=True);  b1 = torch.tensor(0.0, requires_grad=True)
+w2 = torch.tensor(-1.0, requires_grad=True); b2 = torch.tensor(1.0, requires_grad=True)
+
+y = w2 * torch.relu(w1 * x + b1) + b2          # forward
+loss = (y - t) ** 2
+loss.backward()                                 # backward: PyTorch does the chain rule for you
+print(loss.item(), w1.grad.item(), b1.grad.item(), w2.grad.item(), b2.grad.item())   # 1.0 4.0 2.0 -2.0 -2.0
+
+with torch.no_grad():                           # the update, lr = 0.1
+    for p in (w1, b1, w2, b2):
+        p -= 0.1 * p.grad
+y = w2 * torch.relu(w1 * x + b1) + b2
+print("loss after one step:", round(((y - t) ** 2).item(), 2))                       # 0.04
+```
+
+## 📝 Summary
+
+> * **Chain rule**: effects along a chain multiply (gears).
+> * **Backprop**: starting from the loss, compute every weight's slope, right to left.
+> * **Update**: w ← w − lr × slope. In PyTorch: `zero_grad()`, `backward()`, `step()`.
+> * **Learning rate**: too small crawls, too big jumps. **Momentum** smooths, **Adam** adapts per weight, **AdamW** adds a
+>   brake (weight decay).
+> * **Schedule**: warm up gently, big steps in the middle, tiny steps at the end (cosine).
+
+## 9. Activities
 
 1. **Gears (5 min).** Real gears or drawn ones: count turns; multiply ratios.
 2. **The chain on paper (20 min).** Repeat §2 with x = 1 (everything else the same).
 3. **Heavy ball (5 min).** A marble and a heavier ball down a bent ruler with a small bump: which one gets past? (momentum)
 4. **Break it (10 min).** In `03_training_loop.ipynb`: lr = 1.0; remove `zero_grad()`; forget `eval()`.
 
-## 9. Do it yourself
+## 10. Do it yourself
 
 <details><summary>1. §2 with x = 1: forward pass and the gradient of w1.</summary>
 
@@ -174,7 +232,22 @@ No — overfitting (Lessons 01, 24). It's doing its job on the training data too
 0.001 × (0.1 + 0.9 × 2/3) = 0.001 × 0.7 = **0.0007**.
 </details>
 
-## 10. In your project
+<details><summary>4. 🟢 A weight is 0.3, its gradient is −0.5, lr = 0.2. The new weight?</summary>
+
+0.3 − 0.2 × (−0.5) = 0.3 + 0.1 = **0.4** (negative slope → increasing the weight lowers the loss → go up).
+</details>
+
+<details><summary>5. 🟡 28,709 faces, batch 128. Steps per epoch? Steps in 50 epochs?</summary>
+
+28,709 ÷ 128 = 224.3 → **225** steps (the last batch is smaller). × 50 = **11,250** steps.
+</details>
+
+<details><summary>6. 🔴 Gears: A → B ×3, B → C ×0 (a ReLU that is "off"), C → loss ×5. dLoss/dA?</summary>
+
+3 × 0 × 5 = **0** — the whole chain is blocked by the dead ReLU; A gets no learning signal. That's the "dead ReLU" problem.
+</details>
+
+## 11. In your project
 
 | Project | Where |
 |---|---|
@@ -183,6 +256,12 @@ No — overfitting (Lessons 01, 24). It's doing its job on the training data too
 
 ## 🎬 Watch & explore
 
-* 3Blue1Brown — *Gradient descent* and *Backpropagation calculus* — [search on YouTube](https://www.youtube.com/results?search_query=3Blue1Brown+backpropagation+calculus)
-* Distill — [Why Momentum Really Works](https://distill.pub/2017/momentum/)
-* Andrej Karpathy — *building micrograd* — [search on YouTube](https://www.youtube.com/results?search_query=Karpathy+micrograd+spelled-out+intro)
+| | |
+|---|---|
+| <a href="https://www.youtube.com/watch?v=IHZwWFHWa-w"><img src="https://img.youtube.com/vi/IHZwWFHWa-w/mqdefault.jpg" width="240" alt="video"></a> | **3Blue1Brown — Gradient descent, how neural networks learn**. The loss landscape and walking downhill. |
+| <a href="https://www.youtube.com/watch?v=Ilg3gGewQ5U"><img src="https://img.youtube.com/vi/Ilg3gGewQ5U/mqdefault.jpg" width="240" alt="video"></a> | **3Blue1Brown — Backpropagation, intuitively**. Blame flowing backwards — the factory boss of the story. |
+| <a href="https://www.youtube.com/watch?v=tIeHLnjs5U8"><img src="https://img.youtube.com/vi/tIeHLnjs5U8/mqdefault.jpg" width="240" alt="video"></a> | **3Blue1Brown — Backpropagation calculus**. The chain rule of Part 2 with symbols — for the defence. |
+| <a href="https://www.youtube.com/watch?v=VMj-3S1tku0"><img src="https://img.youtube.com/vi/VMj-3S1tku0/mqdefault.jpg" width="240" alt="video"></a> | **Andrej Karpathy — building micrograd** (2.5 hours). Backprop written from scratch in Python. For the very curious. |
+
+**Read more:**
+* Distill — [Why Momentum Really Works](https://distill.pub/2017/momentum/) — interactive.
