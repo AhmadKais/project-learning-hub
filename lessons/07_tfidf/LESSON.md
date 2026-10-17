@@ -247,7 +247,7 @@ def tfidf(doc):
     return {t: round(v / length, 2) for t, v in row.items()}   # L2
 
 print(round(idf["python"], 4), round(idf["sql"], 4), round(idf["docker"], 4))   # 1.2877 1.0 1.6931
-print(tfidf(docs[0]))      # {'python': 0.8, 'sql': 0.31, 'docker': 0.52}
+print(tfidf(docs[0]))      # {'python': 0.79, 'sql': 0.31, 'docker': 0.52}
 ```
 
 ## Try it yourself
