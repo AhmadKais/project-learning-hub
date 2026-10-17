@@ -210,3 +210,238 @@ if L.wanted("table"):
             ha="center", fontsize=13, color=INK2)
     ax.set_title("Data = a table.  Each row is one thing, each column one measurement.")
     L.save(fig, "table")
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 12. percent of a number: the 10 x 10 grid filling up
+if L.wanted("percent_grid"):
+    fig, ax = plt.subplots(figsize=(6.5, 7))
+
+    def upd(k):
+        blank(ax, (0, 10), (-1.6, 10))
+        ax.set_aspect("equal")
+        for i in range(100):
+            r, c = divmod(i, 10)
+            col = ORANGE if i < k else GRID
+            ax.add_patch(plt.Rectangle((c + 0.06, 9 - r + 0.06), 0.88, 0.88, color=col))
+        ax.text(5, -0.6, f"{k} squares out of 100  =  {k / 100:.2f}  =  {k} %", ha="center", fontsize=17, weight="bold")
+        ax.set_title("'per cent' = 'out of every 100'")
+    steps = list(range(0, 14)) + [13] * 6 + list(range(13, 76, 3)) + [75] * 6
+    L.animate(fig, lambda i: upd(steps[i]), len(steps), "percent_grid", fps=6)
+
+# ---------------------------------------------------------------- 13. the average as a balance point (seesaw), animated
+heights = [150, 158, 162, 165, 171, 174, 180]
+if L.wanted("mean_balance"):
+    fig, ax = plt.subplots(figsize=(12, 4.6))
+
+    def upd(k):
+        ax.clear()
+        hs = heights[: k + 1]
+        m = np.mean(hs)
+        ax.plot([145, 185], [0, 0], color=INK2, lw=6, solid_capstyle="round")
+        ax.add_patch(plt.Polygon([[m - 1.3, -0.9], [m + 1.3, -0.9], [m, 0]], color=ORANGE))
+        for h in hs:
+            ax.add_patch(plt.Circle((h, 0.55), 0.5, color=BLUE))
+            ax.text(h, 1.35, str(h), ha="center", fontsize=11)
+        ax.text(m, -1.5, f"balance point = average = {sum(hs)} ÷ {len(hs)} = {m:.1f} cm", ha="center", fontsize=14,
+                color=ORANGE, weight="bold")
+        ax.set_xlim(145, 185)
+        ax.set_ylim(-2, 2)
+        ax.set_aspect("equal")
+        ax.set_yticks([])
+        ax.set_xlabel("height (cm)")
+        ax.set_title(f"{len(hs)} student(s) on the ruler - where does it balance?")
+    frames = [k for k in range(len(heights)) for _ in range(3)] + [len(heights) - 1] * 4
+    L.animate(fig, lambda i: upd(frames[i]), len(frames), "mean_balance", fps=3)
+
+# ---------------------------------------------------------------- 14. mean vs median: one billionaire walks in
+if L.wanted("mean_median"):
+    salaries = [6, 7, 7, 8, 9, 10, 11]
+    fig, axes = plt.subplots(1, 2, figsize=(14, 4.8), sharey=True)
+    for ax, sal, title in [(axes[0], salaries, "7 workers at a café"),
+                           (axes[1], salaries + [500], "...the owner (500k) walks in")]:
+        ax.bar(range(len(sal)), [min(s, 75) for s in sal], color=[BLUE] * 7 + [ORANGE] * (len(sal) - 7))
+        if len(sal) > 7:
+            ax.text(7, 76.5, "500 ↑", ha="center", fontsize=12, color=ORANGE, weight="bold")
+        m, md = np.mean(sal), np.median(sal)
+        ax.axhline(m, color=RED, ls="--")
+        ax.axhline(md, color=GREEN, ls=":")
+        ax.text(-0.4, max(m, md) + 2.5, f"average = {m:.1f}k", color=RED, fontsize=12)
+        ax.text(-0.4, max(m, md) + 7.5, f"median = {md:.1f}k", color=GREEN, fontsize=12)
+        ax.set_ylim(0, 82)
+        ax.set_xticks([])
+        ax.set_title(title)
+        ax.set_ylabel("monthly salary (thousand ₪)")
+    caption(fig, "One huge value pulls the average far away; the median (the middle person) hardly moves.")
+    L.save(fig, "mean_median")
+
+# ---------------------------------------------------------------- 15. standard deviation drawn as real squares
+if L.wanted("std_squares"):
+    vals = [2, 4, 4, 6]
+    fig, ax = plt.subplots(figsize=(12, 5.2))
+    m = np.mean(vals)
+    ax.axvline(m, color=ORANGE, lw=2)
+    ax.text(m, 4.6, "average = 4", ha="center", color=ORANGE, fontsize=13, weight="bold")
+    ys = [0.3, 2.6, 2.6, 0.3]
+    for v, yb, col in zip(vals, ys, [BLUE, AQUA, AQUA, VIOLET]):
+        d = v - m
+        ax.plot(v, yb, "o", color=col, ms=12, zorder=4)
+        if d:
+            x0 = min(v, m)
+            ax.add_patch(plt.Rectangle((x0, yb), abs(d), abs(d), color=col, alpha=0.3))
+            ax.text(x0 + abs(d) / 2, yb + abs(d) / 2, f"distance {d:+.0f}\nsquare = {d * d:.0f}", ha="center",
+                    va="center", fontsize=12)
+        else:
+            ax.text(v + 0.15, yb + 0.15, "distance 0 → square 0", fontsize=11)
+    ax.add_patch(plt.Rectangle((7.3, 0.3), np.sqrt(2), np.sqrt(2), color=GREEN, alpha=0.35))
+    ax.text(7.3 + np.sqrt(2) / 2, 0.3 + np.sqrt(2) + 0.25, "the AVERAGE square:\n(4+0+0+4) ÷ 4 = 2\nside = √2 = 1.41 = std",
+            ha="center", fontsize=12, color=GREEN, weight="bold")
+    ax.set_xlim(0, 10)
+    ax.set_ylim(0, 5)
+    ax.set_aspect("equal")
+    ax.set_yticks([])
+    ax.set_xlabel("value")
+    ax.set_title("Standard deviation, literally: draw each distance as a square, average the squares, take the side")
+    L.save(fig, "std_squares")
+
+# ---------------------------------------------------------------- 16. two cities, same average temperature
+if L.wanted("two_cities"):
+    days = np.arange(1, 31)
+    r = np.random.default_rng(5)
+    a = 22 + r.normal(0, 1.2, 30)
+    b = 22 + 9 * np.sin(days / 30 * 2 * np.pi * 2) + r.normal(0, 2.5, 30)
+    a += 22 - a.mean()
+    b += 22 - b.mean()
+    fig, ax = plt.subplots(figsize=(12, 4.8))
+    ax.plot(days, a, "o-", color=BLUE, label=f"Haifa-by-the-sea: average {a.mean():.0f}°, std {a.std():.1f}°")
+    ax.plot(days, b, "s-", color=ORANGE, label=f"Desert town: average {b.mean():.0f}°, std {b.std():.1f}°")
+    ax.axhline(22, color=MUTED, ls="--")
+    ax.set_xlabel("day of the month")
+    ax.set_ylabel("temperature at noon (°C)")
+    ax.set_title("Same average, very different life: the std tells you whether to pack a coat")
+    ax.legend(loc="upper right")
+    L.save(fig, "two_cities")
+
+# ---------------------------------------------------------------- 17. probability as a long experiment (law of large numbers)
+if L.wanted("sweets_experiment"):
+    r = np.random.default_rng(2)
+    draws = r.random(400) < 0.3
+    running = np.cumsum(draws) / np.arange(1, 401)
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(14, 4.8), gridspec_kw={"width_ratios": [1, 2]})
+    marks = list(range(1, 21)) + list(range(22, 60, 3)) + list(range(60, 401, 20)) + [400] * 4
+
+    def upd(k):
+        n = marks[k]
+        blank(a1, (0, 10), (0, 10))
+        a1.set_aspect("equal")
+        for i in range(min(n, 100)):
+            rr, cc = divmod(i, 10)
+            a1.add_patch(plt.Circle((cc + 0.5, 9.5 - rr), 0.4, color=ORANGE if draws[i] else BLUE))
+        a1.set_title(f"draws so far: {n}" + ("  (first 100 shown)" if n > 100 else ""))
+        a2.clear()
+        a2.plot(np.arange(1, n + 1), running[:n], color=ORANGE, lw=2.5)
+        a2.axhline(0.3, color=INK, ls="--")
+        a2.text(400, 0.315, "the true chance: 3 ÷ 10 = 0.3", ha="right", fontsize=12)
+        a2.set_xlim(0, 400)
+        a2.set_ylim(0, 1)
+        a2.set_xlabel("number of draws (put the sweet back each time)")
+        a2.set_ylabel("share of orange so far")
+        a2.set_title(f"orange so far: {draws[:n].sum()} / {n} = {running[n - 1]:.2f}")
+    L.animate(fig, upd, len(marks), "sweets_experiment", fps=4)
+
+# ---------------------------------------------------------------- 18. "given that" = first keep only part of the crowd
+if L.wanted("given_that"):
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5.2))
+    people = [("teacher", "card")] * 6 + [("teacher", "cash")] * 2 + [("student", "card")] * 7 + [("student", "cash")] * 25
+    for ax, keep, title in [(axes[0], None, "everyone: P(card) = 13 ÷ 40 = 0.33"),
+                            (axes[1], "teacher", "keep ONLY teachers: P(card | teacher) = 6 ÷ 8 = 0.75")]:
+        blank(ax, (0, 10), (0.7, 4.95))
+        ax.set_aspect("equal")
+        for i, (who, pay) in enumerate(people):
+            rr, cc = divmod(i, 10)
+            faded = keep is not None and who != keep
+            col = (ORANGE if pay == "card" else BLUE)
+            ax.add_patch(plt.Circle((cc + 0.5, 4.4 - rr * 1.05), 0.38, color=col, alpha=0.12 if faded else 1))
+            ax.text(cc + 0.5, 4.4 - rr * 1.05, "T" if who == "teacher" else "S", ha="center", va="center",
+                    color="white" if not faded else MUTED, fontsize=11, weight="bold")
+        ax.set_title(title, fontsize=13)
+    caption(fig, "orange = paid by card, blue = cash, T = teacher, S = student.  The bar | means: first keep only the "
+                 "people after it, then count.")
+    L.save(fig, "given_that")
+
+# ---------------------------------------------------------------- 19. normal ruler vs log ruler
+if L.wanted("log_ruler"):
+    fig, (a1, a2) = plt.subplots(2, 1, figsize=(13, 4.6))
+    things = [(1, "1 ₪\ncoffee tip"), (10, "10 ₪\nfalafel"), (100, "100 ₪\nshoes"), (1000, "1,000 ₪\nphone"),
+              (10000, "10,000 ₪\nused car"), (100000, "100,000 ₪\nnew car"), (1000000, "1,000,000 ₪\nflat")]
+    for ax, logscale in [(a1, False), (a2, True)]:
+        ax.set_ylim(-1, 1)
+        ax.set_yticks([])
+        ax.spines["left"].set_visible(False)
+        ax.grid(False)
+        for v, lab in things:
+            xv = math.log10(v) if logscale else v
+            ax.plot(xv, 0, "o", color=ORANGE, ms=10)
+            if logscale or v >= 100000:
+                ax.text(xv, 0.25, lab, ha="center", fontsize=9.5)
+        if not logscale:
+            ax.annotate("1 ₪, 10 ₪, 100 ₪, 1,000 ₪ and\n10,000 ₪ are ALL in here", (0, 0), xytext=(160000, 0.45),
+                        fontsize=10, arrowprops=dict(arrowstyle="->", color=INK))
+        if logscale:
+            ax.set_xlim(-0.4, 6.4)
+            ax.set_xticks(range(7))
+            ax.set_xticklabels([f"log = {i}" for i in range(7)])
+            ax.set_title("LOG ruler: every step = ×10 → everything fits and is easy to compare", fontsize=13)
+        else:
+            ax.set_xlim(-30000, 1030000)
+            ax.set_xticks([0, 250000, 500000, 750000, 1000000])
+            ax.set_xticklabels(["0", "250,000", "500,000", "750,000", "1,000,000"])
+            ax.set_title("NORMAL ruler: six of the seven prices are squashed into the left corner", fontsize=13)
+    fig.tight_layout()
+    L.save(fig, "log_ruler")
+
+# ---------------------------------------------------------------- 20. the rumour: doubling, and the log answers "how many days?"
+if L.wanted("doubling"):
+    fig, ax = plt.subplots(figsize=(12, 5))
+    d = np.arange(0, 12)
+    ax.bar(d, 2.0 ** d, color=[ORANGE if 2 ** k >= 1000 else BLUE for k in d])
+    for k in d:
+        ax.text(k, 2 ** k + 30, f"{2 ** k:,}", ha="center", fontsize=10)
+    ax.axhline(1000, color=INK, ls="--")
+    ax.text(0, 1050, "1,000 people", fontsize=12)
+    ax.set_xlabel("day")
+    ax.set_ylabel("people who heard the rumour")
+    ax.set_title("Doubling every day: day 10 passes 1,000 → log₂(1000) ≈ 9.97")
+    L.save(fig, "doubling")
+
+# ---------------------------------------------------------------- 21. slope of a road, in numbers
+if L.wanted("road_slope"):
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.2))
+    for ax, s, name in [(axes[0], -0.4, "downhill: slope −0.4"), (axes[1], 0.0, "flat: slope 0"),
+                        (axes[2], 0.25, "uphill: slope +0.25")]:
+        ax.plot([0, 10], [5, 5 + 10 * s], color=INK2, lw=5)
+        ax.annotate("", (8, 5 + 8 * s), (4, 5 + 4 * s), arrowprops=dict(arrowstyle="-|>", color=ORANGE, lw=3))
+        ax.plot([4, 8, 8], [5 + 4 * s, 5 + 4 * s, 5 + 8 * s], color=AQUA, lw=2, ls="--")
+        ax.text(6, 9.0, f"4 steps right, {4 * s:+.1f} up", ha="center", color=AQUA, fontsize=11)
+        ax.set_title(f"{name}\n= {4 * s:+.1f} up ÷ 4 right", fontsize=12)
+        ax.set_xlim(0, 10)
+        ax.set_ylim(0, 10)
+        ax.set_aspect("equal")
+    caption(fig, "slope = how much you go UP for every 1 step RIGHT.  A road sign '10%' means slope 0.10.")
+    L.save(fig, "road_slope")
+
+# ---------------------------------------------------------------- 22. vectors: a list of numbers drawn as an arrow
+if L.wanted("vector_arrows"):
+    fig, ax = plt.subplots(figsize=(8, 7))
+    for v, col, lab in [((3, 1), BLUE, "wine A = (3, 1)"), ((1, 3), ORANGE, "wine B = (1, 3)"),
+                        ((2.6, 1.4), AQUA, "wine C = (2.6, 1.4)")]:
+        ax.annotate("", v, (0, 0), arrowprops=dict(arrowstyle="-|>", color=col, lw=3, mutation_scale=22))
+        ax.text(v[0] + 0.08, v[1] + 0.1, lab, color=col, fontsize=13, weight="bold")
+    ax.plot([3, 2.6], [1, 1.4], color=INK, ls=":", lw=2)
+    ax.text(2.9, 1.25, "close!", fontsize=11)
+    ax.set_xlim(0, 4.2)
+    ax.set_ylim(0, 4.2)
+    ax.set_aspect("equal")
+    ax.set_xlabel("feature 1: alcohol (scaled)")
+    ax.set_ylabel("feature 2: sugar (scaled)")
+    ax.set_title("A list of numbers = a point = an arrow (a 'vector')")
+    L.save(fig, "vector_arrows")
