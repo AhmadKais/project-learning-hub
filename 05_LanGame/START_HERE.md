@@ -39,16 +39,19 @@ If Windows Firewall asks about Python the first time a notebook opens a socket, 
 
 ## Your lessons — see it before you build it
 
-Illustrated lessons with animations and pictures from your own data (all of them: [`lessons/`](../lessons/README.md),
-or open `lessons/LESSONS.html` in a browser). Watch the lesson **before** the stage it belongs to.
+Illustrated lessons, each built around a **story**, **real-world examples**, pictures and animations from your own
+data, diagrams, a **runnable worked example**, checked **videos** and exercises with answers (all lessons:
+[`lessons/`](../lessons/README.md), or open `lessons/LESSONS.html` in a browser). Study each one **before** the stage it
+belongs to. Studying alone? Follow the 8-step route in the
+[lessons README](../lessons/README.md#learning-alone-follow-this-route-for-every-lesson).
 
-| # | Lesson | Before your skeleton's … |
-|---|---|---|
-| 0 | [Lesson 00 — The maths toolkit](../lessons/00_math_toolkit/LESSON.md) and the [glossary](../lessons/GLOSSARY.md) | before everything — and whenever a word or a formula is new |
-| 1 | [Lesson 31 — TCP is a stream: sockets, the protocol and message framing](../lessons/31_tcp_framing/LESSON.md) | stages 1-2 |
-| 2 | [Lesson 32 — Threads, race conditions and locks](../lessons/32_threads_locks/LESSON.md) | stage 2 |
-| 3 | [Lesson 33 — The database: constraints, transactions, indexes, parameters](../lessons/33_databases/LESSON.md) | stage 3 |
-| 4 | [Lesson 30 — Finite state machines: making illegal moves impossible](../lessons/30_state_machines/LESSON.md) | stage 4 |
+| # | Lesson | In one sentence | Inside | Before your skeleton's … |
+|---|---|---|---|---|
+| 0 | [Lesson 00 — The maths toolkit: all the maths you need, from zero](../lessons/00_math_toolkit/LESSON.md) and the [glossary](../lessons/GLOSSARY.md) | the projects only use about twelve small pieces of maths — this lesson shows each one with a story, a picture, an everyday example, and a calculation you can do on paper. | 4 animations, 3 videos | before everything — and whenever a word or a formula is new |
+| 1 | [Lesson 31 — TCP is a stream: sockets, the protocol and message framing](../lessons/31_tcp_framing/LESSON.md) | TCP delivers a reliable stream of bytes with no message boundaries, so every message must end with a marker (a newline) and the receiver must collect bytes in a buffer until a full message has arrived. | 2 animations, 1 video | stages 1-2 |
+| 2 | [Lesson 32 — Threads, race conditions and locks](../lessons/32_threads_locks/LESSON.md) | when several threads change the same data, their read–change–write steps can interleave and lose work; a lock lets only one thread at a time into that critical section — use one lock, with `with`, and hold it briefly. | 1 animation | stage 2 |
+| 3 | [Lesson 33 — The database: constraints, transactions, indexes, parameters](../lessons/33_databases/LESSON.md) | let the database itself refuse bad rows (constraints), group changes so they happen all-or-nothing (transactions), find rows without reading them all (indexes), and never paste user text into SQL (parameters). | 1 animation, 1 video | stage 3 |
+| 4 | [Lesson 30 — Finite state machines: making illegal moves impossible](../lessons/30_state_machines/LESSON.md) | keep the program in exactly one named state at a time and allow only the arrows you drew — then illegal actions (cancel after check-in, a late answer) are not "forgotten checks" but simply impossible. | 2 animations, 1 video | stage 4 |
 
 ## Where to start — the learning path
 

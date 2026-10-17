@@ -37,17 +37,20 @@ Open the repo in VS Code, open a notebook from `02_examples/`, choose the `.venv
 
 ## Your lessons — see it before you build it
 
-Illustrated lessons with animations and pictures from your own data (all of them: [`lessons/`](../lessons/README.md),
-or open `lessons/LESSONS.html` in a browser). Watch the lesson **before** the stage it belongs to.
+Illustrated lessons, each built around a **story**, **real-world examples**, pictures and animations from your own
+data, diagrams, a **runnable worked example**, checked **videos** and exercises with answers (all lessons:
+[`lessons/`](../lessons/README.md), or open `lessons/LESSONS.html` in a browser). Study each one **before** the stage it
+belongs to. Studying alone? Follow the 8-step route in the
+[lessons README](../lessons/README.md#learning-alone-follow-this-route-for-every-lesson).
 
-| # | Lesson | Before your skeleton's … |
-|---|---|---|
-| 0 | [Lesson 00 — The maths toolkit](../lessons/00_math_toolkit/LESSON.md) and the [glossary](../lessons/GLOSSARY.md) | before everything — and whenever a word or a formula is new |
-| 1 | [Lesson 27 — Do two stays collide? Half-open intervals and a two-comparison rule](../lessons/27_intervals_overlap/LESSON.md) | stage 1 |
-| 2 | [Lesson 33 — The database: constraints, transactions, indexes, parameters](../lessons/33_databases/LESSON.md) | stage 2 |
-| 3 | [Lesson 28 — Which free room to give? First-Fit, Best-Fit, Preference — and the Strategy pattern](../lessons/28_allocation_strategies/LESSON.md) | stage 3 |
-| 4 | [Lesson 29 — What does the stay cost, and why? A chain of pricing rules](../lessons/29_rule_chain_pricing/LESSON.md) | stage 4 |
-| 5 | [Lesson 30 — Finite state machines: making illegal moves impossible](../lessons/30_state_machines/LESSON.md) | stage 5 |
+| # | Lesson | In one sentence | Inside | Before your skeleton's … |
+|---|---|---|---|---|
+| 0 | [Lesson 00 — The maths toolkit: all the maths you need, from zero](../lessons/00_math_toolkit/LESSON.md) and the [glossary](../lessons/GLOSSARY.md) | the projects only use about twelve small pieces of maths — this lesson shows each one with a story, a picture, an everyday example, and a calculation you can do on paper. | 4 animations, 3 videos | before everything — and whenever a word or a formula is new |
+| 1 | [Lesson 27 — Do two stays collide? Half-open intervals and a two-comparison rule](../lessons/27_intervals_overlap/LESSON.md) | write a stay as [check-in, check-out) — nights, not days — and two stays collide exactly when `a < d and c < b`: two comparisons that cover every possible case. | 1 animation | stage 1 |
+| 2 | [Lesson 33 — The database: constraints, transactions, indexes, parameters](../lessons/33_databases/LESSON.md) | let the database itself refuse bad rows (constraints), group changes so they happen all-or-nothing (transactions), find rows without reading them all (indexes), and never paste user text into SQL (parameters). | 1 animation, 1 video | stage 2 |
+| 3 | [Lesson 28 — Which free room to give? First-Fit, Best-Fit, Preference — and the Strategy pattern](../lessons/28_allocation_strategies/LESSON.md) | when several rooms are free, the rule for choosing one decides who gets turned away later — so we write three rules, measure them on 200 simulated months, and program them so the hotel can swap the rule with one line. | 2 animations | stage 3 |
+| 4 | [Lesson 29 — What does the stay cost, and why? A chain of pricing rules](../lessons/29_rule_chain_pricing/LESSON.md) | build the price as a chain of small rules — base, weekend, long stay, extras, VAT — each adding visible invoice lines, and remember that the order of the rules changes the total. | 1 animation | stage 4 |
+| 5 | [Lesson 30 — Finite state machines: making illegal moves impossible](../lessons/30_state_machines/LESSON.md) | keep the program in exactly one named state at a time and allow only the arrows you drew — then illegal actions (cancel after check-in, a late answer) are not "forgotten checks" but simply impossible. | 2 animations, 1 video | stage 5 |
 
 ## Where to start — the learning path
 

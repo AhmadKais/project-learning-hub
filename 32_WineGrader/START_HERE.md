@@ -38,20 +38,23 @@ and press **Run All**.
 
 ## Your lessons — see it before you build it
 
-Illustrated lessons with animations and pictures from your own data (all of them: [`lessons/`](../lessons/README.md),
-or open `lessons/LESSONS.html` in a browser). Watch the lesson **before** the stage it belongs to.
+Illustrated lessons, each built around a **story**, **real-world examples**, pictures and animations from your own
+data, diagrams, a **runnable worked example**, checked **videos** and exercises with answers (all lessons:
+[`lessons/`](../lessons/README.md), or open `lessons/LESSONS.html` in a browser). Study each one **before** the stage it
+belongs to. Studying alone? Follow the 8-step route in the
+[lessons README](../lessons/README.md#learning-alone-follow-this-route-for-every-lesson).
 
-| # | Lesson | Before your skeleton's … |
-|---|---|---|
-| 0 | [Lesson 00 — The maths toolkit](../lessons/00_math_toolkit/LESSON.md) and the [glossary](../lessons/GLOSSARY.md) | before everything — and whenever a word or a formula is new |
-| 1 | [Lesson 01 — What "learning" means: data, splits and overfitting](../lessons/01_what_is_learning/LESSON.md) | before you start |
-| 2 | [Lesson 02 — Feature scaling: making every feature speak the same language](../lessons/02_feature_scaling/LESSON.md) | stage 3 |
-| 3 | [Lesson 03 — Measuring a classifier: confusion matrix, precision, recall, F1](../lessons/03_confusion_matrix_metrics/LESSON.md) | stage 4 |
-| 4 | [Lesson 15 — k-nearest neighbours: "tell me who your neighbours are"](../lessons/15_knn/LESSON.md) | stage 4 |
-| 5 | [Lesson 16 — The kd-tree: skipping work, and when skipping stops working](../lessons/16_kdtree/LESSON.md) | stage 5 |
-| 6 | [Lesson 05 — Honest evaluation: cross-validation, nested CV and leakage](../lessons/05_cross_validation_leakage/LESSON.md) | stage 6 |
-| 7 | [Lesson 17 — Learning a weight per feature: coordinate search and the incremental update](../lessons/17_feature_weights/LESSON.md) | stage 6 |
-| 8 | [Lesson 33 — The database: constraints, transactions, indexes, parameters](../lessons/33_databases/LESSON.md) | stage 7 |
+| # | Lesson | In one sentence | Inside | Before your skeleton's … |
+|---|---|---|---|---|
+| 0 | [Lesson 00 — The maths toolkit: all the maths you need, from zero](../lessons/00_math_toolkit/LESSON.md) and the [glossary](../lessons/GLOSSARY.md) | the projects only use about twelve small pieces of maths — this lesson shows each one with a story, a picture, an everyday example, and a calculation you can do on paper. | 4 animations, 3 videos | before everything — and whenever a word or a formula is new |
+| 1 | [Lesson 01 — What is "machine learning"?](../lessons/01_what_is_learning/LESSON.md) | instead of writing the rules yourself, you show the computer many examples **with the right answers**, and it finds the rules by itself. | 4 animations, 4 videos | before you start |
+| 2 | [Lesson 02 — Feature scaling: putting all numbers on the same ruler](../lessons/02_feature_scaling/LESSON.md) | before comparing examples, change every feature so that "1 step" means the same thing for all of them — otherwise the feature with the biggest numbers wins every comparison. | 3 animations, 2 videos | stage 3 |
+| 3 | [Lesson 03 — Is the model good? Counting its right and wrong answers](../lessons/03_confusion_matrix_metrics/LESSON.md) | sort every answer into four boxes (caught, false alarm, missed, correct "no"), and from those four counts compute numbers that answer different questions: *can I trust it when it says yes?* and *does it catch everything?* | 2 animations, 2 videos | stage 4 |
+| 4 | [Lesson 15 — k-nearest neighbours: "tell me who your neighbours are, and I'll tell you who you are"](../lessons/15_knn/LESSON.md) | to grade a new wine, find the k most similar wines whose grades you already know, and let them vote — closer wines louder, and with a small correction so the common grade doesn't win just by being common. | 2 animations, 1 video | stage 4 |
+| 5 | [Lesson 16 — The kd-tree: skipping work, and when skipping stops working](../lessons/16_kdtree/LESSON.md) | a kd-tree cuts the space into boxes inside boxes so a nearest-neighbour search can skip whole boxes that can't contain a closer wine — which works beautifully in 2–4 dimensions and hardly at all in 11. | 2 animations, 3 videos | stage 5 |
+| 6 | [Lesson 05 — Honest testing: cross-validation, nested CV and leakage](../lessons/05_cross_validation_leakage/LESSON.md) | test many times on different slices so that luck averages out, and make sure the test data never — not even a little — helps build the model. | 2 animations, 1 video | stage 6 |
+| 7 | [Lesson 17 — Learning how much each feature matters: coordinate search](../lessons/17_feature_weights/LESSON.md) | give each feature a "volume knob" in the distance, and let the computer turn one knob at a time, keeping a change only when the cross-validated score really improves. | 2 animations | stage 6 |
+| 8 | [Lesson 33 — The database: constraints, transactions, indexes, parameters](../lessons/33_databases/LESSON.md) | let the database itself refuse bad rows (constraints), group changes so they happen all-or-nothing (transactions), find rows without reading them all (indexes), and never paste user text into SQL (parameters). | 1 animation, 1 video | stage 7 |
 
 ## Where to start — the learning path
 

@@ -40,24 +40,27 @@ the `.venv` kernel, **Run All**.
 
 ## Your lessons — see it before you build it
 
-Illustrated lessons with animations and pictures from your own data (all of them: [`lessons/`](../lessons/README.md),
-or open `lessons/LESSONS.html` in a browser). Watch the lesson **before** the stage it belongs to.
+Illustrated lessons, each built around a **story**, **real-world examples**, pictures and animations from your own
+data, diagrams, a **runnable worked example**, checked **videos** and exercises with answers (all lessons:
+[`lessons/`](../lessons/README.md), or open `lessons/LESSONS.html` in a browser). Study each one **before** the stage it
+belongs to. Studying alone? Follow the 8-step route in the
+[lessons README](../lessons/README.md#learning-alone-follow-this-route-for-every-lesson).
 
-| # | Lesson | Before your skeleton's … |
-|---|---|---|
-| 0 | [Lesson 00 — The maths toolkit](../lessons/00_math_toolkit/LESSON.md) and the [glossary](../lessons/GLOSSARY.md) | before everything — and whenever a word or a formula is new |
-| 1 | [Lesson 01 — What "learning" means: data, splits and overfitting](../lessons/01_what_is_learning/LESSON.md) | before you start |
-| 2 | [Lesson 19 — How a computer sees a picture: pixels, normalisation, equalisation](../lessons/19_images_as_numbers/LESSON.md) | stage 2 |
-| 3 | [Lesson 25 — Finding the face: Haar features, the integral image and the cascade](../lessons/25_face_detection_haar/LESSON.md) | stage 2 |
-| 4 | [Lesson 20 — A neural network from zero: neurons, layers, softmax, cross-entropy](../lessons/20_neurons_softmax/LESSON.md) | stage 3 |
-| 5 | [Lesson 22 — Convolution: a small filter that slides over the picture](../lessons/22_convolution_pooling/LESSON.md) | stage 3 |
-| 6 | [Lesson 23 — EmotionNet: residual blocks, BatchNorm, Dropout, and `train()` vs `eval()`](../lessons/23_resnet_batchnorm/LESSON.md) | stage 3 |
-| 7 | [Lesson 21 — How a network learns: backpropagation, optimisers, the learning-rate schedule](../lessons/21_backprop_optimizers/LESSON.md) | stage 4 |
-| 8 | [Lesson 24 — Training in practice: augmentation, class weights, label smoothing, early stopping](../lessons/24_training_in_practice/LESSON.md) | stage 4 |
-| 9 | [Lesson 03 — Measuring a classifier: confusion matrix, precision, recall, F1](../lessons/03_confusion_matrix_metrics/LESSON.md) | stage 4 |
-| 10 | [Lesson 26 — Real time: the frame budget, the camera thread, and a label that doesn't flicker](../lessons/26_realtime_smoothing/LESSON.md) | stage 5 |
-| 11 | [Lesson 32 — Threads, race conditions and locks](../lessons/32_threads_locks/LESSON.md) | stage 5 |
-| 12 | [Lesson 33 — The database: constraints, transactions, indexes, parameters](../lessons/33_databases/LESSON.md) | stage 6 |
+| # | Lesson | In one sentence | Inside | Before your skeleton's … |
+|---|---|---|---|---|
+| 0 | [Lesson 00 — The maths toolkit: all the maths you need, from zero](../lessons/00_math_toolkit/LESSON.md) and the [glossary](../lessons/GLOSSARY.md) | the projects only use about twelve small pieces of maths — this lesson shows each one with a story, a picture, an everyday example, and a calculation you can do on paper. | 4 animations, 3 videos | before everything — and whenever a word or a formula is new |
+| 1 | [Lesson 01 — What is "machine learning"?](../lessons/01_what_is_learning/LESSON.md) | instead of writing the rules yourself, you show the computer many examples **with the right answers**, and it finds the rules by itself. | 4 animations, 4 videos | before you start |
+| 2 | [Lesson 19 — How a computer sees a picture: pixels, normalisation, equalisation](../lessons/19_images_as_numbers/LESSON.md) | for a computer a picture is a table of brightness numbers — and before the network sees it, we stretch the brightness (equalisation) and shrink the numbers around 0 (normalisation), in exactly the same way every time. | 2 animations, 2 videos | stage 2 |
+| 3 | [Lesson 25 — Finding the face: Haar features, the integral image and the cascade](../lessons/25_face_detection_haar/LESSON.md) | to find a face fast, check simple light/dark patterns (computed in 4 reads each thanks to the integral image) in a chain of quick tests that throws away almost every non-face window at the first steps. | 2 animations, 3 videos | stage 2 |
+| 4 | [Lesson 20 — A neural network from zero: neurons, layers, softmax, cross-entropy](../lessons/20_neurons_softmax/LESSON.md) | a neural network is many tiny "multiply, add, bend" units arranged in layers, each layer building more complex clues from the one before, ending in one score per class that softmax turns into probabilities. | 3 animations, 3 videos | stage 3 |
+| 5 | [Lesson 22 — Convolution: a small stencil that slides over the picture](../lessons/22_convolution_pooling/LESSON.md) | instead of one giant layer looking at all pixels at once, a CNN slides small stencils (filters) over the picture, making maps of where each pattern appears — and stacks of such layers see edges, then face parts, then expressions. | 2 animations, 2 videos | stage 3 |
+| 6 | [Lesson 23 — EmotionNet: residual blocks, BatchNorm, Dropout, and `train()` vs `eval()`](../lessons/23_resnet_batchnorm/LESSON.md) | EmotionNet stacks residual blocks — layers that only learn a *correction* and pass their input around them on a shortcut — plus BatchNorm (a z-score inside the network) and Dropout (random switch-offs), and the switch `eval()` tells the last two to behave when the model is used. | 1 animation, 4 videos | stage 3 |
+| 7 | [Lesson 21 — How a network learns: backpropagation, optimisers and the learning-rate schedule](../lessons/21_backprop_optimizers/LESSON.md) | after each wrong answer, backpropagation passes the blame backwards through the network to find how every weight should change, and the optimiser moves every weight a small step in that direction — a million times. | 3 animations, 4 videos | stage 4 |
+| 8 | [Lesson 24 — Training in practice: augmentation, class weights, label smoothing, early stopping](../lessons/24_training_in_practice/LESSON.md) | four standard tricks — change the training pictures a little every time, make mistakes on rare emotions cost more, don't demand 100 % certainty, and keep the best epoch — turn a network that memorises into one that generalises. | 2 animations, 2 videos | stage 4 |
+| 9 | [Lesson 03 — Is the model good? Counting its right and wrong answers](../lessons/03_confusion_matrix_metrics/LESSON.md) | sort every answer into four boxes (caught, false alarm, missed, correct "no"), and from those four counts compute numbers that answer different questions: *can I trust it when it says yes?* and *does it catch everything?* | 2 animations, 2 videos | stage 4 |
+| 10 | [Lesson 26 — Real time: the frame budget, the camera thread, and a label that doesn't flicker](../lessons/26_realtime_smoothing/LESSON.md) | read the camera in its own thread and always show the newest frame, and average the last few frames' probabilities so the label stays calm — accepting a tiny delay. | 2 animations | stage 5 |
+| 11 | [Lesson 32 — Threads, race conditions and locks](../lessons/32_threads_locks/LESSON.md) | when several threads change the same data, their read–change–write steps can interleave and lose work; a lock lets only one thread at a time into that critical section — use one lock, with `with`, and hold it briefly. | 1 animation | stage 5 |
+| 12 | [Lesson 33 — The database: constraints, transactions, indexes, parameters](../lessons/33_databases/LESSON.md) | let the database itself refuse bad rows (constraints), group changes so they happen all-or-nothing (transactions), find rows without reading them all (indexes), and never paste user text into SQL (parameters). | 1 animation, 1 video | stage 6 |
 
 ## Where to start — the learning path
 

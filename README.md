@@ -22,8 +22,9 @@ repo is where you **learn** what goes into it.
 **Start with [`00_common/`](00_common/README.md)** (30 minutes: clone, install, run a notebook, run the tests), then open your
 folder's `START_HERE.md`.
 
-**New: [`lessons/`](lessons/README.md)** — 33 illustrated lessons, one per algorithm of all seven projects: animations,
-diagrams and charts made from the projects' own data, worked examples, class activities and check questions. Open
+**New: [`lessons/`](lessons/README.md)** — 34 illustrated lessons (a maths toolkit + one per algorithm of all seven
+projects), written so you can **learn alone**: a story, real-world examples, animations and charts made from the projects'
+own data, diagrams, runnable worked examples, checked videos, exercises with answers and a one-card summary. Open
 [`lessons/LESSONS.html`](lessons/LESSONS.html) to see them all in one page. Your `START_HERE.md` lists your lessons in order.
 
 ## What every project folder contains

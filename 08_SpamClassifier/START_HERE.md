@@ -38,22 +38,25 @@ Open the repo in VS Code, open a notebook from `02_examples/`, choose the `.venv
 
 ## Your lessons — see it before you build it
 
-Illustrated lessons with animations and pictures from your own data (all of them: [`lessons/`](../lessons/README.md),
-or open `lessons/LESSONS.html` in a browser). Watch the lesson **before** the stage it belongs to.
+Illustrated lessons, each built around a **story**, **real-world examples**, pictures and animations from your own
+data, diagrams, a **runnable worked example**, checked **videos** and exercises with answers (all lessons:
+[`lessons/`](../lessons/README.md), or open `lessons/LESSONS.html` in a browser). Study each one **before** the stage it
+belongs to. Studying alone? Follow the 8-step route in the
+[lessons README](../lessons/README.md#learning-alone-follow-this-route-for-every-lesson).
 
-| # | Lesson | Before your skeleton's … |
-|---|---|---|
-| 0 | [Lesson 00 — The maths toolkit](../lessons/00_math_toolkit/LESSON.md) and the [glossary](../lessons/GLOSSARY.md) | before everything — and whenever a word or a formula is new |
-| 1 | [Lesson 01 — What "learning" means: data, splits and overfitting](../lessons/01_what_is_learning/LESSON.md) | before you start |
-| 2 | [Lesson 06 — Cleaning text: from a message to a list of terms](../lessons/06_text_preprocessing/LESSON.md) | stage 2 |
-| 3 | [Lesson 07 — TF-IDF: turning text into numbers that mean something](../lessons/07_tfidf/LESSON.md) | stage 3 |
-| 4 | [Lesson 11 — Naive Bayes from scratch: counting your way to a spam filter](../lessons/11_naive_bayes/LESSON.md) | stage 4 |
-| 5 | [Lesson 02 — Feature scaling: making every feature speak the same language](../lessons/02_feature_scaling/LESSON.md) | stage 5 |
-| 6 | [Lesson 05 — Honest evaluation: cross-validation, nested CV and leakage](../lessons/05_cross_validation_leakage/LESSON.md) | stage 5 |
-| 7 | [Lesson 14 — The SVM, calibration, and comparing two models honestly](../lessons/14_svm_calibration/LESSON.md) | stage 5 |
-| 8 | [Lesson 03 — Measuring a classifier: confusion matrix, precision, recall, F1](../lessons/03_confusion_matrix_metrics/LESSON.md) | stage 6 |
-| 9 | [Lesson 04 — The threshold is a decision: ROC, AUC and choosing where to cut](../lessons/04_threshold_roc/LESSON.md) | stage 6 |
-| 10 | [Lesson 33 — The database: constraints, transactions, indexes, parameters](../lessons/33_databases/LESSON.md) | stage 7 |
+| # | Lesson | In one sentence | Inside | Before your skeleton's … |
+|---|---|---|---|---|
+| 0 | [Lesson 00 — The maths toolkit: all the maths you need, from zero](../lessons/00_math_toolkit/LESSON.md) and the [glossary](../lessons/GLOSSARY.md) | the projects only use about twelve small pieces of maths — this lesson shows each one with a story, a picture, an everyday example, and a calculation you can do on paper. | 4 animations, 3 videos | before everything — and whenever a word or a formula is new |
+| 1 | [Lesson 01 — What is "machine learning"?](../lessons/01_what_is_learning/LESSON.md) | instead of writing the rules yourself, you show the computer many examples **with the right answers**, and it finds the rules by itself. | 4 animations, 4 videos | before you start |
+| 2 | [Lesson 06 — Cleaning text: from a message to a list of words the computer can count](../lessons/06_text_preprocessing/LESSON.md) | before a computer can compare texts it must cut them into words and make "the same word" really look the same — and every small choice in that cleaning decides what the computer is allowed to see. | 3 animations, 3 videos | stage 2 |
+| 3 | [Lesson 07 — TF-IDF: turning text into numbers that mean something](../lessons/07_tfidf/LESSON.md) | a word is important for a document if it is **frequent in it** and **rare in the others** — TF-IDF is that sentence turned into arithmetic. | 2 animations, 2 videos | stage 3 |
+| 4 | [Lesson 11 — Naive Bayes from scratch: counting your way to a spam filter](../lessons/11_naive_bayes/LESSON.md) | every word in a message is a clue; Naive Bayes counts how often each clue appeared in spam and in normal messages, and combines the clues into one verdict — and can tell you which clues convinced it. | 3 animations, 2 videos | stage 4 |
+| 5 | [Lesson 02 — Feature scaling: putting all numbers on the same ruler](../lessons/02_feature_scaling/LESSON.md) | before comparing examples, change every feature so that "1 step" means the same thing for all of them — otherwise the feature with the biggest numbers wins every comparison. | 3 animations, 2 videos | stage 5 |
+| 6 | [Lesson 05 — Honest testing: cross-validation, nested CV and leakage](../lessons/05_cross_validation_leakage/LESSON.md) | test many times on different slices so that luck averages out, and make sure the test data never — not even a little — helps build the model. | 2 animations, 1 video | stage 5 |
+| 7 | [Lesson 14 — The SVM: the widest street between two classes (and how to get a probability out of it)](../lessons/14_svm_calibration/LESSON.md) | the SVM draws the fence between two classes that stays as far as possible from both — and because its answer is a distance, not a probability, we "calibrate" it into an honest percentage. | 3 animations, 2 videos | stage 5 |
+| 8 | [Lesson 03 — Is the model good? Counting its right and wrong answers](../lessons/03_confusion_matrix_metrics/LESSON.md) | sort every answer into four boxes (caught, false alarm, missed, correct "no"), and from those four counts compute numbers that answer different questions: *can I trust it when it says yes?* and *does it catch everything?* | 2 animations, 2 videos | stage 6 |
+| 9 | [Lesson 04 — Where do we draw the line? Thresholds and the ROC curve](../lessons/04_threshold_roc/LESSON.md) | a model gives each example a **score** from 0 to 1; **people** choose the line (threshold) above which we say "yes" — and the right line depends on which mistake costs more. | 2 animations, 2 videos | stage 6 |
+| 10 | [Lesson 33 — The database: constraints, transactions, indexes, parameters](../lessons/33_databases/LESSON.md) | let the database itself refuse bad rows (constraints), group changes so they happen all-or-nothing (transactions), find rows without reading them all (indexes), and never paste user text into SQL (parameters). | 1 animation, 1 video | stage 7 |
 
 ## Where to start — the learning path
 

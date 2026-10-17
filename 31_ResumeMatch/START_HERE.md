@@ -41,18 +41,21 @@ Open the repo in VS Code, open a notebook from `02_examples/`, choose the `.venv
 
 ## Your lessons — see it before you build it
 
-Illustrated lessons with animations and pictures from your own data (all of them: [`lessons/`](../lessons/README.md),
-or open `lessons/LESSONS.html` in a browser). Watch the lesson **before** the stage it belongs to.
+Illustrated lessons, each built around a **story**, **real-world examples**, pictures and animations from your own
+data, diagrams, a **runnable worked example**, checked **videos** and exercises with answers (all lessons:
+[`lessons/`](../lessons/README.md), or open `lessons/LESSONS.html` in a browser). Study each one **before** the stage it
+belongs to. Studying alone? Follow the 8-step route in the
+[lessons README](../lessons/README.md#learning-alone-follow-this-route-for-every-lesson).
 
-| # | Lesson | Before your skeleton's … |
-|---|---|---|
-| 0 | [Lesson 00 — The maths toolkit](../lessons/00_math_toolkit/LESSON.md) and the [glossary](../lessons/GLOSSARY.md) | before everything — and whenever a word or a formula is new |
-| 1 | [Lesson 06 — Cleaning text: from a message to a list of terms](../lessons/06_text_preprocessing/LESSON.md) | stage 2 |
-| 2 | [Lesson 07 — TF-IDF: turning text into numbers that mean something](../lessons/07_tfidf/LESSON.md) | stage 3 |
-| 3 | [Lesson 08 — Documents as arrows: dot product and cosine similarity](../lessons/08_vectors_cosine/LESSON.md) | stage 4 |
-| 4 | [Lesson 09 — BM25 and the inverted index: how search engines rank](../lessons/09_bm25_inverted_index/LESSON.md) | stage 5 |
-| 5 | [Lesson 10 — Is the ranking good? Precision@k and MRR](../lessons/10_ranking_metrics/LESSON.md) | stage 6 |
-| 6 | [Lesson 33 — The database: constraints, transactions, indexes, parameters](../lessons/33_databases/LESSON.md) | stage 8 |
+| # | Lesson | In one sentence | Inside | Before your skeleton's … |
+|---|---|---|---|---|
+| 0 | [Lesson 00 — The maths toolkit: all the maths you need, from zero](../lessons/00_math_toolkit/LESSON.md) and the [glossary](../lessons/GLOSSARY.md) | the projects only use about twelve small pieces of maths — this lesson shows each one with a story, a picture, an everyday example, and a calculation you can do on paper. | 4 animations, 3 videos | before everything — and whenever a word or a formula is new |
+| 1 | [Lesson 06 — Cleaning text: from a message to a list of words the computer can count](../lessons/06_text_preprocessing/LESSON.md) | before a computer can compare texts it must cut them into words and make "the same word" really look the same — and every small choice in that cleaning decides what the computer is allowed to see. | 3 animations, 3 videos | stage 2 |
+| 2 | [Lesson 07 — TF-IDF: turning text into numbers that mean something](../lessons/07_tfidf/LESSON.md) | a word is important for a document if it is **frequent in it** and **rare in the others** — TF-IDF is that sentence turned into arithmetic. | 2 animations, 2 videos | stage 3 |
+| 3 | [Lesson 08 — How similar are two texts? Arrows, the dot product and cosine similarity](../lessons/08_vectors_cosine/LESSON.md) | draw every text as an arrow; two texts are similar when their arrows **point the same way** — and the cosine of the angle between them is that similarity, as one number from 0 to 1. | 1 animation, 2 videos | stage 4 |
+| 4 | [Lesson 09 — BM25 and the inverted index: how real search engines rank](../lessons/09_bm25_inverted_index/LESSON.md) | BM25 fixes two weaknesses of TF-IDF — repeating a word counts too much, and long documents match everything — and the inverted index lets a search engine skip every document that doesn't contain the query's words. | 2 animations, 3 videos | stage 5 |
+| 5 | [Lesson 10 — Is the ranking good? Precision@k and MRR](../lessons/10_ranking_metrics/LESSON.md) | a ranking is judged at the top — **P@k** asks "how many of the first k are good?" and **MRR** asks "how high is the first good one?". | 2 animations, 1 video | stage 6 |
+| 6 | [Lesson 33 — The database: constraints, transactions, indexes, parameters](../lessons/33_databases/LESSON.md) | let the database itself refuse bad rows (constraints), group changes so they happen all-or-nothing (transactions), find rows without reading them all (indexes), and never paste user text into SQL (parameters). | 1 animation, 1 video | stage 8 |
 
 ## Where to start — the learning path
 
