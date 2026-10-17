@@ -161,3 +161,90 @@ if L.wanted("zipf"):
     caption(fig, f"A handful of stop-words are everywhere and say nothing about spam;  "
                  f"{once:,} words ({once / len(freq):.0%}) appear only once.")
     L.save(fig, "zipf")
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 5. the regex scanning a sentence, token by token
+if L.wanted("regex_scan"):
+    sentence = "Used C++, .NET and Node.js with Docker."
+    rows = [(r"\w+", RED, "re.findall(r'\\w+')"), (TOKEN_PATTERN, GREEN, "TOKEN_PATTERN")]
+    found = [[(m.start(), m.end()) for m in re.finditer(p, sentence)] for p, _, _ in rows]
+    n_steps = max(len(f) for f in found)
+    fig, ax = plt.subplots(figsize=(14, 5))
+    cw = 0.95 / len(sentence)
+
+    def upd(k):
+        blank(ax)
+        for r_i, ((pat, col, name), spans) in enumerate(zip(rows, found)):
+            y = 0.62 - r_i * 0.45
+            ax.text(0.02, y + 0.2, name, fontsize=13, weight="bold", color=col, family="monospace")
+            for i, ch in enumerate(sentence):
+                ax.text(0.025 + i * cw, y, ch, fontsize=17, family="monospace", ha="center", va="center")
+            shown = spans[: k + 1]
+            for s, e in shown:
+                ax.add_patch(plt.Rectangle((0.025 + (s - 0.5) * cw, y - 0.07), (e - s) * cw, 0.14, color=col,
+                                           alpha=0.25))
+            toks = [sentence[s:e] for s, e in shown]
+            ax.text(0.02, y - 0.16, "tokens: " + ", ".join(toks), fontsize=12, color=col, family="monospace")
+        ax.set_title("The pattern slides along the text and cuts out every piece that matches", fontsize=14)
+    frames = [k for k in range(n_steps) for _ in range(2)] + [n_steps - 1] * 4
+    L.animate(fig, lambda i: upd(frames[i]), len(frames), "regex_scan", fps=2)
+
+# ---------------------------------------------------------------- 6. stemming: word families collapse to one key
+if L.wanted("stem_families"):
+    families = [["develop", "developed", "developing", "development", "developer"],
+                ["connect", "connected", "connecting", "connection", "connections"],
+                ["learn", "learned", "learning", "learns", "learner"],
+                ["manage", "managed", "managing", "management", "manager"]]
+    fig, ax = plt.subplots(figsize=(14, 5.6))
+    blank(ax)
+    for f_i, fam in enumerate(families):
+        x0 = 0.01 + f_i * 0.25
+        stems = [STEM(w) for w in fam]
+        main = Counter(stems).most_common(1)[0][0]
+        ax.text(x0 + 0.115, 0.95, f"family {f_i + 1}", ha="center", fontsize=12, color=INK2)
+        for j, (w, st) in enumerate(zip(fam, stems)):
+            y = 0.8 - j * 0.16
+            box(ax, x0, y, 0.12, 0.1, w, color=INK2, fontsize=11.5, radius=0.01, lw=1.2)
+            ax.text(x0 + 0.128, y + 0.05, "→", fontsize=14, va="center")
+            same = st == main
+            box(ax, x0 + 0.15, y, 0.08, 0.1, st, color=SERIES[f_i] if same else MUTED,
+                fill=LIGHT_BLUE if same else PAPER, fontsize=12, weight="bold", radius=0.01)
+    caption(fig, "Real Snowball stems. Most forms collapse to one key; a few stay apart (learner). "
+                 "Stems need not be real words.")
+    L.save(fig, "stem_families")
+
+# ---------------------------------------------------------------- 7. top words before and after removing stop-words (real SMS)
+if L.wanted("stopwords_before_after"):
+    with open(data("08_SpamClassifier", "sms_spam.csv"), encoding="utf-8") as f:
+        sms = list(csv.DictReader(f))
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    for ax, drop in [(axes[0], False), (axes[1], True)]:
+        cs = Counter(w for r in sms if r["label"] == "spam" for w in WORD_RE.findall(r["text"].lower())
+                     if not drop or (w not in STOP and len(w) >= 3))
+        top = cs.most_common(15)
+        ax.barh(range(15)[::-1], [c for _, c in top], color=ORANGE)
+        ax.set_yticks(range(15)[::-1], [w for w, _ in top])
+        ax.set_xlabel("count in the 747 spam SMS")
+        ax.set_title("the 15 commonest words in SPAM" + (" - after dropping\nstop-words and words < 3 letters"
+                                                          if drop else "\n(raw)"), fontsize=13)
+    caption(fig, "Left: 'to, you, a, the' say nothing. Right: 'call, free, txt, claim, prize' - now the spam signal is loud.")
+    L.save(fig, "stopwords_before_after")
+
+# ---------------------------------------------------------------- 8. why bigrams: same words, different meaning
+if L.wanted("bigrams"):
+    pairs = [("Built machine learning models in Python", True),
+             ("Learning to repair a sewing machine", False)]
+    fig, ax = plt.subplots(figsize=(14, 4.8))
+    blank(ax)
+    for i, (txt, ml) in enumerate(pairs):
+        y = 0.72 - i * 0.45
+        toks = [STEM(w) for w in re.findall(r"[a-z]+", txt.lower()) if w not in STOP]
+        grams = [f"{a} {b}" for a, b in zip(toks, toks[1:])]
+        ax.text(0.02, y + 0.12, f"CV {i + 1}: \"{txt}\"", fontsize=13, weight="bold")
+        chips(ax, toks, y0=y - 0.03, x0=0.02, width=0.42,
+              status=["changed" if t in ("machin", "learn") else "keep" for t in toks])
+        chips(ax, grams, y0=y - 0.03, x0=0.47, width=0.52,
+              status=["new" if g == "machin learn" else "keep" for g in grams])
+    ax.text(0.02, 0.95, "single words (both CVs have 'machin' and 'learn')", fontsize=12, color=INK2)
+    ax.text(0.47, 0.95, "+ bigrams (only CV 1 has 'machin learn')", fontsize=12, color=INK2)
+    L.save(fig, "bigrams")
