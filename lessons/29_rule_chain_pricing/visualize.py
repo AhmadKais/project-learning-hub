@@ -111,3 +111,46 @@ if L.wanted("wrong_order"):
     caption(fig, f"Same stay, same rules, another order: {total(EX1):,.2f} vs {total(WRONG):,.2f}.  "
                  "The long-stay rule reads lines_so_far - so it must run after base and weekend, and VAT must be last.")
     L.save(fig, "wrong_order")
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 4. a price calendar for room 102, March 2026
+if L.wanted("price_calendar"):
+    import calendar
+    from datetime import date
+    fig, ax = plt.subplots(figsize=(12, 6.4))
+    blank(ax, (0, 7), (-0.2, 6.6))
+    for j, dname in enumerate(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]):
+        ax.text(j + 0.5, 6.3, dname, ha="center", fontsize=12, weight="bold")
+    season = range(0)                                    # example 1 has no season
+    for d in range(1, 32):
+        dt = date(2026, 3, d)
+        wd = dt.weekday()
+        week = (d + date(2026, 3, 1).weekday() - 1) // 7
+        y = 5.2 - week
+        price = 450 * (1.5 if d in season else 1)
+        if wd in (4, 5):
+            price *= 1.2
+        stay = 2 <= d < 9
+        col = ORANGE if wd in (4, 5) else (YELLOW if d in season else PAPER)
+        ax.add_patch(plt.Rectangle((wd + 0.04, y + 0.04), 0.92, 0.92, fc=col, ec=BLUE if stay else GRID,
+                                   lw=3.5 if stay else 1, alpha=0.8 if col != PAPER else 1))
+        ax.text(wd + 0.08, y + 0.75, str(d), fontsize=11, color=INK2)
+        ax.text(wd + 0.5, y + 0.35, f"{price:,.0f}", ha="center", fontsize=12, weight="bold")
+    ax.text(0, -0.1, "white = 450 ₪   ·   orange = Friday / Saturday night (+20 % = 540)   ·   blue frame = the guide's stay "
+                     "[2, 9): 5 × 450 + 2 × 540 = 3,330", fontsize=10.5, color=INK2)
+    ax.set_title("Room 102 in March 2026: the price of each night (before discounts and VAT)", fontsize=13)
+    L.save(fig, "price_calendar")
+
+# ---------------------------------------------------------------- 5. order matters in real life: a coupon and a discount
+if L.wanted("shop_order"):
+    fig, ax = plt.subplots(figsize=(11, 4.4))
+    a = (100 - 10) * 0.8
+    b = 100 * 0.8 - 10
+    ax.barh([1, 0], [a, b], color=[BLUE, GREEN], height=0.5)
+    ax.text(a + 1, 1, f"{a:.0f} ₪   coupon −10 ₪ first, then −20 %", va="center", fontsize=12)
+    ax.text(b + 1, 0, f"{b:.0f} ₪   −20 % first, then coupon −10 ₪", va="center", fontsize=12)
+    ax.set_yticks([])
+    ax.set_xlim(0, 125)
+    ax.set_xlabel("you pay for a 100 ₪ shirt")
+    ax.set_title("Same two discounts, different order, different price - the shop must choose the order")
+    L.save(fig, "shop_order")

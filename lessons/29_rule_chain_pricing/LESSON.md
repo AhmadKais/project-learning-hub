@@ -3,6 +3,17 @@
 > **For:** Eran (HotelManager stage 4) &nbsp;·&nbsp; **Time:** 2 × 45 min
 > **Before:** Lesson 00 §1 (percentages); Lesson 27 (nights); Python classes &nbsp;·&nbsp; **After this:** Lesson 30
 
+**In one sentence:** build the price as a chain of small rules — base, weekend, long stay, extras, VAT — each adding
+visible invoice lines, and remember that the order of the rules changes the total.
+
+## 🗺️ The map of this lesson
+
+```mermaid
+flowchart LR
+    C["the stay<br/>(room, dates, guests)"] --> R1["BaseRate"] --> R2["WeekendSurcharge"] --> R3["LongStayDiscount"] --> R4["Extras"] --> R5["Vat"]
+    R5 --> INV["invoice:<br/>all lines + total"]
+```
+
 ## The story
 
 > A guest checks out and gets an invoice: **4,445.06 ₪**. She frowns: *"7 nights at 450 is 3,150. Why 4,445?"* A bad
@@ -11,12 +22,13 @@
 > a **chain of rules**, each adding visible lines, is the algorithm of this lesson. And it turns out that **the order of
 > the rules changes the price**.
 
-## 🎯 By the end, the student can
+### 🌍 Real world
 
-1. Compute the guide's invoice 4,445.06 by hand, line by line, including every percentage.
-2. Explain the rule-chain design: each rule reads the stay and the lines so far, and adds lines.
-3. Explain why the order of the rules is part of the algorithm (4,445.06 vs 4,466.30).
-4. Explain the open/closed principle: "add a new discount in two minutes".
+Every bill you get is a chain of rules: a **supermarket receipt** (items, "2 for 1", club discount, VAT), a **phone bill**
+(plan, extra minutes, roaming, VAT), an **electricity bill** (fixed charge, usage in tiers, VAT), an **online checkout**
+(items, shipping, coupon, tax). The good ones show every line — and in all of them the order matters:
+
+![order matters in a shop](figs/shop_order.png)
 
 ## Words you need
 
@@ -34,6 +46,10 @@
 ---
 
 ## 1. The invoice, line by line
+
+First, the price of every night in March for room 102:
+
+![price calendar](figs/price_calendar.png)
 
 ![invoice waterfall](figs/waterfall.png)
 
@@ -122,6 +138,47 @@ Adding "returning guests −5 %" = one new class + one line in the engine's list
 **Money:** round each line to the agora (2 decimals) and then add. Eran's code uses `round(x, 2)`; this lesson's script uses
 Python's `Decimal`, which avoids float surprises like 0.1 + 0.2 = 0.30000000000000004.
 
+## 🧪 Worked example: a rule chain in 30 lines
+
+```python
+from dataclasses import dataclass
+from datetime import date, timedelta
+from decimal import Decimal, ROUND_HALF_UP
+
+def money(x):
+    return Decimal(x).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+@dataclass
+class Stay:
+    check_in: date
+    check_out: date
+    rate: Decimal
+    guests: int
+    breakfast: bool
+
+    def nights(self):
+        return [self.check_in + timedelta(days=i) for i in range((self.check_out - self.check_in).days)]
+
+def base(s, lines):      return [("base", money(len(s.nights()) * s.rate))]
+def weekend(s, lines):   return [("weekend +20%", money(sum(s.rate * Decimal("0.2") for n in s.nights() if n.weekday() in (4, 5))))]
+def long_stay(s, lines): return [("long stay -10%", money(-sum(a for _, a in lines) * Decimal("0.1")))] if len(s.nights()) >= 7 else []
+def extras(s, lines):    return [("breakfast", money(len(s.nights()) * s.guests * 55))] if s.breakfast else []
+def vat(s, lines):       return [("VAT 18%", money(sum(a for _, a in lines) * Decimal("0.18")))]
+
+def quote(stay, rules):
+    lines = []
+    for rule in rules:
+        lines += rule(stay, lines)
+    return lines, sum(a for _, a in lines)
+
+stay = Stay(date(2026, 3, 2), date(2026, 3, 9), Decimal(450), 2, True)
+lines, total = quote(stay, [base, weekend, long_stay, extras, vat])
+for name, amount in lines:
+    print(f"{name:15s} {amount:>9}")
+print("TOTAL", total)                                                    # 4445.06
+print("wrong order:", quote(stay, [base, long_stay, weekend, extras, vat])[1])   # 4466.30
+```
+
 ## 5. Common mistakes
 
 | student says | the truth |
@@ -129,6 +186,15 @@ Python's `Decimal`, which avoids float surprises like 0.1 + 0.2 = 0.300000000000
 | "One formula: rate × nights × factors" | Nobody can see why, and every new rule means editing the formula. |
 | "Order doesn't matter, adding is commutative" | The rules take **percentages of different things**. |
 | "The weekend surcharge is on the normal rate" | It's on that night's price — 675, not 450, in high season. |
+| "Use float for money" | 0.1 + 0.2 = 0.30000000000000004. Round each line, or use `Decimal`. |
+
+## 📝 Summary
+
+> * The price is a **chain of rules**; each reads the stay and the lines so far and **adds visible lines**.
+> * Example 1: 3,150 + 180 − 333 + 770 + 678.06 = **4,445.06**. Example 2 (season): **2,442.60**.
+> * A discount is a **negative line**; total = sum of all lines.
+> * **Order matters**: long stay after base + weekend, VAT last — otherwise 4,466.30.
+> * **Open/closed**: a new rule = a new class + one line in the list.
 
 ## 6. Activities
 
