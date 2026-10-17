@@ -160,3 +160,77 @@ if L.wanted("incremental"):
     caption(fig, f"Change ONE weight → add one matrix.  Check: max difference from a full recompute = "
                  f"{np.abs(direct - D2).max():.1e}")
     L.save(fig, "incremental")
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 4. turning one knob: the "circle" of neighbours stretches
+if L.wanted("knob_ellipse"):
+    Z = (X - X.mean(0)) / X.std(0)
+    P2 = Z[:600][:, [10, 1]]                          # alcohol, volatile acidity
+    q = np.array([0.3, 0.2])
+    ws = np.r_[np.linspace(0.05, 4, 16), np.linspace(4, 0.05, 16)]
+    fig, ax = plt.subplots(figsize=(8.5, 8))
+
+    def upd(k):
+        w = ws[k]
+        d = np.sqrt(w * (P2[:, 0] - q[0]) ** 2 + (P2[:, 1] - q[1]) ** 2)
+        nn = np.argsort(d)[:21]
+        r = d[nn[-1]]
+        ax.clear()
+        ax.scatter(P2[:, 0], P2[:, 1], s=12, color=MUTED, alpha=0.5)
+        ax.scatter(P2[nn, 0], P2[nn, 1], s=45, color=ORANGE, edgecolor="white", zorder=3)
+        th = np.linspace(0, 2 * np.pi, 200)
+        ax.plot(q[0] + r / np.sqrt(w) * np.cos(th), q[1] + r * np.sin(th), color=ORANGE, lw=2, ls="--")
+        ax.scatter(*q, s=300, marker="*", color=INK, zorder=4)
+        ax.set_xlim(-2.5, 3)
+        ax.set_ylim(-2.5, 3)
+        ax.set_aspect("equal")
+        ax.set_xlabel("alcohol (scaled)")
+        ax.set_ylabel("volatile acidity (scaled)")
+        ax.set_title(f"alcohol's weight = {w:.2f}\n"
+                     + ("alcohol counts MORE → the neighbourhood gets narrow in alcohol" if w > 1.2 else
+                        "alcohol counts LESS → the neighbourhood stretches along alcohol" if w < 0.8 else
+                        "normal weight → a circle"), fontsize=12)
+    L.animate(fig, upd, len(ws), "knob_ellipse", fps=4)
+
+# ---------------------------------------------------------------- 5. the noise test: random columns get weight 0
+if L.wanted("noise_test"):
+    r = np.random.default_rng(1)
+    noise_folds = []
+    for f in folds:
+        n_te, n_tr = f["terms"][0].shape
+        A = r.normal(size=(n_te, 2)).astype(np.float32)
+        B = r.normal(size=(n_tr, 2)).astype(np.float32)
+        extra = [np.abs(A[:, None, j] - B[None, :, j]) ** P for j in range(2)]
+        noise_folds.append({**f, "terms": f["terms"] + extra})
+    names13 = NAMES + ["NOISE 1", "NOISE 2"]
+    w = np.ones(13)
+
+    def cvs(w):
+        return np.mean([score(f, sum(wi * t for wi, t in zip(w, f["terms"]))) for f in noise_folds])
+    best = cvs(w)
+    start = best
+    for _ in range(2):
+        changed = False
+        for i in range(13):
+            if w[i] == 0:
+                continue
+            for fac in (0, 0.5, 1.5, 2):
+                trial = w.copy()
+                trial[i] *= fac
+                s = cvs(trial)
+                if s > best + 0.002:
+                    w, best, changed = trial, s, True
+                    break
+        if not changed:
+            break
+    fig, ax = plt.subplots(figsize=(12, 5))
+    ax.bar(range(13), w, color=[RED if n.startswith("NOISE") else BLUE for n in names13])
+    for i, v in enumerate(w):
+        ax.text(i, v + 0.05, f"{v:g}", ha="center", fontsize=11)
+    ax.set_xticks(range(13), names13, rotation=35, ha="right")
+    ax.set_ylabel("learned weight")
+    ax.set_title(f"Two columns of pure random noise added to 11 real features - coordinate search sets them to "
+                 f"{w[11]:g} and {w[12]:g}\n(cross-validated macro-F1: {start:.3f} with all weights 1 → {best:.3f})",
+                 fontsize=12)
+    print("  noise test weights:", dict(zip(names13, w)), round(start, 3), round(best, 3))
+    L.save(fig, "noise_test")

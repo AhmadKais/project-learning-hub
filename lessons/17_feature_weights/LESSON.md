@@ -3,6 +3,20 @@
 > **For:** Seif (WineGrader stage 6) &nbsp;·&nbsp; **Time:** 2 × 45 min
 > **Before:** Lessons 02, 05, 15 &nbsp;·&nbsp; **After this:** the tuning / results chapter of the book
 
+**In one sentence:** give each feature a "volume knob" in the distance, and let the computer turn one knob at a time,
+keeping a change only when the cross-validated score really improves.
+
+## 🗺️ The map of this lesson
+
+```mermaid
+flowchart LR
+    A["1 · A weight =<br/>a volume knob"] --> B["2 · No slope:<br/>a staircase"]
+    B --> C["3 · Coordinate search:<br/>one knob at a time"]
+    C --> D["4 · Make it fast:<br/>incremental update"]
+    D --> E["5 · Callbacks"]
+    E --> F["6 · The honest result"]
+```
+
 ## The story
 
 > A wine expert tells Sami: *"For quality, alcohol matters a lot; chlorides (salt) hardly at all."* Right now Sami's k-NN
@@ -11,13 +25,11 @@
 > feature counts more in "similar"; turn it to 0 and it is ignored. This lesson is how the computer turns the knobs — and
 > the honest answer it found.
 
-## 🎯 By the end, the student can
+### 🌍 Real world
 
-1. Explain what a feature weight does to the distance (and that weight 0 = the feature is removed).
-2. Explain with the staircase picture why gradient descent can't be used here.
-3. Run coordinate search by hand on a small table of trials.
-4. Explain the incremental update and check it with numbers.
-5. Report an honest "it didn't help" result.
+* A **music equaliser**: bass, mid, treble — you turn one slider, listen, keep it if it sounds better, move to the next.
+* **Cooking**: a cook adjusts one ingredient at a time ("a bit more salt?"), tastes, and keeps only what helps.
+* **Old TVs and radios** were tuned knob by knob the same way. That's exactly coordinate search.
 
 ## Words you need
 
@@ -43,6 +55,15 @@ weights (1, 1):     1 × 1² + 1 × 1² = 2      distance √2 = 1.41
 weights (2, 1):     2 × 1² + 1 × 1² = 3      distance √3 = 1.73   (alcohol counts double)
 weights (1, 0):     1 × 1² + 0 × 1² = 1      distance √1 = 1.00   (chlorides ignored)
 ```
+
+### Watch what one knob does
+
+Turning alcohol's weight up or down changes the **shape** of the neighbourhood (the 21 nearest wines, orange):
+
+![turning one knob](figs/knob_ellipse.gif)
+
+Weight 1 → a circle. Weight 4 → alcohol differences count 4× → only wines with almost the same alcohol are "near" (a narrow
+oval). Weight near 0 → alcohol hardly matters → the oval stretches along alcohol.
 
 ## 2. Why not gradient descent?
 
@@ -113,7 +134,16 @@ One addition instead of recomputing all 11 features → Seif's run dropped from 
 
 After every pass, the loop tells its helpers "round finished, here is the score and the weights": `HistoryLogger` (for the
 chart), `Checkpoint` (saves the best weights safely), `EarlyStopping` (says when to stop). The loop doesn't need to know
-about files or charts. This is the **Observer pattern**.
+about files or charts. This is the **Observer pattern** — like a YouTube channel and its subscribers: the channel just
+announces "new video", and each subscriber decides what to do with it.
+
+```mermaid
+flowchart LR
+    LOOP["learn_weights loop"] -- "pass finished:<br/>score, weights" --> H["HistoryLogger<br/>(chart)"]
+    LOOP -- same message --> C["Checkpoint<br/>(save best)"]
+    LOOP -- same message --> E["EarlyStopping<br/>(stop?)"]
+    E -. "yes, stop" .-> LOOP
+```
 
 ## 6. The honest result
 
@@ -124,8 +154,45 @@ about files or charts. This is the **Observer pattern**.
 
 Inside the inner folds the learning helped a little (0.581 → 0.585); on the untouched outer folds the gain **disappeared**.
 That's overfitting to the inner folds — exactly what nested CV (Lesson 05) is built to catch. The conclusion for the book:
-*once the features are scaled, no wine feature is useless or dominant enough for re-weighting to help.* On data with pure
-noise columns (a test), the same code finds and removes them.
+*once the features are scaled, no wine feature is useless or dominant enough for re-weighting to help.*
+
+### Proof the method works: the noise test
+
+To show the method itself isn't broken, add two columns of **pure random numbers** to the 11 real features and run the
+search (2 passes, 3 folds, a sample of 2,400 wines):
+
+![the noise test](figs/noise_test.png)
+
+One noise column is removed (weight 0), the other is halved, and the score goes up from 0.543 to 0.565. So when there **is**
+something to fix, the search fixes it. On the real 11 features, there was nothing to fix.
+
+## 🧪 Worked example: coordinate search on made-up scores
+
+```python
+# a pretend "cross-validated score" for 3 weights (in the project: macro-F1 from 5 folds)
+def score(w):
+    alcohol, acidity, chlorides = w
+    return 0.56 + 0.02 * min(alcohol, 1.5) - 0.01 * abs(acidity - 1) - 0.01 * chlorides
+
+w, best, tol = [1.0, 1.0, 1.0], None, 0.002
+best = score(w)
+for pass_no in range(3):
+    changed = False
+    for i in range(3):
+        if w[i] == 0:
+            continue
+        for factor in (0, 0.5, 1.5, 2):
+            trial = w.copy()
+            trial[i] *= factor
+            s = score(trial)
+            if s > best + tol:                     # only real improvements
+                w, best, changed = trial, s, True
+                print(f"pass {pass_no + 1}: weight {i} ×{factor} → {w}  score {best:.3f}")
+                break
+    if not changed:
+        break
+print("final", w, round(best, 3))
+```
 
 ## 7. Common mistakes
 
@@ -134,6 +201,15 @@ noise columns (a test), the same code finds and removes them.
 | "The learned weights are better — the inner score went up" | Only the outer (nested) score counts. |
 | "Try every combination of weights" | 4¹¹ ≈ 4 million combinations × CV — impossible. Coordinate search tries ~100. |
 | "The incremental update is an approximation" | It's exact — §4 checks it. |
+| "A result that didn't improve is a failure" | A measured, explained "no" is a result — and the noise test proves the method works. |
+
+## 📝 Summary
+
+> * A **weight** per feature = a volume knob in the distance; 0 removes the feature.
+> * The score is a **staircase** — no slope, so no gradient descent.
+> * **Coordinate search**: one knob at a time, try ×0, ×0.5, ×1.5, ×2, keep only gains > **0.002**.
+> * **Incremental update**: D_new = D + (w_new − w_old)·|Δᵢ|ᵖ — exact and ~15× faster.
+> * Honest result: no gain on the real wines (nested CV), but noise columns are found and removed.
 
 ## 8. Activities
 
@@ -168,5 +244,6 @@ doesn't help on this data", and why.
 
 ## 🎬 Watch & explore
 
+* Refactoring Guru — [The Observer pattern](https://refactoring.guru/design-patterns/observer) — with pictures and Python code.
 * *Coordinate descent explained* — [search on YouTube](https://www.youtube.com/results?search_query=coordinate+descent+optimization+explained)
-* Refactoring Guru — [The Observer pattern](https://refactoring.guru/design-patterns/observer)
+* At home: run the worked example, then change the tolerance to 0 — how many more (tiny) changes does it accept?
