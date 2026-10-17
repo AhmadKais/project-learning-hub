@@ -154,3 +154,74 @@ if L.wanted("duplicates"):
     ax.set_ylabel("macro-F1, 1-NN, 5-fold CV")
     ax.set_title(f"{len(W) - len(Wd):,} wines appear twice: the copy in the test fold finds itself at distance 0")
     L.save(fig, "duplicates")
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 6. one split = one roll of the dice (real wines)
+if L.wanted("dice_rolls"):
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import f1_score
+    rolls = []
+    for seed in range(40):
+        a, b, ya_, yb_ = train_test_split(Xw, yw, test_size=300, stratify=yw, random_state=seed)
+        rolls.append(f1_score(yb_, model.fit(a, ya_).predict(b), average="macro"))
+    rolls = np.array(rolls)
+    print(f"  40 single splits of 300 test wines: min {rolls.min():.3f} max {rolls.max():.3f}")
+    fig, ax = plt.subplots(figsize=(12, 5))
+    bins = np.arange(0.48, 0.70, 0.01)
+
+    def upd(k):
+        ax.clear()
+        ax.hist(rolls[: k + 1], bins, color=ORANGE, edgecolor="white")
+        ax.axvline(rolls[k], color=INK, lw=2)
+        ax.set_xlim(0.48, 0.70)
+        ax.set_ylim(0, 10)
+        ax.set_xlabel("macro-F1 on 300 test wines")
+        ax.set_ylabel("how many times")
+        ax.set_title(f"split #{k + 1}: score {rolls[k]:.3f}     (lowest so far {rolls[:k + 1].min():.3f}, "
+                     f"highest {rolls[:k + 1].max():.3f})")
+    frames = list(range(40)) + [39] * 5
+    L.animate(fig, lambda i: upd(frames[i]), len(frames), "dice_rolls", fps=4)
+
+# ---------------------------------------------------------------- 7. mean ± std: a win or a tie?
+if L.wanted("tie_or_win"):
+    fig, ax = plt.subplots(figsize=(12, 4.6))
+    cases = []
+    for kk, col in [(15, BLUE), (17, AQUA), (1, ORANGE)]:
+        mdl = make_pipeline(StandardScaler(), KNeighborsClassifier(kk, weights="distance"))
+        sc = cross_val_score(mdl, Xw, yw, cv=StratifiedKFold(K, shuffle=True, random_state=1), scoring="f1_macro")
+        cases.append((f"k = {kk}", sc.mean(), sc.std(), col))
+        print(f"  k={kk}: {sc.mean():.3f} +- {sc.std():.3f}")
+    for i, (name, m, s, col) in enumerate(cases):
+        ax.errorbar(m, i, xerr=s, fmt="o", color=col, ms=14, capsize=10, lw=3)
+        ax.text(m, i + 0.25, f"{name}:  {m:.3f} ± {s:.3f}", ha="center", fontsize=13, weight="bold")
+    ax.axvspan(cases[0][1] - cases[0][2], cases[0][1] + cases[0][2], color=BLUE, alpha=0.08)
+    ax.set_yticks([])
+    ax.set_ylim(-0.6, 2.7)
+    ax.set_xlim(0.50, 0.63)
+    ax.set_xlabel("cross-validated macro-F1 (the dot = mean, the bar = ± std)")
+    ax.set_title("k = 15 vs k = 17: the bars overlap → a TIE.   k = 1 is clearly lower → a real difference.")
+    L.save(fig, "tie_or_win")
+
+# ---------------------------------------------------------------- 8. the folds as a deck of cards (stratified dealing)
+if L.wanted("deal_folds"):
+    r = np.random.default_rng(3)
+    deck = np.array([1] * 8 + [0] * 12)
+    r.shuffle(deck)
+    fig, axes = plt.subplots(1, 2, figsize=(14, 4.4))
+    for ax, strat in [(axes[0], False), (axes[1], True)]:
+        blank(ax, (0, 4), (0, 6))
+        if strat:
+            order = np.r_[np.flatnonzero(deck == 1), np.flatnonzero(deck == 0)]
+        else:
+            order = np.arange(20)
+        folds = [[] for _ in range(4)]
+        for j, idx in enumerate(order):
+            folds[j % 4 if strat else j // 5].append(deck[idx])
+        for f_, cards in enumerate(folds):
+            for c_, v in enumerate(cards):
+                ax.add_patch(plt.Rectangle((f_ + 0.15, 4.6 - c_ * 0.85), 0.7, 0.7, color=RED if v else INK2))
+            ax.text(f_ + 0.5, 0.15, f"fold {f_ + 1}\n{sum(cards)} red", ha="center", fontsize=11)
+        ax.set_title("RANDOM cut: red cards bunch up" if not strat else "STRATIFIED: deal red and black separately",
+                     fontsize=13)
+    caption(fig, "20 cards, 8 red (= the rare class). Stratified dealing gives every fold the same share: 2 red each.")
+    L.save(fig, "deal_folds")
