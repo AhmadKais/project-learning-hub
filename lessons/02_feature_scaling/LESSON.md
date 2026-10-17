@@ -1,209 +1,148 @@
-# Lesson 02 — Feature scaling: making every feature speak the same language
+# Lesson 02 — Feature scaling: putting all numbers on the same ruler
 
-> **For:** Seif (WineGrader — critical) · Dani (PhishGuard) · Laith (SVM) · Ryan (pixels) &nbsp;·&nbsp; **Time:** 45 – 60 min
-> **Before:** Lesson 00 §2, §3, §10; Lesson 01 &nbsp;·&nbsp; **After this:** Lessons 12, 14, 15, 19
+> **For:** Seif (WineGrader) · Dani (PhishGuard) · Laith (SVM) · Ryan (pixels) &nbsp;·&nbsp; **Time:** 45 min
+> **Before:** Lesson 00 §2, §3, §10; Lesson 01
+
+**In one sentence:** before comparing examples, change every feature so that "1 step" means the same thing for all of
+them — otherwise the feature with the biggest numbers wins every comparison.
 
 ## The story
 
-> **Sami owns a wine shop.** A customer loved a white wine with **10.4 % alcohol** and **140 mg/l of sulphur dioxide**
-> (SO₂ — a preservative). It's sold out. Sami wants the computer to find **the most similar wines** in stock. "Similar"
-> means "the numbers are close". But one number is around 10 and the other around 140 — and that turns out to ruin
-> everything.
-
-## 🎯 By the end, the student can
-
-1. Explain with a picture why a feature with big numbers "wins" every distance.
-2. Compute a z-score and a min-max score by hand, step by step.
-3. State the rule: the scaler is learned on the training rows only, and the same numbers are used for every new example.
+> **Sami owns a wine shop.** A customer loved a wine with **10.4 % alcohol** and **140 mg/l of SO₂** (a preservative). It's
+> sold out. *"Give me the most similar wine you have,"* she says. Sami asks his computer to find the wine with the closest
+> numbers. The computer suggests a wine that tastes completely different. What went wrong?
 
 ## Words you need
 
-| word | meaning |
+| word | simple meaning |
 |---|---|
-| **feature** | one measured number of an example (alcohol, SO₂) — Lesson 01 |
-| **distance** | how far apart two examples are, using all their numbers — Pythagoras, Lesson 00 §10 |
-| **scale (of a feature)** | the typical size of its numbers: alcohol ≈ 8–14, SO₂ ≈ 10–440 |
-| **scaling** | changing every feature so they all have a similar size |
-| **mean** | the average — Lesson 00 §2 |
-| **standard deviation (std)** | the typical distance from the average — Lesson 00 §3 |
-| **z-score** | (value − mean) / std: "how many typical steps above or below average" |
-| **min-max scaling** | (value − min) / (max − min): squeeze everything into 0 … 1 |
+| **feature** | one measured number (alcohol, SO₂) |
+| **distance** | how different two wines are, using all their numbers (Lesson 00 §10) |
+| **scale** | how big a feature's numbers usually are: alcohol ≈ 10, SO₂ ≈ 140 |
+| **scaling** | changing the numbers so all features have a similar size |
+| **z-score** | "how many typical steps above or below average" |
 
 ---
 
-## 1. Why the big numbers win
+## Step 1 — See the problem
 
-Two wines in Sami's shop, compared with the customer's wine (10.4 %, 140):
+> 📖 Sami has two candidate wines.
 
 ```
                  alcohol   SO₂
 customer's wine    10.4    140
-wine A             10.5    155        ← almost the same alcohol, SO₂ a bit higher
-wine B             13.0    142        ← very different alcohol (much stronger), SO₂ almost the same
+wine A             10.5    155      ← almost the same alcohol, a bit more SO₂
+wine B             13.0    142      ← MUCH stronger, almost the same SO₂
 ```
 
-Distance = Pythagoras (Lesson 00 §10): square each difference, add, take the root.
+Any wine expert says **A** is similar. Let's compute the distance (Pythagoras: square the differences, add, square root):
 
 ```
-to wine A:   alcohol difference 10.5 − 10.4 = 0.1   → squared 0.01
-             SO₂ difference     155 − 140   = 15    → squared 225
-             distance = √(0.01 + 225) = √225.01 = 15.0
-
-to wine B:   alcohol difference 13.0 − 10.4 = 2.6   → squared 6.76
-             SO₂ difference     142 − 140   = 2     → squared 4
-             distance = √(6.76 + 4) = √10.76 = 3.3
+to A:  alcohol 0.1 → 0.1² = 0.01      SO₂ 15 → 15² = 225       √(0.01 + 225) = 15.0
+to B:  alcohol 2.6 → 2.6² = 6.76      SO₂ 2  → 2²  = 4         √(6.76 + 4)   =  3.3
 ```
 
-The computer says **wine B is much closer** (3.3 < 15.0). But any wine expert says the opposite: 13 % vs 10.4 % alcohol
-is a *huge* difference in taste, while 155 vs 140 SO₂ is nothing. The computer is fooled because **SO₂ numbers are
-big**, so their differences are big, so they dominate the sum.
-
-![feature ranges](figs/ranges.png)
-
-The 11 wine features live on completely different scales: density changes by 0.001, SO₂ by hundreds.
+The computer says **B is closer** (3.3 < 15). Why? SO₂ numbers are **big** (hundreds), so their differences are big and drown
+the alcohol. A 15-point SO₂ difference is nothing for taste; a 2.6 % alcohol difference is huge.
 
 ![neighbours before and after scaling](figs/neighbours.png)
 
-**Left:** the 7 "nearest" wines to the star using raw numbers form a flat **band**: all have SO₂ ≈ 140, and their
-alcohol is anything from 8.8 to 11.7 — **alcohol is ignored**. **Right:** after scaling, the neighbours are close in
-**both** features.
+**Left:** the 7 "nearest" wines using raw numbers all have SO₂ ≈ 140 — and any alcohol at all. Alcohol is ignored.
+**Right:** after scaling, the nearest wines are close in **both**.
 
-**Analogy:** compare people by "height in millimetres + age in years". Height (1,700 mm) drowns age (16 years): a
-2-year-old and a 60-year-old of the same height look like twins.
+**Like comparing people by "height in millimetres + age in years":** height (1,700) drowns age (16). A child and a grown-up
+of the same height would look like twins.
 
-## 2. The fix: z-score, step by step
+## Step 2 — The fix: z-score
 
-The idea: measure every feature in **its own typical step**. "One step" of alcohol is its standard deviation; "one step"
-of SO₂ is *its* standard deviation. Then 1 means the same thing for every feature: "one typical step away from average".
+> 📖 Sami's idea: measure each feature in **its own** typical step. "One step of alcohol" and "one step of SO₂" should mean
+> the same thing: "one typical difference".
 
-$$z = \frac{\text{value} - \text{mean}}{\text{std}}$$
+**In words:** take the value, subtract the average, divide by the standard deviation (Lesson 00 §3).
 
-**Example — alcohol of 3 training wines: 8, 10, 12.**
+$$z = \frac{\text{value} - \text{average}}{\text{std}}$$
+
+**By hand — alcohol of 3 wines: 8, 10, 12.**
 
 ```
-step 1  mean:                 (8 + 10 + 12) / 3 = 30 / 3 = 10
-step 2  differences:          8 − 10 = −2      10 − 10 = 0      12 − 10 = +2
-step 3  squares:              4                0                4
-step 4  average of squares:   (4 + 0 + 4) / 3 = 8 / 3 = 2.667
-step 5  std = √2.667 =        1.633
-step 6  z-scores:             (8 − 10) / 1.633  = −1.22
-                              (10 − 10) / 1.633 =  0
-                              (12 − 10) / 1.633 = +1.22
+average:      (8 + 10 + 12) ÷ 3 = 10
+std:          distances −2, 0, +2 → squares 4, 0, 4 → average 8 ÷ 3 = 2.67 → √2.67 = 1.63
+z-scores:     (8 − 10) ÷ 1.63 = −1.22      (10 − 10) ÷ 1.63 = 0      (12 − 10) ÷ 1.63 = +1.22
 ```
 
-Read them aloud: "wine 1 is 1.22 steps **below** average, wine 2 is exactly average, wine 3 is 1.22 steps **above**".
-
-**A new wine arrives with 13 % alcohol.** We use the **training** mean and std (10 and 1.633), not new ones:
-z = (13 − 10) / 1.633 = 3 / 1.633 = **1.84**.
+Say it aloud: "wine 1 is 1.2 steps **below** average, wine 2 is average, wine 3 is 1.2 steps **above**".
 
 ![z-score in two steps](figs/zscore_steps.gif)
 
-The animation shows what z-score does to the cloud of wines: first **slide** it so the centre is at 0 (subtract the
-mean), then **squeeze or stretch** each direction so the spread is 1 (divide by the std). Who is close to whom *inside*
-one feature does not change — only the units.
+The animation: first **move** the cloud so its centre is 0, then **squeeze** each direction so its spread is 1.
 
-### Sami's wines again, scaled
+> 📖 After scaling, Sami's computer suggests **wine A**. The customer is happy.
 
-Say for SO₂ the training mean is 138 and the std is 42; for alcohol mean 10.5, std 1.2.
+## Step 3 — One rule you must never break
 
-```
-customer:  alcohol (10.4 − 10.5)/1.2 = −0.08     SO₂ (140 − 138)/42 = 0.05
-wine A:    alcohol (10.5 − 10.5)/1.2 =  0.00     SO₂ (155 − 138)/42 = 0.40
-wine B:    alcohol (13.0 − 10.5)/1.2 =  2.08     SO₂ (142 − 138)/42 = 0.10
+> 📖 A new wine arrives at the shop with 13 % alcohol. Sami scales it with the **same** average (10) and std (1.63) he
+> used before: (13 − 10) ÷ 1.63 = **1.84**.
 
-distance to A = √((0.00+0.08)² + (0.40−0.05)²) = √(0.0064 + 0.1225) = √0.129 = 0.36
-distance to B = √((2.08+0.08)² + (0.10−0.05)²) = √(4.67 + 0.0025)   = √4.67  = 2.16
-```
+The average and std are **learned from the training wines** and **saved with the model**. Every new wine is scaled with
+those saved numbers — never with new ones. (Scaling one wine by itself would mean dividing by a std of 0!)
 
-Now wine A is the nearest — the right answer.
+## Try it yourself
 
-## 3. The other way: min-max, and why one outlier breaks it
+<details><summary>1. Average alcohol 10.5, std 1.2. A wine has 12.3. Its z-score?</summary>
 
-$$\text{minmax} = \frac{\text{value} - \min}{\max - \min}$$
+(12.3 − 10.5) ÷ 1.2 = 1.8 ÷ 1.2 = **1.5** → "one and a half steps above average".
+</details>
 
-Alcohol 8, 10, 12 → (8−8)/(12−8) = 0, (10−8)/4 = 0.5, (12−8)/4 = 1. Simple: everything between 0 and 1.
+<details><summary>2. z-scores of 4, 6, 8, 10.</summary>
 
-![one outlier squeezes min-max](figs/outlier.png)
+average 7 · distances −3, −1, 1, 3 · squares 9, 1, 1, 9 · average 5 · std √5 = 2.24 → **−1.34, −0.45, 0.45, 1.34**.
+</details>
 
-But one white wine has 440 mg/l SO₂ (most have 50–200). The maximum is now 440, so every *normal* wine is squeezed into
-the bottom part of 0 … 1 and their differences become tiny. An unusual value like this is called an **outlier**. z-score
-is hurt much less. Seif's project tries both; the tuning table decides (`test_one_outlier_squeezes_minmax_but_not_zscore`).
-
-## 4. Scaling also makes learning faster
-
-![gradient descent with and without scaling](figs/gradient_descent.gif)
-
-Some models learn by taking small steps **downhill** (gradient descent — Lesson 00 §9, Lesson 12). With unscaled
-features the "valley" is long and narrow: steps that are safe in the steep direction are tiny in the flat one, so the
-model zig-zags and crawls (left). Scaled features make the valley round: it walks straight to the bottom (right). That's
-why Laith's SVM needs `StandardScaler` and otherwise warns "failed to converge".
-
-## 5. THE rule
-
-The mean and std are **learned from data** → they are part of the model → they come from the **training rows only** →
-they are **saved with the model** and used again for every new wine at the shop.
-
-```python
-# RIGHT                                         # WRONG - the test rows helped build the scaler
-scaler = StandardScaler().fit(X_train)          Z = StandardScaler().fit_transform(X_all)
-Xtr = scaler.transform(X_train)                 Xtr, Xte = Z[train], Z[test]
-Xte = scaler.transform(X_test)   # TRAINING numbers
-```
-
-## 6. Which models need it?
-
-| needs scaling | doesn't |
-|---|---|
-| k-NN (distances) · SVM (distances/margins) · logistic regression and neural networks (gradient descent) | Naive Bayes (counts words) · decision trees / random forest (only ask "is x > 3?") |
-
-## 7. Common mistakes
+## Common mistakes
 
 | student says | the truth |
 |---|---|
-| "Scaling changes my data, so it changes the answer" | It changes how features are **compared** — exactly the point. Inside one feature the order of the wines stays the same. |
-| "Fit the scaler on everything, it's just an average" | Leakage. Small, but real — and tests catch it. |
-| "At the shop I'll scale the one new wine by itself" | The std of one number is 0 → division by zero. Use the saved training numbers. |
+| "Scaling changes my data" | It changes how features are compared — that's the point. The order of wines inside one feature stays the same. |
+| "Fit the scaler on all the data" | Only on training data, then reuse (Lesson 05: leakage). |
 
-## 8. Activities
+## Class activities
 
-1. **Human k-NN (10 min).** Write 5 "people" as (height in cm, age in years). Who is closest to a new person? Convert to
-   z-scores together and ask again — the answer changes.
-2. **Slider (5 min).** `python visualize.py --live`: a slider multiplies SO₂'s importance. At 0 SO₂ is ignored; at 3 it
-   dominates again. (This is Seif's "feature weights", Lesson 17.)
+1. **Human comparison (10 min).** 5 "people" on the board as (height cm, age). Who is closest to a new person? Convert to
+   z-scores — the answer changes.
+2. **Slider (5 min).** `python visualize.py --live`: a slider makes SO₂ count more or less.
 
-## 9. Do it yourself
-
-<details><summary>1. Training alcohol: mean 10.5, std 1.2. A new wine has 12.3. Its z-score? Say it in words.</summary>
-
-(12.3 − 10.5) / 1.2 = 1.8 / 1.2 = **1.5** → "one and a half typical steps above average".
-</details>
-
-<details><summary>2. z-score of 4, 6, 8, 10 (compute mean and std first).</summary>
-
-mean 7 · differences −3, −1, 1, 3 · squares 9, 1, 1, 9 · average 5 · std √5 = 2.236 → z = −1.34, −0.45, 0.45, 1.34.
-</details>
-
-<details><summary>3. Min-max of 20, 50, 80, 200.</summary>
-
-min 20, max 200, range 180 → 0, 0.17, 0.33, 1. (See how 200 squeezes the others.)
-</details>
-
-<details><summary>4. A feature is the same for every training wine. What breaks, and what is the fix?</summary>
-
-std = 0 → division by zero. Set std to 1: the column becomes zeros and adds nothing to any distance — correct, it carries
-no information.
-</details>
-
-## 10. In your project
+## In your project
 
 | Project | Where |
 |---|---|
-| WineGrader | `winegrader/ml/scaler.py` → `StandardScaler.fit/transform/inverse_transform`, `MinMaxScaler`, `scaler_from_dict` · `tuning.prepare_folds` scales inside every fold · theory `32_WineGrader/01_theory/03_data_scaling.md` |
-| PhishGuard | `ModelTrainer.build_logistic` — `StandardScaler` inside the `Pipeline`, fitted on train only, saved in the bundle |
-| Spam | `SVMClassifier.fit` — `make_pipeline(StandardScaler(), LinearSVC(...))` |
+| WineGrader | `winegrader/ml/scaler.py` → `StandardScaler`, `MinMaxScaler` · scaled inside each fold in `tuning.prepare_folds` |
+| PhishGuard | `ModelTrainer.build_logistic` — `StandardScaler` inside the `Pipeline` |
+| Spam | `SVMClassifier.fit` — `StandardScaler` before the SVM |
 | FaceEmotion | pixels: `/255`, then `(x − 0.5013) / 0.2916` (Lesson 19) |
+
+<details><summary>🎓 <b>For the defence (advanced)</b></summary>
+
+* **All 11 features live on different scales:**
+
+  ![feature ranges](figs/ranges.png)
+
+* **Min-max scaling** = (value − min) ÷ (max − min) → everything between 0 and 1. One extreme wine (an **outlier**) breaks
+  it: one white wine has 440 SO₂, so every normal wine is squeezed near 0. z-score suffers much less:
+
+  ![one outlier squeezes min-max](figs/outlier.png)
+
+* **Scaling makes learning faster** for models trained by gradient descent (Lesson 12): unscaled → a narrow valley and
+  zig-zag steps; scaled → straight to the bottom. That's the SVM's "failed to converge" warning.
+
+  ![gradient descent with and without scaling](figs/gradient_descent.gif)
+
+* **Which models need it?** k-NN, SVM, logistic regression, neural networks — yes. Naive Bayes, decision trees, random
+  forests — no (they count or ask "is x > 3?").
+* **A feature that is the same for every wine:** std = 0 → set std to 1 (the column becomes zeros and adds nothing).
+* Test names: `test_one_outlier_squeezes_minmax_but_not_zscore`, `test_fit_uses_only_given_rows`.
+</details>
 
 ## 🎬 Watch & explore
 
-* *Feature scaling: standardization vs normalization* — [search on YouTube](https://www.youtube.com/results?search_query=feature+scaling+standardization+normalization+machine+learning)
+* *Feature scaling explained* — [search on YouTube](https://www.youtube.com/results?search_query=feature+scaling+standardization+normalization+machine+learning)
 * scikit-learn — [Importance of feature scaling](https://scikit-learn.org/stable/auto_examples/preprocessing/plot_scaling_importance.html)

@@ -20,3 +20,4 @@ a { color:var(--accent); }
 nav#TOC { background:var(--soft); padding:12px 20px; border-radius:8px; }
 nav#TOC > ul > li { margin:4px 0; }
 nav#TOC ul ul { display:none; }
+pre.mermaid { background:#fcfcfb; text-align:center; }

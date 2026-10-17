@@ -42,6 +42,13 @@ a { color:var(--accent); }
 nav#TOC { background:var(--soft); padding:12px 20px; border-radius:8px; }
 nav#TOC > ul > li { margin:4px 0; }
 nav#TOC ul ul { display:none; }
+pre.mermaid { background:#fcfcfb; text-align:center; }
+"""
+
+MERMAID = """<script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs";
+mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+</script>
 """
 
 
@@ -88,6 +95,9 @@ def build_html():
     for folder in sorted(p for p in LESSONS.iterdir() if p.is_dir() and re.match(r"\d\d_", p.name)):
         num = folder.name[:2]
         html = re.sub(rf'(<h1 id="lesson-{num}-[^"]*")', rf'<a id="{folder.name}"></a>\1', html, count=1)
+    # ```mermaid blocks (the diagrams) -> <pre class="mermaid"> drawn by mermaid.js in the browser
+    html = re.sub(r'<pre class="mermaid"><code>(.*?)</code></pre>', r'<pre class="mermaid">\1</pre>', html, flags=re.S)
+    html = html.replace("</body>", MERMAID + "</body>")
     out.write_text(html, encoding="utf-8")
     src.unlink()
     print(f"wrote {out.relative_to(HUB)}  ({out.stat().st_size / 1e3:.0f} KB)")
