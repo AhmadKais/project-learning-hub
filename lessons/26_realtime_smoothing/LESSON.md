@@ -3,6 +3,23 @@
 > **For:** Ryan (FaceEmotion stage 5) · the thread part also for Liraz (Lesson 32) &nbsp;·&nbsp; **Time:** 45 – 60 min
 > **Before:** Lesson 00 §2; Lessons 23, 25 &nbsp;·&nbsp; **After this:** the real-time chapter of the book
 
+**In one sentence:** read the camera in its own thread and always show the newest frame, and average the last few
+frames' probabilities so the label stays calm — accepting a tiny delay.
+
+## 🗺️ The map of this lesson
+
+```mermaid
+flowchart LR
+    subgraph CAM["camera thread"]
+        R["cap.read()<br/>(waits ~40 ms)"] --> SLOT[("one slot:<br/>latest frame<br/>🔒 lock")]
+        R -.-> R
+    end
+    subgraph UI["window (Tkinter, every 30 ms)"]
+        T["take a copy"] --> D["detect face"] --> M["network:<br/>7 probabilities"] --> SM["average last 5"] --> SHOW["show label"]
+    end
+    SLOT --> T
+```
+
 ## The story
 
 > Ryan's app finally runs with the camera. Two things look bad in the demo:
@@ -14,12 +31,12 @@
 > Think of a TV news ticker that jumped every time one viewer's opinion changed — unreadable. This lesson fixes both:
 > a separate **camera thread** with "latest frame only", and **temporal smoothing** — averaging the last few answers.
 
-## 🎯 By the end, the student can
+### 🌍 Real world
 
-1. Draw the time budget of one frame and say why reading the camera needs its own thread.
-2. Explain "latest frame only", and why the shared frame needs a lock and a copy.
-3. Compute a moving average of probability vectors by hand, and explain why we average probabilities, not labels.
-4. Compute the delay smoothing adds, and defend the window size 5.
+* **Moving averages** are everywhere: stock charts ("50-day average"), weather ("7-day average temperature"), COVID charts
+  ("7-day average of new cases") — all to calm a jumpy line.
+* Your **phone's compass and step counter** smooth their sensor readings, or the arrow would shake in your hand.
+* **Video calls** drop late frames instead of queuing them — it's better to skip a frame than to show the past (Part 2).
 
 ## Words you need
 
@@ -65,6 +82,10 @@ Tkinter (the window library) runs everything in one thread: no `while True` loop
 Each frame is judged alone. With a borderline expression (51 % happy / 49 % neutral), one pixel of noise flips the label.
 In the simulation: the raw label changes **20 times** in 100 frames (4 seconds) — flicker; the smoothed one **4 times**.
 
+What the user actually sees — the same 100 frames as two app screens:
+
+![two app screens](figs/two_screens.gif)
+
 **Moving average, step by step (window N = 5).** P(happy) in frames 1–7:
 
 ```
@@ -106,9 +127,36 @@ The third frame was **very** sure; averaging respects how sure each frame was, v
 
 ![delay](figs/delay.png)
 
-A moving average over N frames reacts about N / 2 frames late. N = 5 at 25 fps: 2.5 × 40 ms ≈ **100 ms** — people don't
-notice delays below ~150 ms. N = 15: 7.5 × 40 ms = **300 ms** — noticeable. If the label still changes more than twice a
-second, go to 7, not to 15.
+A moving average over N frames reacts about (N − 1) / 2 frames late (its "centre" is that far in the past). N = 5 at 25
+fps: 2 × 40 ms = **80 ms** — people don't notice delays below ~150 ms. N = 15: 7 × 40 ms = **280 ms** — noticeable. If the
+label still changes more than twice a second, go to 7, not to 15.
+
+![window sizes](figs/window_sizes.png)
+
+## 🧪 Worked example: the smoother, and average vs vote
+
+```python
+from collections import deque
+import numpy as np
+
+class TemporalSmoother:
+    def __init__(self, window=5):
+        self._history = deque(maxlen=window)
+    def update(self, probs):
+        self._history.append(np.asarray(probs, float))
+        return np.mean(self._history, axis=0)
+    def reset(self):
+        self._history.clear()
+
+s = TemporalSmoother(5)
+for p in [0.6, 0.4, 0.6, 0.5, 0.7, 0.3, 0.6]:                 # P(happy) per frame, Part 3
+    out = s.update([p, 1 - p])                               # [happy, neutral]
+    print(f"frame P(happy) {p:.1f} → smoothed {out[0]:.2f} → {'happy' if out[0] > 0.5 else 'neutral/edge'}")
+
+frames = np.array([[0.6, 0.4], [0.6, 0.4], [0.0, 1.0]])      # Part 4: [happy, sad]
+print("vote   :", np.bincount(frames.argmax(1)).argmax())     # 0 = happy
+print("average:", frames.mean(0).argmax(), frames.mean(0))    # 1 = sad, [0.4 0.6]
+```
 
 ## 6. Common mistakes
 
@@ -117,6 +165,15 @@ second, go to 7, not to 15.
 | "Python threads don't run at the same time (the GIL)" | Only one runs Python at a time — but `cap.read()` *waits* on the camera and lets the other thread work meanwhile. |
 | "Smoothing makes the model more accurate" | It makes the display stable; the model is the same. |
 | "Process every frame in a queue to be correct" | Then the screen falls behind. Skip frames. |
+| "A bigger window is always better" | Calmer but later — N = 15 already lags ~0.3 s. |
+
+## 📝 Summary
+
+> * 25 fps → **40 ms** per frame; `cap.read()` alone waits that long → the camera gets **its own thread**.
+> * **Latest frame only**: one slot, overwritten; a lock around it; hand out a **copy**. Never a growing queue.
+> * Tkinter: `root.after(30, …)`, never `while True`.
+> * **Moving average** of the last 5 **probability vectors** (not votes) → a calm label.
+> * Price: ≈ (N − 1)/2 frames of delay — 80 ms for N = 5. `reset()` when the face disappears.
 
 ## 7. Activities
 
@@ -134,7 +191,7 @@ second, go to 7, not to 15.
 
 <details><summary>2. 25 fps and N = 7. About how much delay?</summary>
 
-3.5 frames × 40 ms = **140 ms** — borderline noticeable.
+(7 − 1) / 2 = 3 frames × 40 ms = **120 ms** — still fine, close to the limit.
 </details>
 
 <details><summary>3. The face leaves the picture. What should the smoother do?</summary>
@@ -151,4 +208,5 @@ second, go to 7, not to 15.
 ## 🎬 Watch & explore
 
 * *Moving average explained* — [search on YouTube](https://www.youtube.com/results?search_query=moving+average+filter+smoothing+explained)
+* Lesson 32 — threads and locks, with animations (the camera thread is a real example of it).
 * Python docs — [`collections.deque`](https://docs.python.org/3/library/collections.html#collections.deque) · [`threading.Lock`](https://docs.python.org/3/library/threading.html#lock-objects)

@@ -133,3 +133,43 @@ if L.wanted("latest_frame"):
         arrow(ax, (0.7 if not latest else 0.6, 0.5), (0.78, 0.5))
         ax.set_title(title, fontsize=12.5)
     L.save(fig, "latest_frame")
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 6. what the user SEES: two app screens side by side
+if L.wanted("two_screens"):
+    face = cartoon_face(96, "smile")
+    fig, axes = plt.subplots(1, 2, figsize=(11, 5.4))
+
+    def upd(t):
+        for ax, lbl_arr, p_arr, title in [(axes[0], raw_label, p_happy, "without smoothing"),
+                                          (axes[1], sm_label, smooth, f"moving average of {N} frames")]:
+            ax.clear()
+            ax.imshow(face, cmap="gray", vmin=0, vmax=255, extent=(0, 96, 96, 0))
+            happy = bool(lbl_arr[t])
+            col = ORANGE if happy else BLUE
+            word = "HAPPY" if happy else "NEUTRAL"
+            ax.add_patch(plt.Rectangle((0, 78), 96, 18, color=col, alpha=0.9))
+            ax.text(48, 87, f"{word}  {p_arr[t] if happy else 1 - p_arr[t]:.0%}", ha="center", va="center",
+                    color="white", fontsize=16, weight="bold")
+            ax.set_xlim(0, 96)
+            ax.set_ylim(96, 0)
+            ax.axis("off")
+            ax.set_title(f"{title}\nlabel changes so far: {changes(lbl_arr[: t + 1])}", fontsize=12)
+        fig.suptitle(f"frame {t + 1} of {T}  (25 frames = 1 second)", fontsize=12)
+    L.animate(fig, upd, T, "two_screens", fps=12)
+
+# ---------------------------------------------------------------- 7. window size: calm vs late
+if L.wanted("window_sizes"):
+    fig, axes = plt.subplots(1, 3, figsize=(16, 4.6), sharey=True)
+    for ax, n in zip(axes, (1, 5, 15)):
+        sm = np.array([p_happy[max(0, t - n + 1): t + 1].mean() for t in range(T)])
+        ax.plot(true_happy, color=GREEN, lw=2, ls="--", label="the real expression")
+        ax.plot(sm, color=ORANGE, lw=2.5, label=f"shown (N = {n})")
+        ax.axhline(0.5, color=MUTED, lw=1)
+        delay_ms = (n - 1) / 2 * 40
+        ax.set_title(f"N = {n}: {changes(sm > 0.5)} label changes, delay ≈ {delay_ms:.0f} ms", fontsize=12)
+        ax.set_xlabel("frame")
+        ax.legend(loc="lower right", fontsize=9)
+    axes[0].set_ylabel("P(happy)")
+    caption(fig, "Bigger window = calmer label but later reaction. N = 5 is calm enough and still feels instant.")
+    L.save(fig, "window_sizes")
