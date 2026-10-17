@@ -113,3 +113,71 @@ if L.wanted("normalise"):
     caption(fig, "0.5013 and 0.2916 are the mean and std of the EQUALISED FER-2013 training pixels.  "
                  "The same two numbers in training and with the camera - always.")
     L.save(fig, "normalise")
+
+# ================================================================ expanded lesson: more pictures
+# ---------------------------------------------------------------- 5. the light changes: every number changes, equalisation rescues
+if L.wanted("light_change"):
+    lights = np.r_[np.linspace(1.0, 0.25, 10), np.linspace(0.25, 1.3, 12), np.linspace(1.3, 1.0, 4)]
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+
+    def upd(k):
+        lt = lights[k]
+        raw = np.clip(face.astype(float) * lt, 0, 255).astype(np.uint8)
+        eq, _ = equalize(raw)
+        for ax in axes:
+            ax.clear()
+        axes[0].imshow(raw, cmap="gray", vmin=0, vmax=255)
+        axes[0].set_title(f"camera picture (light × {lt:.2f})\naverage pixel {raw.mean():.0f}")
+        axes[0].axis("off")
+        axes[1].hist(raw.ravel(), bins=48, range=(0, 255), color=MUTED, alpha=0.8, label="before")
+        axes[1].hist(eq.ravel(), bins=48, range=(0, 255), color=BLUE, alpha=0.6, label="after equalisation")
+        axes[1].set_ylim(0, 420)
+        axes[1].set_xlabel("brightness")
+        axes[1].set_title("the numbers the network gets")
+        axes[1].legend(loc="upper right", fontsize=10)
+        axes[2].imshow(eq, cmap="gray", vmin=0, vmax=255)
+        axes[2].set_title(f"after equalisation\naverage pixel {eq.mean():.0f}")
+        axes[2].axis("off")
+    L.animate(fig, upd, len(lights), "light_change", fps=4)
+
+# ---------------------------------------------------------------- 6. pixel art: a smiley as an 8x8 table of numbers
+if L.wanted("pixel_art"):
+    S = np.array([[255, 255, 30, 30, 30, 30, 255, 255],
+                  [255, 30, 200, 200, 200, 200, 30, 255],
+                  [30, 200, 0, 200, 200, 0, 200, 30],
+                  [30, 200, 200, 200, 200, 200, 200, 30],
+                  [30, 200, 0, 200, 200, 0, 200, 30],
+                  [30, 200, 200, 0, 0, 200, 200, 30],
+                  [255, 30, 200, 200, 200, 200, 30, 255],
+                  [255, 255, 30, 30, 30, 30, 255, 255]])
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(13, 6.2))
+    a1.imshow(np.ones_like(S) * 255, cmap="gray", vmin=0, vmax=255)
+    for i in range(8):
+        for j in range(8):
+            a1.text(j, i, str(S[i, j]), ha="center", va="center", fontsize=12, family="monospace")
+    a1.set_xticks(np.arange(-0.5, 8), [])
+    a1.set_yticks(np.arange(-0.5, 8), [])
+    a1.grid(True, color=INK2)
+    a1.set_title("what the computer stores: 64 numbers")
+    a2.imshow(S, cmap="gray", vmin=0, vmax=255)
+    a2.set_xticks([])
+    a2.set_yticks([])
+    a2.grid(False)
+    a2.set_title("what we see when each number is shaded")
+    caption(fig, "0 = black, 255 = white. Ryan's faces are the same idea, 48 × 48 = 2,304 numbers each.")
+    L.save(fig, "pixel_art")
+
+# ---------------------------------------------------------------- 7. the training faces come in every light (statistics only)
+if L.wanted("fer_brightness"):
+    from PIL import Image
+    root = HUB / "13_FaceEmotion" / "data" / "fer2013" / "train"
+    files = sorted(root.glob("*/*"))[::7]
+    means = np.array([np.asarray(Image.open(f), float).mean() for f in files])
+    fig, ax = plt.subplots(figsize=(11, 4.6))
+    ax.hist(means, bins=50, color=VIOLET)
+    ax.set_xlabel("average brightness of one training face (0 = black, 255 = white)")
+    ax.set_ylabel("faces")
+    ax.set_title(f"{len(files):,} FER-2013 training faces: very dark to very bright "
+                 f"(from {means.min():.0f} to {means.max():.0f})")
+    caption(fig, "Only the numbers are shown - the FER-2013 pictures themselves may not be shared.")
+    L.save(fig, "fer_brightness")
