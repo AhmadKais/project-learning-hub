@@ -253,7 +253,11 @@ def __init__(self, use_stemming: bool = None, ngram_max: int = None):
     self.scrubber = PiiScrubber()
     self.token_re = re.compile(config.TOKEN_PATTERN)
     self.stemmer = SnowballStemmer("english")
-    self.stopwords_en = set(stopwords.words("english"))
+    try:
+        self.stopwords_en = set(stopwords.words("english"))
+    except LookupError:                          # first run on a new computer
+        nltk.download("stopwords", quiet=True)
+        self.stopwords_en = set(stopwords.words("english"))
     self.stopwords_he = config.HEBREW_STOPWORDS
 ```
 
