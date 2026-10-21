@@ -1,0 +1,338 @@
+hotelmanager/models/date_range.py::DateRange.__post_init__
+Refuse impossible stays the moment a DateRange is created: check-out must be after check-in, and a stay may not be longer than config.MAX_NIGHTS. Because the class is frozen, an invalid stay can then never exist anywhere in the program.
+
+hotelmanager/models/date_range.py::DateRange.nights
+Return how many nights the guest sleeps: check-out minus check-in, in days. 3 March to 7 March is 4 nights - there is no "+1" because the check-out day is not a night.
+
+hotelmanager/models/date_range.py::DateRange.overlaps
+Return True when two stays share at least one night. Two half-open ranges [a, b) and [c, d) overlap exactly when a < d and c < b. A guest leaving on the 7th and another arriving on the 7th do NOT overlap - the room is re-let the same day.
+
+hotelmanager/models/date_range.py::DateRange.contains
+Return True when `day` is one of the nights of the stay: check-in counts, check-out does not.
+
+hotelmanager/models/date_range.py::DateRange.nights_list
+Give the nights of the stay one by one, from check-in up to the day before check-out. [3 March, 7 March) gives 3, 4, 5, 6 March - one price per night is built from this list.
+
+hotelmanager/models/entities.py::Room.fits
+Return True when the room is active and has at least `guests` beds. A double room (capacity 2) fits exactly 2 guests.
+
+hotelmanager/models/entities.py::Booking.occupies
+Return True when this booking holds the room on `day`: the booking still blocks the room (confirmed or checked in) and the day is one of its nights. A cancelled booking frees the room automatically.
+
+hotelmanager/booking/availability.py::is_room_free
+Return True when no booking blocks this room during `stay`. Skip bookings of other rooms, cancelled or checked-out bookings, and the booking being edited (`ignore_booking_id`); any other booking that overlaps makes the room busy.
+
+hotelmanager/booking/availability.py::free_rooms
+Return every room that fits the guests, has the requested type (if one is given) and is free for the whole stay.
+
+hotelmanager/booking/allocation.py::FirstFreeStrategy.choose
+Pick the free room with the lowest number, or None when the list is empty. Compare the numbers as ints, so room 9 comes before room 10.
+
+hotelmanager/booking/allocation.py::BestFitStrategy.choose
+Pick the smallest room that still fits (then the cheaper, then the lower number), or None. Giving a couple the family room would leave the next family without a room.
+
+hotelmanager/booking/allocation.py::PreferenceStrategy.score
+Score one room against the guest's wishes: +3 for the wanted view, +2 for the wanted floor, +1 for the wanted type, and -1 for every unused bed. Use preferences.get(...) because a wish may be missing.
+
+hotelmanager/booking/allocation.py::PreferenceStrategy.choose
+Pick the room with the highest score; on a tie take the lower room number. Return None when there are no rooms.
+
+hotelmanager/booking/allocation.py::create
+Turn a strategy name from the config into a strategy object ("first_free", "best_fit" or "preference"). An unknown name raises ValueError that lists the valid names.
+
+hotelmanager/pricing/rules.py::Season.contains
+Return True when `day` falls in the season, start and end included (a season is a calendar period, not a stay).
+
+hotelmanager/pricing/rules.py::PricingContext.season_for
+Return the first season that contains `day`, or None.
+
+hotelmanager/pricing/rules.py::BaseRateRule.lines
+Price the room night by night: the room rate times the season multiplier of that night. Group nights with the same price into one invoice line, for example "4 night(s) x double @ 450.00".
+
+hotelmanager/pricing/rules.py::WeekendSurchargeRule.lines
+Add one line for the Friday and Saturday nights: each costs an extra 20% of that night's price (season included). No weekend nights - no line.
+
+hotelmanager/pricing/rules.py::LongStayDiscountRule.lines
+From 7 nights on, take 10% off the room part (the lines added so far). The discount is a line with a negative price, so the total is still just the sum of the lines.
+
+hotelmanager/pricing/rules.py::ExtrasRule.lines
+Add one line per extra the guest chose: breakfast is charged per guest per night, the other extras per night. Unknown extras are ignored.
+
+hotelmanager/pricing/rules.py::VatRule.lines
+Add one "VAT 18%" line on everything above. It must be the last rule.
+
+hotelmanager/pricing/engine.py::PricingEngine.quote
+Run the rules in order, giving each one the lines added so far, and return a Quote with all the lines.
+
+hotelmanager/models/entities.py::Quote.subtotal
+Add up every line except the VAT line, rounded to 2 decimals.
+
+hotelmanager/models/entities.py::Quote.total
+Add up every line, VAT and discounts included, rounded to 2 decimals - what the guest pays.
+
+hotelmanager/database/db.py::Database.get_connection
+Open the SQLite file with rows that behave like dicts and foreign keys switched on (they are off by default in SQLite).
+
+hotelmanager/database/db.py::Database.connection
+A context manager around a connection: commit when the block succeeds, roll back when it raises, and always close.
+
+hotelmanager/database/db.py::Database.initialize_schema
+Create the tables by running the SCHEMA script.
+
+hotelmanager/database/repositories.py::RoomRepository.add
+Insert a room and return its new id. Store `active` as 0/1 - SQLite has no boolean type.
+
+hotelmanager/database/repositories.py::RoomRepository.update
+Save every column of an existing room. The id goes last in the parameters because WHERE id = ? comes last in the SQL.
+
+hotelmanager/database/repositories.py::RoomRepository.delete
+Delete a room by id. A room that has bookings is refused by the database itself (foreign key) - let that error reach the caller.
+
+hotelmanager/database/repositories.py::RoomRepository.get
+Read one room by id and turn the row into a Room, or return None.
+
+hotelmanager/database/repositories.py::RoomRepository.list_all
+Return all rooms (or only active ones) sorted by number as a number, so 9 comes before 10.
+
+hotelmanager/database/repositories.py::GuestRepository.add
+Insert a guest and return the new id. A second guest with the same e-mail is refused by the database (UNIQUE).
+
+hotelmanager/database/repositories.py::GuestRepository.update
+Save every column of an existing guest, id last.
+
+hotelmanager/database/repositories.py::GuestRepository.delete
+Delete a guest by id; a guest with bookings is refused by the database.
+
+hotelmanager/database/repositories.py::GuestRepository.get
+Read one guest by id, or return None. Empty phone, ID and notes come back as "".
+
+hotelmanager/database/repositories.py::GuestRepository.search
+Find guests whose name, e-mail or ID number contains the text (all guests when the text is empty), sorted by name. Build "%text%" in Python and pass it as a parameter.
+
+hotelmanager/database/repositories.py::BookingRepository._row
+Turn a database row into a Booking: dates back from ISO text, the status back to the enum, the extras back to a list, and the room number and guest name for display.
+
+hotelmanager/database/repositories.py::BookingRepository.add
+Insert a booking and return its id. Convert dates and times to ISO text, the status to its value and the extras list to "a,b,c".
+
+hotelmanager/database/repositories.py::BookingRepository.update
+Save the changeable columns of a booking (dates, guests, status, price, extras, check-in/out times). Times that are still None stay NULL.
+
+hotelmanager/database/repositories.py::BookingRepository.get
+Read one booking with its room number and guest name (the JOIN in self.SELECT), or None.
+
+hotelmanager/database/repositories.py::BookingRepository.list_all
+Return bookings newest check-in first, optionally only one status and/or matching a guest name or room number.
+
+hotelmanager/database/repositories.py::BookingRepository.in_period
+Return only the bookings that overlap [start, end) - the same two comparisons as DateRange.overlaps, done in SQL.
+
+hotelmanager/database/repositories.py::BookingRepository.revenue_by_month
+Sum the invoice totals per month: {"2026-03": 12345.0, ...}.
+
+hotelmanager/database/repositories.py::BookingRepository.count_by_status
+Count the bookings per status: {"confirmed": 3, "cancelled": 1, ...}.
+
+hotelmanager/database/repositories.py::SeasonRepository.add
+Insert a season (name, start, end, multiplier) and return its id.
+
+hotelmanager/database/repositories.py::SeasonRepository.list_all
+Return all seasons sorted by start date, dates converted back from text.
+
+hotelmanager/database/repositories.py::SeasonRepository.delete
+Delete a season by id.
+
+hotelmanager/database/repositories.py::InvoiceRepository.add
+Insert an invoice and all its lines in one transaction and return the invoice id. If one line fails, nothing is written.
+
+hotelmanager/database/repositories.py::InvoiceRepository.get_for_booking
+Read the invoice of a booking with its lines in their original order, or None.
+
+hotelmanager/database/repositories.py::InvoiceRepository.mark_paid
+Mark an invoice as paid.
+
+hotelmanager/booking/hotel_service.py::HotelService.add_room
+Check a new room before saving: a number, a known type, a known view, at least 1 bed, no negative rate, and a number that is not taken. A broken rule raises HotelError with a clear message.
+
+hotelmanager/booking/hotel_service.py::HotelService.add_guest
+Check a new guest before saving: a real name (not just spaces) and an e-mail that looks like one. A duplicate e-mail becomes a readable HotelError.
+
+hotelmanager/booking/hotel_service.py::HotelService.quote_for
+Price a stay: collect the room, stay, guests, extras and the current seasons into a PricingContext and let the pricing engine build the quote.
+
+hotelmanager/booking/hotel_service.py::HotelService.find_free_rooms
+Return the rooms free for the stay, reading only the bookings that overlap it (not the whole table).
+
+hotelmanager/booking/hotel_service.py::HotelService.create_booking
+The central method. Check the guest exists, the number of guests and nights, and the extras. If a room was chosen, check it fits and is free; otherwise find free rooms and let the allocation strategy pick one. Price it, save the booking and return it. Every broken rule is a HotelError.
+
+hotelmanager/booking/hotel_service.py::HotelService.check_in
+Check a guest in: only a confirmed booking, and not before its check-in date. Set the status and the check-in time and save.
+
+hotelmanager/booking/hotel_service.py::HotelService.check_out
+Check a guest out: only after check-in. Build the invoice from the quote lines (the guest pays the price agreed at booking - a difference gets its own line), save it, set the status and time, and return the booking and invoice.
+
+hotelmanager/booking/hotel_service.py::HotelService.cancel
+Cancel a booking that has not started. Cancelling more than 48 hours before check-in is free; later it costs one night. Return the booking and the fee.
+
+hotelmanager/booking/availability.py::occupancy_on
+For each room, which booking holds it on `day` (or None) - what one calendar column shows.
+
+hotelmanager/booking/hotel_service.py::HotelService.calendar_matrix
+Build what the calendar draws for one month: the days, the rooms, and for every (room, day) the booking that occupies it or None.
+
+hotelmanager/booking/importer.py::import_rooms
+Read the rooms CSV and add each row through the service. Count the rooms added and collect "line N: reason" for the rows that were refused.
+
+hotelmanager/booking/importer.py::import_guests
+The same for the guests CSV (name, email, phone, document_id).
+
+hotelmanager/controllers/app_controller.py::AppController.__init__
+Create the service and the main window, and give the window a dict of options (room types, extras...) and callbacks (on_add_room, on_book...).
+
+hotelmanager/controllers/app_controller.py::AppController.start
+Fill every tab (rooms, guests, bookings, calendar, reports) and the dashboard line.
+
+hotelmanager/controllers/app_controller.py::AppController._guard
+Call a service function; if it raises HotelError, show the message and return None. Every button goes through this, so a broken rule is a polite message, never a crash.
+
+hotelmanager/controllers/app_controller.py::AppController.refresh_rooms
+Show the current list of rooms in the rooms table.
+
+hotelmanager/controllers/app_controller.py::AppController.add_room
+Turn the form strings into a Room (capacity and floor as ints, rate as a float), add it through the service and refresh. Text in a number field becomes a clear message.
+
+hotelmanager/controllers/app_controller.py::AppController.update_room
+Save the edited form for the selected room (same checks as add) and refresh.
+
+hotelmanager/controllers/app_controller.py::AppController.delete_room
+Ask for confirmation and delete the selected room; a room with bookings shows a message instead.
+
+hotelmanager/controllers/app_controller.py::AppController.search_guests
+Show the guests that match the search text, and give the booking screen the full guest list.
+
+hotelmanager/controllers/app_controller.py::AppController.add_guest
+Build a Guest from the form, add it through the service and refresh the list.
+
+hotelmanager/controllers/app_controller.py::AppController.update_guest
+Save the edited form for the selected guest and refresh.
+
+hotelmanager/controllers/app_controller.py::AppController._parse_stay
+Turn two "YYYY-MM-DD" strings into a DateRange. A wrong format or an impossible range becomes a HotelError with a readable message.
+
+hotelmanager/controllers/app_controller.py::AppController.search_free_rooms
+Read the dates and guest count, find the free rooms and show each one with its price for the stay.
+
+hotelmanager/controllers/app_controller.py::AppController.preview_quote
+Price the chosen room for the stay and extras and show every quote line - the "why" of the price.
+
+hotelmanager/controllers/app_controller.py::AppController.create_booking
+Create the booking (chosen room or automatic), show "Booking #7 created - room 204, ..." and refresh the bookings, calendar and dashboard.
+
+hotelmanager/controllers/app_controller.py::AppController.refresh_bookings
+Show the bookings that match the status filter and search text.
+
+hotelmanager/controllers/app_controller.py::AppController.check_in
+Check in the selected booking and refresh.
+
+hotelmanager/controllers/app_controller.py::AppController.check_out
+Check out the selected booking, show the invoice and, if the user wants, save it as CSV.
+
+hotelmanager/controllers/app_controller.py::AppController.cancel
+Ask for confirmation, cancel the selected booking and tell the user the fee.
+
+hotelmanager/controllers/app_controller.py::AppController.calendar
+Draw the calendar for the chosen month.
+
+hotelmanager/controllers/app_controller.py::AppController.import_sample
+Import the sample rooms and guests, refresh, and tell the user how many were added and which rows were skipped.
+
+hotelmanager/views/widgets.py::make_form
+Build a grid of labels with entries or comboboxes and return {key: tk variable}, so a tab can read and set every field by name.
+
+hotelmanager/views/widgets.py::TableFrame.__init__
+A Treeview with a vertical scrollbar. Connect both directions: the bar scrolls the table and the table moves the bar.
+
+hotelmanager/views/widgets.py::TableFrame.fill
+Clear the table and insert the new rows, using the database id as each row's iid. Clearing first stops the list from growing on every refresh.
+
+hotelmanager/views/widgets.py::TableFrame.selected_id
+Return the id of the selected row as an int, or None when nothing is selected.
+
+hotelmanager/views/rooms_view.py::RoomsView.__init__
+Build the rooms tab: the table on the left, a form on the right, and Add / Update / Delete buttons that call the controller callbacks. Clicking a row fills the form.
+
+hotelmanager/views/rooms_view.py::RoomsView.show_rows
+Turn Room objects into table rows (values in the same order as the columns) and keep {id: Room} so a clicked row can fill the form.
+
+hotelmanager/views/rooms_view.py::RoomsView.clear_form
+Empty every field of the form.
+
+hotelmanager/views/guests_view.py::GuestsView.__init__
+Build the guests tab: a search box, the guests table, a form and Add / Update buttons.
+
+hotelmanager/views/guests_view.py::GuestsView.show_rows
+Fill the table with the guests and keep {id: Guest} for the form.
+
+hotelmanager/views/guests_view.py::GuestsView.clear_form
+Empty every field of the form.
+
+hotelmanager/views/bookings_view.py::BookingsView.__init__
+Build the bookings tab. Top: dates, guests, type, allocation and extras, with Search / Preview quote / Book buttons, a free-rooms table and a quote table. Bottom: the bookings table with a status filter and Check in / Check out / Cancel.
+
+hotelmanager/views/bookings_view.py::BookingsView.show_free_rooms
+Fill the free-rooms table with each room and its price for the stay.
+
+hotelmanager/views/bookings_view.py::BookingsView.show_quote
+Show one row per quote line (description, quantity, unit price, amount) and the total.
+
+hotelmanager/views/bookings_view.py::BookingsView.show_rows
+Fill the bookings table and colour each row by its status (checked in green, checked out grey, cancelled red).
+
+hotelmanager/views/bookings_view.py::BookingsView.selected_booking_id
+Return the id of the selected booking, or None.
+
+hotelmanager/views/main_window.py::MainWindow.__init__
+Build the window: a dashboard line on top and a notebook with the five tabs (Rooms, Guests, Bookings, Calendar, Reports).
+
+hotelmanager/views/main_window.py::MainWindow.show_error
+Show an error message box.
+
+hotelmanager/views/main_window.py::MainWindow.show_info
+Show an information message box.
+
+hotelmanager/views/main_window.py::MainWindow.confirm
+Ask a yes/no question and return True for yes.
+
+hotelmanager/views/calendar_view.py::CalendarView.__init__
+Build the calendar tab: month and year choosers with a Show button, a Canvas, and a legend for the colours.
+
+hotelmanager/views/calendar_view.py::CalendarView.draw
+Draw the month as rectangles on the canvas: rooms down the side, days across, each cell coloured by the booking's status. Clicking a booked cell opens that booking.
+
+hotelmanager/booking/availability.py::occupancy_rate
+Return the share of room-nights that were booked in a period: booked nights inside the period divided by (active rooms x nights in the period). Cancelled bookings do not count; 0 when there are no rooms.
+
+hotelmanager/booking/hotel_service.py::HotelService.occupancy_for_month
+The occupancy rate of one month, from its first day up to the first day of the next month.
+
+hotelmanager/booking/hotel_service.py::HotelService.dashboard
+The numbers for the top line: arrivals today, departures today, guests in the hotel, free rooms today and this month's occupancy.
+
+hotelmanager/booking/importer.py::export_invoice
+Write an invoice as CSV: a short header (guest, room, dates), one row per line, then subtotal, VAT and total. Use "utf-8-sig" so Excel opens it. Return the path.
+
+hotelmanager/controllers/app_controller.py::AppController.reports
+Collect the occupancy of the last 6 months, the revenue per month and the counts per status, and show them in the reports tab.
+
+hotelmanager/views/main_window.py::MainWindow.show_dashboard
+Show the dashboard numbers in one line: arrivals, departures, in-house, free rooms, occupancy.
+
+hotelmanager/views/reports_view.py::ReportsView.__init__
+Build the reports tab: one figure with two bar charts (occupancy and revenue), a Refresh button and a small table of status counts.
+
+hotelmanager/views/reports_view.py::ReportsView.show
+Redraw both charts and refill the status table. Create the figure once and only clear and redraw the axes here.
+
+hotelmanager/pricing/engine.py::PricingEngine.cancellation_fee
+Cancelling at least 48 hours before check-in is free (0.0); later the fee is one night - the unit price of the first room line.

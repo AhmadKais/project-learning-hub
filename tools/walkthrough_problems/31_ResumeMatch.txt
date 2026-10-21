@@ -1,0 +1,218 @@
+resumematch/nlp/loader.py::DocumentLoader.load
+Read one CV file into a Document. Refuse a missing file, a file bigger than the limit, or an unsupported type with a ResumeMatchError. Pick the reader by extension (.pdf, .docx, .txt), clean the text, cut it at the size limit, and use the file name (without extension) as the id.
+
+resumematch/nlp/loader.py::DocumentLoader._load_pdf
+Read the text of every page of a PDF and return (text, page count). Refuse PDFs with too many pages. A broken PDF must become a ResumeMatchError, never a crash.
+
+resumematch/nlp/loader.py::DocumentLoader._load_docx
+Read a Word file: the text of every paragraph and also of every table row - many CVs keep half their content in tables. Return (text, 0).
+
+resumematch/nlp/loader.py::DocumentLoader._load_txt
+Read a text file as UTF-8, replacing bytes that are not valid UTF-8 instead of crashing. Return (text, 0).
+
+resumematch/nlp/loader.py::DocumentLoader._clean
+Fix what real CV files get wrong: join words split by a hyphen at the end of a line ("develo-\nper" -> "developer"), remove control characters and squeeze runs of spaces into one.
+
+resumematch/nlp/loader.py::DocumentLoader.load_directory
+Load every supported file in a folder. One bad file must not stop the batch: collect the failures and return (documents, failures).
+
+resumematch/nlp/pii.py::PiiScrubber.scrub
+Replace URLs, e-mail addresses, 9-digit ID numbers and phone numbers with a space, in that order (a URL can contain something that looks like an e-mail). Personal data must never reach the index.
+
+resumematch/nlp/pii.py::PiiScrubber.find
+Count the e-mails, phones, IDs and URLs in a text without changing it, so the user can see that scrubbing happened.
+
+resumematch/nlp/preprocessor.py::TextPreprocessor.__init__
+Set up the pipeline once: the stemming and n-gram settings, the PII scrubber, the token regex, the stemmer and both stopword lists. Loading NLTK data inside process() would make it very slow.
+
+resumematch/nlp/preprocessor.py::TextPreprocessor.process
+Turn text into the list of terms everything else compares: scrub personal data, split into tokens, lower-case, drop stopwords, stem, drop 1-letter tokens, then add the bigrams. "Python" in a CV and "python" in a job must end up as the same term.
+
+resumematch/nlp/preprocessor.py::TextPreprocessor._is_stopword
+Return True when the token is in the English or the Hebrew stopword list.
+
+resumematch/nlp/preprocessor.py::TextPreprocessor._stem
+Stem a token: Hebrew words go through the simple Hebrew rule, everything else through the English Snowball stemmer ("developing" -> "develop").
+
+resumematch/nlp/preprocessor.py::TextPreprocessor._stem_hebrew
+Remove one common prefix letter (ה, ו, ב, ל, מ, ש, כ) from Hebrew words longer than 3 letters. Only one letter, never from short words - stripping more merges unrelated words.
+
+resumematch/nlp/preprocessor.py::TextPreprocessor._bigrams
+Return every pair of neighbouring tokens joined by a space: ["machine", "learning", "engineer"] -> ["machine learning", "learning engineer"]. "Machine learning" is one skill, not two words.
+
+resumematch/nlp/preprocessor.py::TextPreprocessor.fingerprint
+Return the settings of this pipeline as a dict (lowercase, regex, stopword versions, stemmer, n-grams, version). It is saved with the index, and machine B refuses to rank if its own fingerprint differs - otherwise every score would silently be 0.
+
+resumematch/nlp/vocabulary.py::VocabularyBuilder.__init__
+Store min_df and max_df, using the config values only when the argument is None (min_df=0 is a real value).
+
+resumematch/nlp/vocabulary.py::VocabularyBuilder.build
+Count in how many documents each term appears (once per document), keep the terms with min_df <= df <= max_df x documents, sort them so every build gives the same columns, and return (vocabulary {term: column}, idf list, document frequencies).
+
+resumematch/nlp/vocabulary.py::VocabularyBuilder.compute_idf
+The smoothed IDF used for TF-IDF: ln((1 + N) / (1 + df)) + 1. A term in every document still gets 1, not 0.
+
+resumematch/nlp/vocabulary.py::VocabularyBuilder.compute_idf_bm25
+The IDF used by BM25: ln((N - df + 0.5) / (df + 0.5) + 1). The +1 inside the log keeps it positive for very common terms.
+
+resumematch/rank/base.py::Ranker._normalise
+Divide every score by the highest one, so the best candidate gets 1.0 (leave the list as it is when the best is 0). This makes scores comparable within one ranking only.
+
+resumematch/rank/tfidf.py::TfidfRanker.fit
+Build the sparse TF-IDF matrix: one row per CV, one column per vocabulary term, value = count x idf. Then scale every row to length 1.
+
+resumematch/rank/tfidf.py::TfidfRanker._l2_normalise_rows
+Divide each row by its own length (L2 norm) so every row has length 1; an empty row stays empty. After this, cosine similarity is a plain dot product.
+
+resumematch/rank/tfidf.py::TfidfRanker._vectorise_job
+Turn the job's terms into a vector in the same space as the CVs: counts x the collection's idf, then length 1. Never compute idf from the job alone.
+
+resumematch/rank/tfidf.py::TfidfRanker.rank
+Score every CV in one matrix x vector product, take the top_k, and return RankResults (positions from 1) with the shared-term count and the explanation.
+
+resumematch/rank/tfidf.py::TfidfRanker.explain
+Split one CV's score into its terms: each shared term adds row value x job value. Return the biggest contributions. Together they add up exactly to the score.
+
+resumematch/rank/bm25.py::Bm25Ranker.fit
+Build the inverted index: for each term, the list of (CV row, how often it appears). Also store every CV's length, the average length and the BM25 idf of each term.
+
+resumematch/rank/bm25.py::Bm25Ranker.rank
+Add up the BM25 score only for CVs that contain a job term (the inverted index gives them directly), sort, normalise, and return top_k results with each one's best terms. Fill up with zero-score CVs if fewer than top_k scored.
+
+resumematch/rank/bm25.py::Bm25Ranker._term_score
+The BM25 score of one term in one CV: idf x tf x (k1 + 1) / (tf + k1 x (1 - b + b x length / average length)). Repeats help less and less (saturation), and long CVs are pushed down (b).
+
+resumematch/rank/skills.py::SkillExtractor.__init__
+Store the preprocessor and start an empty {normalised form: skill name} dictionary and a dict of skills by category.
+
+resumematch/rank/skills.py::SkillExtractor.load
+Read skills.csv and, for every skill and alias, store its preprocessed form ("Machine Learning" -> "machin learn") pointing back to the display name. The dictionary must go through the same pipeline as the CVs or nothing matches.
+
+resumematch/rank/skills.py::SkillExtractor.extract
+Return the sorted names of every skill whose normalised form is in the term list. Bigrams are already in the terms, so two-word skills match too.
+
+resumematch/rank/skills.py::SkillExtractor.compare
+Return (matched, missing): the job's skills the CV has, and the job's skills it lacks.
+
+resumematch/rank/skills.py::SkillExtractor.coverage
+The share of required skills that were matched, or 0.0 when the job requires none.
+
+resumematch/rank/explainer.py::RankExplainer.to_lines
+Turn a result into short lines for the screen: the terms it matched with their weights, the skills found, the skills missing, and "3 of 4 required skills (75%)". Report facts, never judge the person.
+
+resumematch/rank/explainer.py::RankExplainer.warning_for
+Return a warning when the text is very similar (score above 0.6) but few required skills are present (coverage below 0.35) - the CV may have copied the job advert. Otherwise return "".
+
+resumematch/eval/metrics.py::precision_at_k
+Of the first k candidates, what share is relevant? Divide by k, not by the list length: missing places count as misses.
+
+resumematch/eval/metrics.py::reciprocal_rank
+1 / the position of the first relevant candidate (first place 1.0, second 0.5...), or 0.0 when none is relevant.
+
+resumematch/eval/metrics.py::mean_reciprocal_rank
+The average reciprocal rank over the jobs that have labels. A job without labels is skipped, not counted as 0.
+
+resumematch/eval/metrics.py::evaluate
+Rank every labelled job, time each ranking, and return the average precision@5, precision@10, MRR and the median time. Use the median, so the first slow run does not distort it.
+
+resumematch/rank/bundle.py::IndexBundle.save
+Write the index to a folder: vocabulary (JSON), idf (npy), matrix (npz), the preprocessing fingerprint and a meta file with the code version, counts and the SHA-256 of the matrix. No pickle - loading a pickle can run code.
+
+resumematch/rank/bundle.py::IndexBundle.load
+Check before trusting the index: all files present, same code version, matrix SHA-256 unchanged, and every fingerprint field equal to this machine's. Any difference raises IndexContractError; only then load the arrays.
+
+resumematch/rank/bundle.py::IndexBundle._sha256
+The SHA-256 of a file, read in binary chunks so a big file does not fill the memory.
+
+resumematch/database/db.py::Database.__new__
+A singleton: create the one Database object on the first call and return the same one afterwards.
+
+resumematch/database/db.py::Database._init
+Open the one SQLite connection (usable from any thread), make rows behave like dicts, switch foreign keys on and create the tables.
+
+resumematch/database/db.py::Database.reset
+Close the connection and forget the singleton, so the next Database() starts fresh (used between tests).
+
+resumematch/database/repositories.py::JobRepository.add
+Insert a job advert with its processed terms and required skills and return its id.
+
+resumematch/database/repositories.py::JobRepository.get
+Read one job by id; raise ResumeMatchError when it does not exist.
+
+resumematch/database/repositories.py::JobRepository.all_labelled
+Return the jobs marked as labelled - the evaluation set.
+
+resumematch/database/repositories.py::ResumeRepository.add
+Insert one processed CV under an anonymous name ("candidate_0142"), storing only the scrubbed terms, never the raw text, name or contact details.
+
+resumematch/database/repositories.py::ResumeRepository.set_matrix_row
+Store which row of the index matrix belongs to this CV.
+
+resumematch/database/repositories.py::ResumeRepository.all_active
+Return every CV whose text was extracted successfully, in id order.
+
+resumematch/database/repositories.py::ResumeRepository.delete_completely
+The right to be forgotten: delete the CV file, delete its row (rankings and labels go with it), and report that the index must be rebuilt because every other row number has moved.
+
+resumematch/database/repositories.py::RankingRepository.save_many
+Save a whole ranking in one executemany call, with each result's top terms as JSON. A new ranking of the same job and method replaces the old one.
+
+resumematch/database/repositories.py::RankingRepository.for_job
+Return the saved ranking of a job and method, best score first.
+
+resumematch/database/repositories.py::RankingRepository.method_disagreement
+The research query: for one job, each candidate's position under TF-IDF and under BM25 and the gap between them, with the CV length - to show that the methods disagree on long and short CVs.
+
+resumematch/database/repositories.py::LabelRepository.set_label
+Store (or replace) whether a candidate is relevant for a job, who labelled it and whether it was labelled before seeing any ranking.
+
+resumematch/database/repositories.py::LabelRepository.relevant_for
+Return the set of candidates labelled relevant for a job, using only labels made before ranking.
+
+resumematch/controllers/app_controller.py::AppController.__init__
+Create everything once: the database, preprocessor, skill dictionary, loader, explainer, repositories and vocabulary builder. The rankers are filled when the index is built or loaded.
+
+resumematch/controllers/app_controller.py::AppController.import_resumes
+Load a folder of CVs, skip files already imported, process each one and store it. Flag CVs with too few terms (probably scanned PDFs) instead of indexing an empty CV. Take skills from the CV's own "Skills:" line when it has one. Return a summary for the screen.
+
+resumematch/controllers/app_controller.py::AppController.build_index
+Refuse with fewer than 50 CVs. Build the vocabulary, fit both rankers, store each CV's matrix row, save the index bundle, and warn if the vocabulary shrank by more than 20% since the last build.
+
+resumematch/controllers/app_controller.py::AppController.load_index
+Machine B: load the bundle with this machine's fingerprint (a mismatch raises), check it matches the CVs in the database, then restore the TF-IDF ranker from the matrix and refit BM25.
+
+resumematch/controllers/app_controller.py::AppController.rank_job
+Rank the CVs for one job with the chosen method, add each candidate's matched and missing skills, save the ranking and return it. If every score is 0, raise an error that points at the preprocessing - that is a silent failure, not a result.
+
+resumematch/controllers/app_controller.py::AppController.compare_methods
+Rank one job with both methods and return both lists plus the disagreement rows for the scatter plot.
+
+build_index.py::main
+Machine A: import the CVs from a folder, build the index, and print the counts, the vocabulary size and the SHA-256 to compare on machine B.
+
+evaluate.py::main
+Load the index, evaluate both methods on the labelled jobs (at least 10), print a comparison table and save each result.
+
+resumematch/views/main_window.py::MainWindow.__init__
+The window: four tabs (Jobs, Candidates, Ranking, Comparison) and a status bar at the bottom.
+
+resumematch/views/main_window.py::MainWindow.show_error
+Show an error message box and put the message in the status bar. Every ResumeMatchError ends here - never a traceback.
+
+resumematch/views/jobs_view.py::JobsView.__init__
+The jobs tab: title, company and description fields, a Save button, the list of saved jobs, and after saving the skills found in the advert.
+
+resumematch/views/candidates_view.py::CandidatesView.__init__
+The candidates tab: choose a folder to import, build the index, delete a candidate, the table of CVs, and a red list of flagged (probably scanned) files.
+
+resumematch/views/ranking_view.py::RankingView.__init__
+The ranking tab: choose a job and a method, press Rank, see the table (position, candidate, score, skills, coverage). Selecting a row shows its explanation and the copied-advert warning right below.
+
+resumematch/views/comparison_view.py::ComparisonView.__init__
+The comparison tab: both rankings side by side and a scatter plot of TF-IDF score against BM25 score, dot size and colour by CV length. Dots far from the diagonal are where the methods disagree.
+
+run.py::main
+Machine B: load the index; if the contract check fails, print why and how to rebuild, and exit with 1. Otherwise open the window.
+
+tune.py::main
+The experiments: sweep BM25's k1 and b (keeping the best), then min_df/max_df, stemming and n-grams. Save every run, write a CSV and plot MRR against b - the answer to the research question.

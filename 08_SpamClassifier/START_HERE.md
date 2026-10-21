@@ -21,7 +21,7 @@ above 0.98.
 | `03_exercises/` | 13 short functions to write yourself + automatic tests + `solutions.py` | Write, run `pytest`, only then look at the solution |
 | `04_build/` | Architecture, code map, and the stage-by-stage build chapter for your skeleton | Use it next to `TASKS.md` in your project |
 | `05_defence/` | Exam-style questions, answers, resources | Before the defence — and test yourself every few weeks |
-| `06_solve/` | `CHECKLIST.md`: all 99 functions of your skeleton, stage by stage, with the test that checks each · `HINTS.md`: hidden hints, numbers to check against and the common traps for the hard ones | Tick the checklist as you go; open a hint only after you tried |
+| `06_solve/` | `CHECKLIST.md`: all 99 functions of your skeleton, stage by stage, with the test that checks each · `HINTS.md`: hidden hints, numbers to check against and the common traps for the hard ones · `WALKTHROUGH.md`: every function explained - the problem, the finished code and its test - and the finished project with screenshots | Tick the checklist as you go; open a hint only after you tried |
 | `data/sms_spam.csv` | The corpus, as `text,label` — the same format your project's `data/corpus/messages.csv` expects | Copy it there to train your real model |
 
 ## Setup (once)
@@ -88,7 +88,8 @@ test of your project's stage 4. If it fails, the table in theory §4.9 tells you
 2. Read its docstring in your code again, slowly, and the matching step in `04_build/`.
 3. Open `06_solve/HINTS.md` at that function: the 💡 hint first, the 🔧 steps only if you need them.
    Compare your output with the "check yourself" numbers.
-4. Still red after 30 honest minutes? Send your supervisor the test name and the last 10 lines of the error.
+4. Still stuck, or finished and want to compare? `06_solve/WALKTHROUGH.md` has the problem and the full solution of every function.
+5. Still red after 30 honest minutes? Send your supervisor the test name and the last 10 lines of the error.
 
 ## The rule
 

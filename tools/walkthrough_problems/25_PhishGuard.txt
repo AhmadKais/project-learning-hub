@@ -1,0 +1,176 @@
+phishguard/features/url_parser.py::URLParser.parse
+Split a URL into scheme, host, subdomains, domain, TLD, port, path and query. People often paste a URL without "http://", so add it before parsing but remember the scheme was empty. The last label of the host is the TLD (two labels for "co.il"-style endings), the one before it is the domain, the rest are subdomains: "mail.paypal.com.secure-login.xyz" gives subdomains ["mail", "paypal", "com"], domain "secure-login", TLD "xyz". Garbage input must not crash: return empty fields instead.
+
+phishguard/features/extractor.py::shannon_entropy
+Measure how random a string looks: H = -sum(p * log2(p)) over its characters, where p is how often each character appears divided by the length. "aaaa" gives 0, a random string like "x7f9q2" gives a high value. An empty string gives 0.
+
+phishguard/features/extractor.py::URLFeatureExtractor.extract
+Turn one URL into the 20 numbers listed in FEATURE_NAMES (lengths, counts of dots and hyphens, yes/no flags as 1.0/0.0, entropy, and so on). Return them as a FeatureVector. Check at the end that you produced exactly the 20 names, so a missing feature fails at once instead of shifting the columns.
+
+phishguard/models/entities.py::FeatureVector.as_list
+Return the feature values as a list in the order of `feature_names`. Loop over the names, not over the dict: the model expects the numbers in exactly the order it was trained on, and a wrong order gives wrong predictions with no error.
+
+phishguard/features/extractor.py::URLFeatureExtractor.extract_many
+Run `extract` on a list of URLs and return the list of value lists - the matrix X the model trains on.
+
+phishguard/ml/dataset.py::DatasetLoader.read
+Read the CSV, keep the URL and label columns, drop empty rows, clean every URL (strip spaces, lower-case) and drop duplicates. Return a table with columns "url" and "label", where label is 1 for phishing ("bad") and 0 for legitimate.
+
+phishguard/ml/dataset.py::DatasetLoader.balance
+Take the same number of rows from each class (at most `per_class`), with the fixed seed, and shuffle them. A balanced sample stops the model from learning "always say legitimate".
+
+phishguard/ml/dataset.py::DatasetLoader.load
+Build the whole dataset: read, balance, turn every URL into features, then split 70/15/15 into train, validation and test. Use `stratify` so each part has the same share of phishing, and the fixed seed so every run gets the same rows. Keep the test URLs so mistakes can be shown later.
+
+phishguard/ml/dataset.py::DatasetLoader.feature_table
+Return a table of all 20 features plus the label for the given rows. With `groupby("label").mean()` you can see which features differ between phishing and legitimate before training anything.
+
+phishguard/ml/trainer.py::ModelTrainer.build_logistic
+Return a Pipeline of a StandardScaler followed by a LogisticRegression (max_iter=1000, balanced class weights). The scaler lives inside the pipeline so it is saved and reused with the model.
+
+phishguard/ml/bundle.py::ModelBundle.from_trained
+Collect everything prediction needs into one bundle: the fitted pipeline, the model name, a copy of the feature names, the threshold (0.5 if the report has none) and the metrics.
+
+phishguard/ml/bundle.py::ModelBundle.save
+Set the version string ("<model>-<trained_at>") and save the whole bundle with joblib. Set the version first, otherwise the saved file has an empty version.
+
+phishguard/ml/bundle.py::ModelBundle.load
+Load a bundle and check that its feature names are exactly FEATURE_NAMES. If they differ, raise a RuntimeError telling the user to retrain - a model fed different features gives wrong answers silently.
+
+phishguard/ml/trainer.py::ModelTrainer.train
+Build and fit the requested models ("logistic", "forest" or "both") with their parameter grids and return a dict {name: TrainedModel}.
+
+train.py::main
+The training script: load the data, train the models, compare them on the test split, save the reports and the best model's bundle, register it in the database and print a summary table with the worst mistakes.
+
+phishguard/ml/trainer.py::ModelTrainer.build_forest
+Return a Pipeline of a StandardScaler and a RandomForestClassifier (config.RANDOM_FOREST_TREES trees, balanced class weights, fixed seed). Trees do not need scaling, but the same pipeline shape keeps the rest of the code identical for both models.
+
+phishguard/ml/trainer.py::ModelTrainer.fit_with_search
+Run a GridSearchCV over the parameter grid (5 folds, scored by F1) on the training split, time it, and return the best model, its parameters, its cross-validated F1 and the seconds it took.
+
+phishguard/ml/evaluator.py::ModelEvaluator.metrics
+Score a model at a given threshold: a URL is phishing when its probability is at least the threshold. Return accuracy, precision, recall, F1 (for the phishing class), AUC, the threshold and the confusion matrix [[tn, fp], [fn, tp]].
+
+phishguard/ml/evaluator.py::ModelEvaluator.choose_threshold
+On the validation split, try thresholds from 0.05 to 0.95 and return the highest one whose recall is still at least the target (0.95). Highest means fewest false alarms while still catching 95% of phishing. Never use the test split here.
+
+phishguard/ml/evaluator.py::ModelEvaluator.compare
+For every trained model: choose its threshold on validation, measure it on test, add its feature importances and worst mistakes. Return the best model's name (highest F1, then recall) and the full report.
+
+phishguard/ml/evaluator.py::ModelEvaluator.importances
+Return how much each feature matters, as {name: value}: the signed weights for logistic regression, the feature importances for the random forest.
+
+phishguard/ml/evaluator.py::ModelEvaluator.worst_mistakes
+Find real URLs the model got wrong on the test split: the legitimate ones with the highest phishing probability and the phishing ones with the lowest. They show the model's limits better than any number.
+
+phishguard/ml/evaluator.py::ModelEvaluator.save_reports
+Write metrics.json and three charts into the reports folder: a confusion matrix per model, both ROC curves on one plot, and the feature importances of the best model.
+
+phishguard/ml/predictor.py::Predictor.load
+Load the model bundle if the file exists and mark the predictor ready. If there is no file, stay "not ready" instead of crashing - the app must still open and tell the user to train.
+
+phishguard/ml/predictor.py::Predictor.predict
+Scan one URL: clean it exactly like the training data (strip, lower-case), extract the features, get the phishing probability and compare it with the bundle's threshold. Return a ScanResult.
+
+phishguard/ml/explainer.py::Explainer.contributions
+Work out how much each feature pushed this URL toward phishing. For logistic regression it is weight x scaled value (exact); for the forest, importance x the sign of the scaled value (an approximation). Give each one a readable sentence; for a yes/no feature that is 0 use the "when zero" sentence.
+
+phishguard/ml/explainer.py::Explainer.explain
+Keep the contributions that point the same way as the verdict, take the `top` strongest, store them on the result and return them. These are the three reasons the user sees.
+
+evaluate.py::main
+With --url or --file: scan each URL and print the verdict, probability and reasons. Without them: rebuild the same split, load the saved model and print its metrics on the test split.
+
+phishguard/database/db.py::Database.get_connection
+Open the SQLite file with rows that behave like dicts and foreign keys switched on (they are off by default in SQLite).
+
+phishguard/database/db.py::Database.connection
+A context manager around a connection: commit when the block succeeds, roll back when it raises, and always close.
+
+phishguard/database/db.py::Database.initialize_schema
+Create the tables by running the SCHEMA script.
+
+phishguard/database/repositories.py::ScanRepository.add
+Insert one scan and return its new id. Store the time as ISO text, the verdict as its value and the features as JSON, and always use ? placeholders - the URL comes from outside.
+
+phishguard/database/repositories.py::ScanRepository.get
+Read one scan by id and turn the row back into a ScanResult, or return None.
+
+phishguard/database/repositories.py::ScanRepository.list_recent
+Return the newest scans first, optionally only one verdict and/or URLs containing a search text. Build the WHERE part from a list of conditions and pass every value as a parameter.
+
+phishguard/database/repositories.py::ScanRepository.set_feedback
+Store the user's feedback ("correct" or "wrong") on one scan.
+
+phishguard/database/repositories.py::ScanRepository.counts_by_verdict
+Count the scans per verdict with GROUP BY and return {Verdict: count}, with 0 for a verdict that has no scans.
+
+phishguard/database/repositories.py::ScanRepository.wrong_feedback
+Return the scans the user marked "wrong" - the candidates for retraining.
+
+phishguard/database/repositories.py::ModelRepository.register
+Save a trained model's version, name, date, training size, metrics and threshold. INSERT OR REPLACE, so registering the same version twice keeps one row.
+
+phishguard/database/repositories.py::ModelRepository.list_all
+Return every registered model, newest first, as dicts - the experiments table.
+
+phishguard/models/entities.py::ScanResult.risk_level
+Turn the probability into "low", "medium" or "high" using the two limits in config. This only picks the colour; the verdict itself comes from the threshold.
+
+phishguard/controllers/app_controller.py::AppController.__init__
+Create the predictor, the explainer (only when a model is loaded), the two repositories and the main window, and hand the window the four callbacks.
+
+phishguard/controllers/app_controller.py::AppController.start
+Show the scan tab, fill the history and statistics, and warn the user (with the train command) when there is no model.
+
+phishguard/controllers/app_controller.py::AppController.on_scan
+Check the URL (not empty, not too long), scan and explain it, save it, and show the result. Any error becomes a message box - a bad URL must never crash the app.
+
+phishguard/controllers/app_controller.py::AppController.on_filter
+Read the scans that match the chosen verdict and search text and show them in the history table.
+
+phishguard/controllers/app_controller.py::AppController.on_feedback
+Save "correct"/"wrong" for the selected scan and refresh the table; ask the user to select a row first if none is selected.
+
+phishguard/controllers/app_controller.py::AppController.on_export
+Export the history to CSV and tell the user where the file is.
+
+phishguard/controllers/app_controller.py::AppController.refresh_stats
+Give the statistics tab the counts per verdict and the list of registered models.
+
+phishguard/utils/exporter.py::ReportExporter.export_history
+Write all scans to exports/history_<time>.csv with a header row. Use the "utf-8-sig" encoding so Excel opens it correctly. Return the file path.
+
+phishguard/views/main_window.py::MainWindow.__init__
+Build a Notebook with three tabs - Scan, History, Statistics - and keep each tab as an attribute so the controller can reach it.
+
+phishguard/views/main_window.py::MainWindow.show_error
+Show an error message box.
+
+phishguard/views/main_window.py::MainWindow.show_info
+Show an information message box.
+
+phishguard/views/scan_view.py::ScanView.__init__
+Build the scan tab: a URL entry (Enter also scans), Scan and Clear buttons, a big verdict label, a progress bar used as a risk meter, a probability line and a list for the reasons.
+
+phishguard/views/scan_view.py::ScanView.show_result
+Show the verdict in the colour of its risk level, fill the meter with the probability, and list the reasons with an arrow showing which way each one pushes.
+
+phishguard/views/scan_view.py::ScanView.clear
+Empty the entry, the verdict, the meter and the reasons.
+
+phishguard/views/history_view.py::HistoryView.__init__
+Build the history tab: a verdict filter and search box, a table of scans (the scan id is the row's iid), and buttons for "Mark correct", "Mark wrong" and "Export CSV".
+
+phishguard/views/history_view.py::HistoryView.show_rows
+Clear the table and insert one row per scan.
+
+phishguard/views/history_view.py::HistoryView.selected_id
+Return the id of the selected row as an int, or None when nothing is selected.
+
+phishguard/views/stats_view.py::StatsView.__init__
+Build the statistics tab: a matplotlib bar chart embedded in Tk and a table of registered models.
+
+phishguard/views/stats_view.py::StatsView.show
+Redraw the bar chart with the counts per verdict and refill the models table.

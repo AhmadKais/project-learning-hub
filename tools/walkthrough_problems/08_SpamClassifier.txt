@@ -1,0 +1,296 @@
+spamclassifier/ml/dataset.py::load_corpus
+Read the corpus CSV (columns text and label) and return (texts, labels) with ham = 0 and spam = 1. A missing column or an unknown label is an error naming the row. Drop exact duplicate texts and say how many - the same text in train and test would be a leak.
+
+spamclassifier/ml/dataset.py::class_balance
+Count the ham and spam labels and the spam share: {"ham": n, "spam": n, "spam_ratio": 0.13}. Print it right after loading - a strange ratio means a broken corpus.
+
+spamclassifier/ml/dataset.py::stratified_split
+Split the messages 70 / 15 / 15 into train, validation and test, keeping the same spam share in each part and the same split on every run (fixed seed). Give the sizes as whole numbers of messages, not ratios, so the parts are exactly the right size.
+
+spamclassifier/ml/dataset.py::assert_no_leakage
+Raise AssertionError if the same text appears in two of the three parts. Run it before every training.
+
+spamclassifier/preprocessing/email_parser.py::EmailParser.parse
+Turn a raw message into a CleanedMessage in this order: cut it to the maximum length, split off the subject, measure the capitals, "!" and digits on the raw text, count tags and links, remove the HTML, replace links with URLTOKEN, then lower-case everything except URLTOKEN. Measuring before lower-casing is the point: "FREE!!!" and "free" must not look the same.
+
+spamclassifier/preprocessing/email_parser.py::EmailParser.truncate
+Return at most MAX_INPUT_CHARS characters, so a huge message cannot use up the memory.
+
+spamclassifier/preprocessing/email_parser.py::EmailParser.split_headers
+Return (subject, body). Headers are the "Name: value" lines before the first blank line; keep only the Subject. No headers: the whole text is the body. Only headers: the body is "".
+
+spamclassifier/preprocessing/email_parser.py::EmailParser.strip_html
+Remove every <...> tag and squeeze the spaces, so "<b>free</b><i>offer</i>" becomes "free offer", not "freeoffer".
+
+spamclassifier/preprocessing/email_parser.py::EmailParser.replace_urls
+Replace every link with URLTOKEN. The model should learn "there is a link", not one particular domain.
+
+spamclassifier/preprocessing/email_parser.py::EmailParser.caps_ratio
+Upper-case letters divided by all letters, between 0 and 1. Digits and punctuation are not letters. No letters gives 0.
+
+spamclassifier/preprocessing/email_parser.py::EmailParser.exclamation_count
+Count the "!" characters.
+
+spamclassifier/preprocessing/email_parser.py::EmailParser.digit_ratio
+Digits divided by all characters, between 0 and 1. An empty string gives 0.
+
+spamclassifier/preprocessing/email_parser.py::EmailParser.count_urls
+Count the links in the text.
+
+spamclassifier/preprocessing/email_parser.py::EmailParser.count_html_tags
+Count the <...> tags, before they are removed.
+
+spamclassifier/preprocessing/tokenizer.py::load_stopwords
+Return NLTK's English stopword set, downloading it once if it is missing.
+
+spamclassifier/preprocessing/tokenizer.py::Tokenizer.tokenize
+Split a cleaned message's text into tokens with the filtering rules below.
+
+spamclassifier/preprocessing/tokenizer.py::Tokenizer.tokenize_text
+Split a string into words (letters and apostrophes), drop stopwords and words shorter than 3 letters, but always keep URLTOKEN: "free URLTOKEN offer now" -> ["free", "URLTOKEN", "offer", "now"].
+
+spamclassifier/preprocessing/tokenizer.py::Tokenizer._keep
+Return True when a token stays: always for URLTOKEN, otherwise when it is long enough and not a stopword.
+
+spamclassifier/preprocessing/tokenizer.py::ngrams
+Return every n-gram from n_min to n_max words, joined by spaces: ["click", "here", "now"] with 1-2 gives ["click", "here", "now", "click here", "here now"].
+
+spamclassifier/features/feature_engineer.py::FeatureEngineer.fit
+Build the vocabulary from the TRAINING messages only: count in how many messages each unigram and bigram appears, keep the MAX_FEATURES most common, and store each one's IDF. Fitting on all the data would let the test set shape the features.
+
+spamclassifier/features/feature_engineer.py::FeatureEngineer.transform
+Turn one message into a FeatureVector: TF-IDF values for the vocabulary terms (count / length x idf, then scaled to length 1) plus the seven hand-made numbers. Terms not in the vocabulary are ignored. Calling it before fit is an error.
+
+spamclassifier/features/feature_engineer.py::FeatureEngineer.handcrafted
+The seven hand-made numbers in the fixed order: capitals share, "!" count, length, digit share and link count (all measured by the parser), plus how many trigger words appear and unique words / all words.
+
+spamclassifier/features/feature_engineer.py::FeatureEngineer.l2_normalise
+Divide every value by the vector's length (square root of the sum of squares). A zero vector stays as it is. Without this, long messages get bigger numbers and the model learns length instead of content.
+
+spamclassifier/features/feature_engineer.py::FeatureEngineer.idf_value
+log(N / (1 + df)) + 1: rare terms get a high weight, a term in every message the lowest.
+
+spamclassifier/features/feature_engineer.py::FeatureEngineer.to_dense
+Flatten a FeatureVector into one list: the vocabulary values in vocabulary order, then the seven numbers in their fixed order. This is exactly what the SVM receives.
+
+spamclassifier/ml/naive_bayes.py::NaiveBayesClassifier.fit
+Learn from token lists: the log share of each class (prior), and for every word in each class log((count + alpha) / (total words in the class + alpha x vocabulary size)). The +alpha (Laplace smoothing) stops an unseen word from giving probability 0; logs stop the product from becoming 0.0.
+
+spamclassifier/ml/naive_bayes.py::NaiveBayesClassifier.predict_log_scores
+The log score of each class for one message: its log prior plus the log likelihood of every known token. Unknown tokens are skipped - they would add the same to both classes.
+
+spamclassifier/ml/naive_bayes.py::NaiveBayesClassifier.predict_proba
+P(spam) = 1 / (1 + exp(ham score - spam score)), computed from the difference so it never underflows. Very large differences give exactly 0.0 or 1.0.
+
+spamclassifier/ml/naive_bayes.py::NaiveBayesClassifier.predict
+1 (spam) when P(spam) is at least the threshold, else 0.
+
+spamclassifier/ml/naive_bayes.py::NaiveBayesClassifier.log_odds
+How strongly a word points to spam: log P(word | spam) - log P(word | ham). Positive means spam, negative means ham, 0 for an unknown word.
+
+spamclassifier/ml/naive_bayes.py::NaiveBayesClassifier.explain
+The words of this message with the strongest log-odds (by absolute value), each word once - the reasons shown to the user.
+
+spamclassifier/ml/naive_bayes.py::NaiveBayesClassifier.most_discriminative
+The vocabulary words with the strongest log-odds, strongest first - useful to spot a model that learned something silly.
+
+spamclassifier/ml/comparator.py::ModelComparator.cross_validate
+Stratified 5-fold cross-validation: for every fold train a NEW model (features refitted too) on the other folds, score the held-out fold, and return mean and standard deviation of precision, recall and F1.
+
+spamclassifier/ml/comparator.py::ModelComparator.compare
+For each metric say which model wins - or "no significant difference" when the gap between the means is smaller than the larger standard deviation.
+
+spamclassifier/ml/comparator.py::ModelComparator.confusion_matrix
+Count true ham, false spam (real mail hidden), false ham (spam let through) and true spam from predictions and labels.
+
+spamclassifier/ml/svm_classifier.py::SVMClassifier.fit
+Fit the comparison model: a MaxAbsScaler (every column between 0 and 1) and a LinearSVC, wrapped in CalibratedClassifierCV so it outputs probabilities like Naive Bayes.
+
+spamclassifier/ml/svm_classifier.py::SVMClassifier.predict_proba
+P(spam) for one dense vector.
+
+spamclassifier/ml/svm_classifier.py::SVMClassifier.predict
+1 when P(spam) is at least the threshold, else 0.
+
+spamclassifier/ml/svm_classifier.py::SVMClassifier.explain
+Approximate reasons from the linear weights: weight x scaled value for each feature present, strongest first. Only an approximation after calibration - that is why Naive Bayes is the main model.
+
+spamclassifier/ml/threshold.py::confusion_at
+Count the four cells when a message is spam if its probability is at least the threshold.
+
+spamclassifier/ml/threshold.py::choose_threshold
+On the validation split, try thresholds from 0.50 to 0.99 and keep the one with the best recall among those whose precision is at least the floor (0.98). If none reaches the floor, raise ValueError - never fall back to 0.5 silently.
+
+spamclassifier/ml/threshold.py::precision_recall_curve
+Precision and recall at every threshold of the search range - the curve on the comparison tab.
+
+spamclassifier/ml/naive_bayes.py::NaiveBayesClassifier.to_dict
+Return the learned numbers (alpha, priors, likelihoods, vocabulary) as a plain dict for the bundle.
+
+spamclassifier/ml/naive_bayes.py::NaiveBayesClassifier.from_dict
+Rebuild a ready-to-use classifier from to_dict's output.
+
+spamclassifier/ml/svm_classifier.py::SVMClassifier.to_dict
+Return what is needed to save the SVM (its C and the fitted model).
+
+spamclassifier/ml/svm_classifier.py::SVMClassifier.from_dict
+Rebuild the SVM from to_dict's output.
+
+spamclassifier/ml/bundle.py::ModelBundle.new_version
+A version name like "2026-03-11-a": today's date plus the first free letter, so two runs on one day do not collide.
+
+spamclassifier/ml/bundle.py::ModelBundle.save
+Write the eight files of a bundle (vectorizer, both models, features, thresholds, metrics, version, checksum last) into a temporary folder and rename it at the end, so a crash never leaves a half-written bundle.
+
+spamclassifier/ml/bundle.py::ModelBundle.load
+In this order: all files present, checksum matches, feature list matches config - and only then unpickle. Unpickling first would make the checksum useless, because pickle can run code.
+
+spamclassifier/ml/bundle.py::ModelBundle.compute_checksum
+One SHA-256 over the bundle files in sorted name order.
+
+spamclassifier/ml/bundle.py::ModelBundle.verify
+True when all files are there and the stored checksum matches.
+
+spamclassifier/ml/bundle.py::ModelBundle.verify_feature_contract
+Raise ValueError when the bundle's hand-made feature names are not exactly config's, in the same order. Name both lists in the message.
+
+spamclassifier/ml/bundle.py::ModelBundle.latest_version
+The newest bundle in models/ that passes verify, or None.
+
+spamclassifier/database/db.py::connect
+Open the SQLite connection with dict-like rows and foreign keys switched on. check_same_thread=False, because the Retrain tab trains on a worker thread that uses the same connection.
+
+spamclassifier/database/db.py::initialise
+Create the tables (safe to run every time) and commit.
+
+spamclassifier/database/repositories.py::ScanRepository.save
+Insert one checked message and return its id. Store only the first 500 characters of the body and the reasons as JSON - never whole mails.
+
+spamclassifier/database/repositories.py::ScanRepository.recent
+The newest scans first, at most `limit`.
+
+spamclassifier/database/repositories.py::ScanRepository.get
+One scan by id, or None.
+
+spamclassifier/database/repositories.py::ScanRepository.count_by_verdict
+Count the scans per verdict: {"ham": n, "spam": n}.
+
+spamclassifier/database/repositories.py::FeedbackRepository.submit
+Record that a verdict was wrong (with the right label) and return the id. Feedback waits for the next retrain - it never retrains by itself.
+
+spamclassifier/database/repositories.py::FeedbackRepository.pending
+The corrections not used yet, as (text, correct label).
+
+spamclassifier/database/repositories.py::FeedbackRepository.mark_used
+Mark every waiting correction as used by a training run and return how many. Call it only after the run succeeded.
+
+spamclassifier/database/repositories.py::FeedbackRepository.false_positive_count
+How many messages marked spam the user said were real mail - the most important number of the project.
+
+spamclassifier/database/repositories.py::TrainingRepository.start_run
+Insert a training run (version, sizes, threshold, notes) and return its id.
+
+spamclassifier/database/repositories.py::TrainingRepository.save_metrics
+Save the cross-validation results of a run, one row per metric.
+
+spamclassifier/database/repositories.py::TrainingRepository.save_vocabulary
+Save the most decisive words of a run with their log-odds and counts.
+
+spamclassifier/database/repositories.py::TrainingRepository.latest_metrics
+Every metric of the newest run.
+
+spamclassifier/database/repositories.py::TrainingRepository.runs
+The recent training runs, newest first, for the history table.
+
+spamclassifier/ml/explainer.py::Explainer.reasons_for
+Ask the classifier for the reasons of a token list.
+
+spamclassifier/ml/explainer.py::Explainer.to_sentence
+Write the reasons as one readable sentence: "Marked as spam mainly because of: winner, free, urgent." - mention the words pointing the other way too, and say so plainly when there are no reasons at all.
+
+spamclassifier/ml/explainer.py::Explainer.format_weight
+Turn a log-odds weight into a word: "very strong" (2 or more), "strong" (1), "moderate" (0.5), else "weak".
+
+spamclassifier/spam_filter.py::SpamFilter.from_bundle
+Load the newest (or a given) bundle and build a ready SpamFilter. With no bundle at all, raise FileNotFoundError that says to run train.py.
+
+spamclassifier/spam_filter.py::SpamFilter.classify
+The full scan: parse, tokenize, compute the probability with the chosen model, add the reasons, compare with that model's threshold and return a Verdict with the time it took. It uses the same parser, tokenizer and features as training.
+
+spamclassifier/presenters/app_presenter.py::AppPresenter.check_message
+Classify a pasted message, save the scan, remember its id for the feedback button and return the verdict. Empty input raises ValueError with a message for the screen.
+
+spamclassifier/presenters/app_presenter.py::AppPresenter.submit_feedback
+Record that the last verdict was wrong; raise RuntimeError if nothing was checked yet.
+
+spamclassifier/presenters/app_presenter.py::AppPresenter.recent_scans
+The rows for the history table.
+
+spamclassifier/presenters/app_presenter.py::AppPresenter.pending_feedback_count
+How many corrections are waiting.
+
+spamclassifier/presenters/app_presenter.py::AppPresenter.retrain
+Retrain on the corpus plus the corrections, reporting each step through `progress`, switch to the new model, and return a summary with the change of every metric against the previous run.
+
+spamclassifier/presenters/app_presenter.py::AppPresenter.comparison_metrics
+Both models' cross-validation metrics (from the loaded bundle).
+
+spamclassifier/presenters/app_presenter.py::AppPresenter.comparison_summary
+For each metric, which model won or that neither did.
+
+spamclassifier/presenters/app_presenter.py::AppPresenter.most_discriminative_words
+The words the model finds most decisive, for the comparison tab.
+
+spamclassifier/presenters/app_presenter.py::AppPresenter.format_verdict
+Turn a verdict into display strings: SPAM / LEGITIMATE, red / green, the probability, the confidence word (high / moderate / borderline), the explanation sentence and the reasons.
+
+spamclassifier/views/main_window.py::MainWindow.build
+Create the notebook with the three tabs: Check message, Retrain, Compare models.
+
+spamclassifier/views/main_window.py::MainWindow.run
+Build the window and start the main loop.
+
+spamclassifier/views/main_window.py::MainWindow.show_error
+Show an error message box - the only error path of the UI.
+
+spamclassifier/views/check_view.py::CheckView.build
+Lay out the check tab: the message box, a Naive Bayes / SVM choice, Check and "Mark as wrong" buttons, a coloured verdict banner, the reasons table and the history table. The message is shown as plain text only.
+
+spamclassifier/views/check_view.py::CheckView.on_check
+Send the text to the presenter and show the verdict; an empty box shows the error message instead of crashing.
+
+spamclassifier/views/check_view.py::CheckView.on_mark_wrong
+Send the opposite label as feedback and confirm it to the user.
+
+spamclassifier/views/check_view.py::CheckView.display_verdict
+Fill the banner and the reasons from the presenter's display strings - the view decides nothing itself.
+
+spamclassifier/views/check_view.py::CheckView.refresh_history
+Reload the history table from the recent scans.
+
+spamclassifier/views/train_view.py::TrainView.build
+Lay out the retrain tab: "N corrections waiting", a Retrain button (disabled at 0), a scrolling log and the table of past runs.
+
+spamclassifier/views/train_view.py::TrainView.on_retrain
+Run the retrain on a worker thread so the window does not freeze; the worker only puts progress lines in a queue, and the Tk thread reads them with after(). Never touch a widget from the worker.
+
+spamclassifier/views/train_view.py::TrainView.append_log
+Add a line to the log and scroll to the bottom.
+
+spamclassifier/views/compare_view.py::CompareView.build
+Lay out the comparison tab: the metrics table (mean ± spread and the winner), the most decisive words and a figure for the curves.
+
+spamclassifier/views/compare_view.py::CompareView.draw_curves
+Draw the precision-recall curves of both models with the chosen threshold marked, a small ROC plot and both confusion matrices.
+
+spamclassifier/views/compare_view.py::CompareView.refresh
+Reload the table, the words and the curves.
+
+run.py::main
+Open the database, load the model bundle (or print "No trained model found. Run: python3 train.py" and exit), build the presenter and open the window.
+
+train.py::main
+Train both models on the corpus plus waiting corrections, save a new bundle, record the run, and print the sizes, metrics with their spread, the comparison and the chosen thresholds.
+
+evaluate.py::main
+The final measurement: load the bundle, rebuild the same locked test split, classify every test message with both models, and print PASS or FAIL against each target of the proposal. Write reports/evaluation.md.

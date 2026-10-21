@@ -1,0 +1,257 @@
+langame/common/protocol.py::Message.to_wire
+Turn a message into bytes ready to send: one JSON object {"type", "payload"} followed by a newline, encoded as UTF-8. Keep Hebrew readable (ensure_ascii=False).
+
+langame/common/protocol.py::Message.from_wire
+Turn one received line back into a Message. Invalid JSON, a missing or unknown type, or a payload that is not a dict raises ProtocolError - never a raw json or KeyError. The server must survive garbage from any client.
+
+langame/common/protocol.py::MessageBuffer.feed
+TCP is a stream: two messages can arrive glued together, or one can arrive in two pieces. Add the new bytes to what is pending, cut at every newline, return the complete messages and keep the unfinished end for next time. Anything longer than the size limit raises ProtocolError.
+
+run_server.py::print_local_addresses
+Print every IPv4 address of this computer (and 127.0.0.1) so players know what to type in their client.
+
+langame/server/game_server.py::GameServer.serve_forever
+Open a TCP socket on the port (reusable after a restart), listen, and accept connections in a loop. Give each new connection its own ClientHandler thread and keep it in the handler list. A one-second timeout lets the loop notice a shutdown.
+
+langame/server/game_server.py::GameServer.broadcast
+Send a message to every player who joined. Copy the handler list under the lock, then send outside it, so one slow client cannot block the others. A handler whose send fails is reported to the engine as left.
+
+langame/server/game_server.py::GameServer.remove_handler
+Remove a finished handler from the list (under the lock).
+
+langame/server/game_server.py::GameServer.shutdown
+Stop the accept loop, save a game that is in progress, close every client and the listening socket.
+
+langame/server/client_handler.py::ClientHandler.run
+The thread of one client: receive bytes, cut them into messages and dispatch each one. A garbage message gets an ERROR reply and the thread keeps serving; a closed connection ends the loop and always closes the handler.
+
+langame/server/client_handler.py::ClientHandler._dispatch
+Turn a message into a Command and let the engine execute it. A bad payload gets an ERROR reply. The handler never decides game rules itself.
+
+langame/server/client_handler.py::ClientHandler.send
+Send a message to this client under its send lock (two threads may send at once). On a network error return False instead of raising - the caller may be broadcasting to everyone.
+
+langame/server/client_handler.py::ClientHandler.close
+Close the handler once (calling it again does nothing): tell the engine the player left, close the socket and remove the handler from the server.
+
+langame/server/commands.py::JoinCommand.execute
+Accept a new player only in the lobby, with a name of 1-16 characters that is not taken, while there is room. Otherwise return an ERROR with a code like "name_taken", "game_started" or "full".
+
+langame/server/commands.py::LeaveCommand.execute
+Tell the engine this player left.
+
+langame/server/commands.py::build_command
+Turn a message into the matching Command (JOIN, ANSWER, LEAVE, START_GAME). Missing or wrongly typed fields raise ProtocolError("bad_payload"); any other type raises ProtocolError("unexpected_type").
+
+langame/server/game_engine.py::GameEngine.execute
+Run a command under the engine lock and send its ERROR reply (if any) back to that client. Log every command.
+
+langame/server/game_engine.py::GameEngine.add_player
+Add the player, remember its handler, make the first player the host, send it WELCOME and send everyone the updated lobby.
+
+langame/server/game_engine.py::GameEngine.player_left
+A player disconnected: in the lobby remove them (and choose a new host if needed) and update the lobby; during a game keep their score, and close the question early if everyone still here has answered. Never crash.
+
+langame/server/game_engine.py::GameEngine.lobby_payload
+The lobby message: the names of the connected players and the minimum needed.
+
+langame/server/game_engine.py::GameEngine.connected_players
+The players who are still connected.
+
+langame/database/db.py::Database.get_connection
+Open an SQLite connection usable from any thread, with dict-like rows and foreign keys switched on. Each call opens its own short connection.
+
+langame/database/db.py::Database.connection
+A context manager: commit on success, roll back on an error, always close.
+
+langame/database/db.py::Database.initialize_schema
+Create the tables by running the SCHEMA script.
+
+langame/database/repositories.py::QuestionRepository.add
+Insert a question (text, four options, the correct index, category, difficulty) and return its id.
+
+langame/database/repositories.py::QuestionRepository.get
+Read one question by id with its four options as a list, or None.
+
+langame/database/repositories.py::QuestionRepository.list_ids
+Return only the question ids, optionally of one category - the game shuffles these.
+
+langame/database/repositories.py::QuestionRepository.count
+How many questions there are, optionally in one category.
+
+langame/database/repositories.py::QuestionRepository.import_csv
+Import questions from a CSV in one transaction and return how many were added. Rows with a correct index outside 0-3 (or other broken values) are skipped and reported.
+
+langame/common/models.py::Question.public_payload
+What goes into a QUESTION message: id, text and options - never the correct index, or a modified client could cheat.
+
+langame/server/question_manager.py::QuestionManager.prepare
+Take all matching question ids, shuffle them and keep `count` for this game. Too few questions raises a clear ValueError before the game starts.
+
+langame/server/question_manager.py::QuestionManager.next
+Take the next prepared id and return its question.
+
+langame/server/score_engine.py::ScoreEngine.points_for
+Points for one answer: a wrong answer gets 0; a correct one gets 1000 x (time left / time limit), at least 100. Answering in 3 of 15 seconds gives 800. Keep the time between 0 and the limit.
+
+langame/server/score_engine.py::ScoreEngine.score_round
+Mark every answer correct or not, give it its points and add them to the player's score. Players who did not answer get nothing.
+
+langame/common/models.py::build_leaderboard
+Sort the players by score (highest first, then by name) and number them from 1. Players who left stay on the board.
+
+langame/server/commands.py::StartGameCommand.execute
+Only the host may start, only in the lobby, and only with enough players. Not enough questions becomes an ERROR too.
+
+langame/server/commands.py::AnswerCommand.execute
+Pass the answer to the engine, which checks it.
+
+langame/server/game_engine.py::GameEngine.start_game
+Prepare the questions, reset the scores, leave the lobby (no more joining), tell everyone the countdown and schedule the first question.
+
+langame/server/game_engine.py::GameEngine.next_question
+After the last question end the game. Otherwise take the next question, clear the answers, broadcast it (without the answer, with the time limit and number) and start the timer that closes it.
+
+langame/server/game_engine.py::GameEngine.record_answer
+The key check of the game. Refuse an answer when no question is open, for an old question, with a choice outside 0-3, or a second time from the same player. Otherwise store it with the server's own timing; when everyone has answered, close the question early.
+
+langame/server/game_engine.py::GameEngine.close_question
+Close the question once (the timer and the last answer may both call it): score the answers, keep them for the database, broadcast the result and the leaderboard, and schedule the next question.
+
+langame/server/game_engine.py::GameEngine.result_payload
+The result message: the question id, the correct index and each player's answer {choice, is_correct, points}, keyed by name.
+
+langame/server/game_engine.py::GameEngine.leaderboard_payload
+The leaderboard message: the ranked entries as dicts.
+
+langame/client/network_client.py::NetworkClient.connect
+Connect to the server (give up after a few seconds) and start a background thread that reads from the socket. Connection errors go to the caller.
+
+langame/client/network_client.py::NetworkClient._reader_loop
+Receive bytes, cut them into messages and put each one in the inbox queue - never touch the screen from this thread. When the connection drops, put a "disconnected" ERROR in the queue.
+
+langame/client/network_client.py::NetworkClient.send
+Send a message; if the connection is gone raise ConnectionError so the controller can show it.
+
+langame/client/network_client.py::NetworkClient.close
+Close the socket; calling it twice does nothing.
+
+langame/client/controllers/client_controller.py::ClientController.__init__
+Create the network client and the main window, give the window the callbacks, and close tidily when the window is closed.
+
+langame/client/controllers/client_controller.py::ClientController.start
+Show the connect screen and start the polling loop that reads messages from the server.
+
+langame/client/controllers/client_controller.py::ClientController.on_connect
+Check the name, connect to the server and send JOIN, then show the lobby. A connection error is shown to the user.
+
+langame/client/controllers/client_controller.py::ClientController.on_start
+Host only: send START_GAME.
+
+langame/client/controllers/client_controller.py::ClientController.on_answer
+Send the chosen answer once per question and lock the buttons.
+
+langame/client/controllers/client_controller.py::ClientController.on_close
+Send LEAVE if possible (ignore errors - the server may be gone), close the connection and the window.
+
+langame/client/controllers/client_controller.py::ClientController._poll_inbox
+The bridge between the network thread and the screen: every 50 ms take all waiting messages out of the queue (without blocking) and handle them, then schedule itself again. Only this method, on the Tk thread, may update the widgets.
+
+langame/client/controllers/client_controller.py::ClientController.handle_message
+Call the handler for each message type: WELCOME, LOBBY_UPDATE, COUNTDOWN, QUESTION, RESULT, LEADERBOARD, GAME_OVER and ERROR (a disconnect goes back to the connect screen).
+
+langame/client/views/main_window.py::MainWindow.__init__
+Create all screens (connect, lobby, game with the leaderboard on the side, game over) on top of each other in one container.
+
+langame/client/views/main_window.py::MainWindow.show
+Bring the named screen to the front with tkraise().
+
+langame/client/views/main_window.py::MainWindow.show_error
+Show an error message box.
+
+langame/client/views/connect_view.py::ConnectView.__init__
+Three fields (server, port, name) and a Connect button; Enter also connects.
+
+langame/client/views/lobby_view.py::LobbyView.__init__
+The player list, a status line, the Start button (for the host only) and a big countdown label.
+
+langame/client/views/lobby_view.py::LobbyView.set_players
+Refresh the player list and the status line ("3 players - waiting for the host").
+
+langame/client/views/lobby_view.py::LobbyView.set_host_controls
+Show the Start button only to the host.
+
+langame/client/views/lobby_view.py::LobbyView.show_countdown
+Count down "Game starts in 5..." once per second with after().
+
+langame/client/views/question_view.py::QuestionView.__init__
+The question screen: a counter, the question text, four answer buttons in a 2x2 grid, a time bar and a result line. Use lambda idx=i so each button answers its own number.
+
+langame/client/views/question_view.py::QuestionView.show
+Show a new question: the counter, the text, the four options with the buttons enabled again, and start the time bar. The bar is only a display - the server decides the time.
+
+langame/client/views/question_view.py::QuestionView.lock_buttons
+Disable the buttons after answering and mark the chosen one. The server also refuses a second answer.
+
+langame/client/views/question_view.py::QuestionView.show_result
+Stop the time bar, mark the correct answer and show this player's result (correct with points, wrong, or no answer).
+
+langame/client/views/leaderboard_view.py::LeaderboardView.__init__
+A small table of rank, name and score.
+
+langame/client/views/leaderboard_view.py::LeaderboardView.update
+Clear and refill the table from the entries.
+
+langame/client/views/leaderboard_view.py::LeaderboardView.highlight
+Colour this player's row.
+
+langame/client/views/game_over_view.py::GameOverView.__init__
+The winner, the final table and a "Back to lobby" button.
+
+langame/client/views/game_over_view.py::GameOverView.show
+Show the winner and fill the final table.
+
+langame/database/repositories.py::QuestionRepository.update
+Save every editable column of a question.
+
+langame/database/repositories.py::QuestionRepository.delete
+Delete a question by id.
+
+langame/database/repositories.py::QuestionRepository.list_all
+All questions (optionally of one category) for the admin table.
+
+langame/database/repositories.py::QuestionRepository.categories
+The distinct categories, sorted.
+
+langame/database/repositories.py::GameRepository.save_game
+Save a finished game in one transaction: the game, then every player (remember each new player id), then every answer with its player id. If anything fails, nothing is written.
+
+langame/database/repositories.py::GameRepository.list_recent
+The newest games with their winner and number of players (JOIN + GROUP BY).
+
+langame/server/game_engine.py::GameEngine.end_game
+Broadcast GAME_OVER with the winner and the final table, save the game, and go back to a lobby with the players who are still connected.
+
+langame/admin/admin_app.py::AdminApp.__init__
+The admin window: a Questions tab (table plus a form with the text, four options, the correct one, category and difficulty, and Add / Update / Delete / Import CSV / Refresh) and a Games tab.
+
+langame/admin/admin_app.py::AdminApp.refresh_questions
+Clear and refill the questions table from the database. Call it after every change so the table always matches the database.
+
+langame/admin/admin_app.py::AdminApp.on_add
+Read the form, check that the text and all four options are filled in and different, and add the question.
+
+langame/admin/admin_app.py::AdminApp.on_update
+Save the form over the selected question.
+
+langame/admin/admin_app.py::AdminApp.on_delete
+Ask for confirmation and delete the selected question; a question used in a saved game cannot be deleted.
+
+langame/admin/admin_app.py::AdminApp.on_import_csv
+Choose a CSV file, import it and show how many questions were added.
+
+langame/admin/admin_app.py::AdminApp.refresh_games
+Reload the games table.
+
+langame/database/repositories.py::GameRepository.question_stats
+For each question: how many times it was asked, the share of correct answers and the average answer time - the hardest questions first.

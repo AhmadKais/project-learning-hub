@@ -20,7 +20,7 @@ depends on preprocessing: if `C++` becomes `C`, no ranking method can save you.
 | `03_exercises/` | 13 short functions to write yourself + automatic tests + `solutions.py` | Write, run `pytest`, only then look at the solution |
 | `04_build/` | Code map and the stage-by-stage build chapters for your skeleton | Use it next to `TASKS.md` in your project |
 | `05_defence/` | Exam-style questions and resources | Before the defence — and test yourself every few weeks |
-| `06_solve/` | `CHECKLIST.md`: all 73 functions of your skeleton, stage by stage, with the test that checks each · `HINTS.md`: hidden hints, numbers to check against and the common traps for the hard ones | Tick the checklist as you go; open a hint only after you tried |
+| `06_solve/` | `CHECKLIST.md`: all 73 functions of your skeleton, stage by stage, with the test that checks each · `HINTS.md`: hidden hints, numbers to check against and the common traps for the hard ones · `WALKTHROUGH.md`: every function explained - the problem, the finished code and its test - and the finished project with screenshots | Tick the checklist as you go; open a hint only after you tried |
 | `data/` | `resumes.csv` (200 invented CVs), `jobs.csv` (5 adverts + which CVs are relevant) | Made by `tools/make_resume_data.py` — **no real person's CV**, on purpose |
 
 The synthetic CVs contain traps on purpose: very long CVs that list every technology, "keyword stuffers"
@@ -88,7 +88,8 @@ ex08 checks that your explanation **sums exactly to the score** — the same pro
 2. Read its docstring in your code again, slowly, and the matching step in `04_build/`.
 3. Open `06_solve/HINTS.md` at that function: the 💡 hint first, the 🔧 steps only if you need them.
    Compare your output with the "check yourself" numbers.
-4. Still red after 30 honest minutes? Send your supervisor the test name and the last 10 lines of the error.
+4. Still stuck, or finished and want to compare? `06_solve/WALKTHROUGH.md` has the problem and the full solution of every function.
+5. Still red after 30 honest minutes? Send your supervisor the test name and the last 10 lines of the error.
 
 ## The rule
 

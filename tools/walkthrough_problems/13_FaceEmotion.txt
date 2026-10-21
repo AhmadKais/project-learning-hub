@@ -1,0 +1,290 @@
+train.py::print_device_banner
+Print which device will train the model: for a GPU its name and memory, otherwise a loud warning that CPU training takes hours.
+
+app/vision/camera.py::CameraService.start
+Open the camera (or a video file), set the frame size and start a background thread that keeps reading frames. If the camera cannot be opened, raise RuntimeError with a clear message.
+
+app/vision/camera.py::CameraService._reader_loop
+Keep reading frames while running and store only the newest one (under the lock). A failed read is never stored. Reading here, not in the Tk callback, stops the window from freezing.
+
+app/vision/camera.py::CameraService.read
+Return a copy of the newest frame, or None if there is none yet. A copy, because the reader thread keeps overwriting the buffer.
+
+app/vision/camera.py::CameraService.stop
+Stop the thread, wait for it, release the camera and drop the stored frame.
+
+app/models/detection.py::FaceDetection.area
+The box's width x height - used to pick the biggest face.
+
+app/models/detection.py::FaceDetection.with_margin
+Return a new box grown by `margin` (0.10 = 10%) on every side, but never outside the frame. frame_shape is (height, width).
+
+app/models/detection.py::FaceDetection.crop
+Cut the box out of the frame: rows y..y+h, columns x..x+w (numpy indexes rows first).
+
+app/vision/face_detector.py::FaceDetector.detect_largest
+Find all faces and return a list with only the biggest one, or an empty list.
+
+app/vision/face_detector.py::create_detector
+Turn a name into a detector object: "haar" or "dnn"; anything else raises ValueError.
+
+app/vision/haar_detector.py::HaarCascadeDetector.__init__
+Load the Haar cascade file. A wrong path does not raise by itself - it just finds nothing - so check that the cascade loaded and raise if it is empty.
+
+app/vision/haar_detector.py::HaarCascadeDetector.detect
+Find faces: convert to grey, equalise the lighting, run detectMultiScale with the config settings and return a FaceDetection per box.
+
+app/vision/preprocessor.py::FacePreprocessor.crop_face
+Cut the face out of the frame with the margin added, so it includes forehead and chin like the training images.
+
+app/ml/dataset.py::EqualizeHist.__call__
+A transform that equalises the lighting of a grey image (cv2.equalizeHist) - the camera path does the same, so training and real time see the same kind of picture.
+
+app/vision/preprocessor.py::FacePreprocessor.to_model_input
+Turn a face crop into what the network expects: grey, resized to 48x48, equalised, scaled to 0-1, normalised with the training mean and std, shaped (1, 1, 48, 48). The steps must match the evaluation transform exactly.
+
+app/vision/preprocessor.py::FacePreprocessor.process
+Crop the face, then turn it into the model input.
+
+app/ml/dataset.py::build_train_transform
+The training transforms: grey, equalise, random flip, small rotation and crop, to tensor, normalise, and random erasing. The randomness makes the model robust; it is used for training only.
+
+app/ml/dataset.py::build_eval_transform
+The evaluation transforms: grey, resize to 48x48, equalise, to tensor, normalise - no randomness, and the same steps as the camera path.
+
+app/ml/dataset.py::FER2013Dataset.__init__
+Load the image folders with ImageFolder and build a lookup that turns its alphabetical label numbers into the Emotion numbers. Without it the model learns fine but calls every sad face "neutral".
+
+app/ml/dataset.py::FER2013Dataset.__len__
+The number of images.
+
+app/ml/dataset.py::FER2013Dataset.__getitem__
+Return one (image, label) pair with the label translated to the Emotion order.
+
+app/ml/dataset.py::FER2013Dataset.class_counts
+How many images each of the seven emotions has, counted from the file list (not by loading images). Disgust has far fewer than happy.
+
+app/ml/dataset.py::build_dataloaders
+Return train, validation and test loaders: split 10% of the training images off for validation (fixed seed), augment only the training part, shuffle only the training loader.
+
+app/ml/network.py::ResidualBlock.__init__
+Create the two 3x3 convolutions with batch norm and ReLU, and the shortcut: the identity when the shape stays the same, otherwise a 1x1 convolution with batch norm.
+
+app/ml/network.py::ResidualBlock.forward
+conv-bn-relu, conv-bn, add the shortcut, then ReLU. Adding the shortcut before the last ReLU is what lets the gradient flow back through deep networks.
+
+app/ml/network.py::EmotionNet.__init__
+Build the network: a stem (1 to 64 channels), four residual blocks (64, 128, 256, 512 channels, halving the size from block 2 on), and a head (average pool, dropout, linear to 7). About 4.9 million parameters.
+
+app/ml/network.py::EmotionNet.forward
+Pass the batch through stem, the four blocks and the head. Return raw logits - no softmax here, CrossEntropyLoss applies it.
+
+app/ml/dataset.py::compute_class_weights
+Give rare emotions a bigger weight in the loss: total / (7 x count) for each class, scaled so the average weight is 1. Return a tensor on the training device.
+
+app/ml/trainer.py::ModelTrainer.__init__
+Create the loss (with the class weights and label smoothing), the AdamW optimiser, a learning-rate schedule (warm-up then cosine) and the gradient scaler for mixed precision on a GPU.
+
+app/ml/trainer.py::ModelTrainer.train_one_epoch
+One pass over the training data: move each batch to the device, compute the loss, back-propagate and step the optimiser. Return the average loss and accuracy.
+
+app/ml/trainer.py::ModelTrainer.validate
+The same loop over the validation data, in eval mode and without gradients or optimiser steps.
+
+app/ml/trainer.py::ModelTrainer.fit
+Train for the given epochs: train, validate, step the schedule and print a line per epoch. Save the best model whenever validation accuracy improves and the last model every epoch, and stop early after 8 epochs without improvement.
+
+app/ml/trainer.py::ModelTrainer.save_checkpoint
+Save the weights, the optimiser state, the epoch, the validation accuracy and the pre-processing constants together, so a model file can never be used with the wrong normalisation.
+
+app/ml/trainer.py::ModelTrainer.plot_history
+Plot loss and accuracy per epoch (train and validation) and save the picture.
+
+app/ml/evaluator.py::ModelEvaluator.evaluate
+Run the whole test set once and compute the accuracy, precision/recall/F1 per emotion and the confusion matrix.
+
+app/ml/evaluator.py::ModelEvaluator.plot_confusion_matrix
+Draw the confusion matrix as a heat-map with the emotion names, each row scaled to sum to 1, so you can see which emotions get mixed up.
+
+app/ml/evaluator.py::ModelEvaluator.save_report
+Write the metrics to a JSON file.
+
+train.py::main
+Build the loaders, the class weights, the model and the trainer, train, save the training curves and print the best validation accuracy.
+
+evaluate.py::main
+Load a checkpoint, evaluate it on the test set, save the confusion matrix and the metrics, and print the accuracy and the F1 per emotion.
+
+app/ml/predictor.py::EmotionPredictor.load_model
+Load the trained model once. If the file is missing, print how to train and stay "not ready" - the app must still open and show the camera.
+
+app/ml/predictor.py::EmotionPredictor.predict
+Classify one face: run the network, apply softmax, and return the top emotion, its probability and all seven probabilities.
+
+app/ml/smoothing.py::TemporalSmoother.update
+Add the newest probability vector, average the last N vectors and return the top emotion of the average. Averaging probabilities (not labels) stops the label from flickering between two close emotions.
+
+app/ml/smoothing.py::TemporalSmoother.reset
+Forget the stored frames (when the face is lost).
+
+app/ml/smoothing.py::TemporalSmoother.current
+The smoothed emotion now, or None when nothing is stored.
+
+app/vision/annotator.py::FrameAnnotator.draw_detection
+On a copy of the frame, draw the face box in the emotion's colour and a label "HAPPY 87%" on a filled bar above it. The English name, because OpenCV cannot draw Hebrew.
+
+app/vision/annotator.py::FrameAnnotator.draw_fps
+Write "FPS: 24.3" in the top-left corner.
+
+app/vision/annotator.py::FrameAnnotator.draw_no_face
+Write "No face detected" on the frame.
+
+app/utils/fps.py::FpsCounter.tick
+Record the time of a new frame.
+
+app/utils/fps.py::FpsCounter.value
+Frames per second over the last frames: (count - 1) / (last time - first time), 0 with fewer than two frames.
+
+app/utils/fps.py::FpsCounter.reset
+Forget the stored times.
+
+app/controllers/app_controller.py::AppController.__init__
+Create the camera, detector, preprocessor, predictor, smoother, annotator, FPS counter and session controller, and the window with its four callbacks.
+
+app/controllers/app_controller.py::AppController.start
+Show the window and warn when there is no trained model.
+
+app/controllers/app_controller.py::AppController.start_capture
+Start the camera, open a session, reset the counters and schedule the first frame. A second click while running does nothing; a camera error is shown.
+
+app/controllers/app_controller.py::AppController._on_frame
+One frame: read it, find the biggest face, classify and smooth it, draw the result, record the sample, update the panel and chart, show the frame - then schedule the next call. Never sleep or loop here; Tk would freeze.
+
+app/controllers/app_controller.py::AppController.stop_capture
+Cancel the scheduled frame, stop the camera, close the session (saving the remaining samples) and show the summary.
+
+app/controllers/app_controller.py::AppController.on_close
+Stop everything cleanly, then close the window.
+
+app/models/session.py::Session.duration_seconds
+Seconds from start to end, or 0 while the session is still running.
+
+app/models/session.py::Session.emotion_distribution
+The percentage of samples for each emotion; an empty dict when there are no samples.
+
+app/models/session.py::Session.dominant_emotion
+The emotion with the highest percentage, or None.
+
+app/database/db.py::Database.get_connection
+Open the SQLite file with dict-like rows and foreign keys switched on.
+
+app/database/db.py::Database.connection
+A context manager: commit on success, roll back on an error, always close.
+
+app/database/db.py::Database.initialize_schema
+Create the tables by running the SCHEMA script.
+
+app/database/repositories.py::SessionRepository.create
+Insert a new session (start time, detector, model) and return its id.
+
+app/database/repositories.py::SessionRepository.finish
+Save the end time, frames processed and average FPS of a session.
+
+app/database/repositories.py::SessionRepository.get
+Read one session by id, or None.
+
+app/database/repositories.py::SessionRepository.list_recent
+The newest sessions first.
+
+app/database/repositories.py::SessionRepository.delete
+Delete a session; its samples go with it (cascade).
+
+app/database/repositories.py::SampleRepository.add
+Insert one sample, with its seven probabilities stored as JSON.
+
+app/database/repositories.py::SampleRepository.add_many
+Insert a whole buffer of samples in one executemany - one disk write per batch, not per frame.
+
+app/database/repositories.py::SampleRepository.list_for_session
+All samples of a session in time order.
+
+app/database/repositories.py::SampleRepository.emotion_counts
+Count the samples per emotion with GROUP BY: {Emotion: count}.
+
+app/controllers/session_controller.py::SessionController.start_session
+Create a session with the current time, save it, keep it as the current session and return it.
+
+app/controllers/session_controller.py::SessionController.record
+Buffer a sample, skipping those below the confidence floor; save the buffer every 60 samples.
+
+app/controllers/session_controller.py::SessionController.flush
+Save the buffered samples at once and empty the buffer.
+
+app/controllers/session_controller.py::SessionController.end_session
+Save the remaining samples, store the end time, frames and FPS, load the samples back for the summary and return the finished session.
+
+app/controllers/session_controller.py::SessionController.export_csv
+Write the session to CSV and return the path.
+
+app/utils/exporter.py::SessionExporter.export
+Write exports/session_<id>_<time>.csv: one row per sample, then a summary (duration, frames, FPS, percentage per emotion). Use "utf-8-sig" so the Hebrew names open correctly in Excel.
+
+app/controllers/app_controller.py::AppController.export_session
+Export the last finished session and tell the user where the file is (or why there is nothing to export yet).
+
+app/views/main_window.py::MainWindow.__init__
+Build the window: a toolbar (Start, Stop, Export, detector choice), the video on the left, the emotion panel and live chart on the right, the stats bar at the bottom. The video grows with the window.
+
+app/views/main_window.py::MainWindow.set_running
+Enable and disable the buttons so Start cannot be pressed twice.
+
+app/views/main_window.py::MainWindow.show_message
+Show an information message box.
+
+app/views/video_frame.py::VideoFrame.__init__
+A label that will show the video frames, and a place to keep the current image.
+
+app/views/video_frame.py::VideoFrame.show
+Show a camera frame: BGR to RGB, to a PIL image, to a PhotoImage, into the label - and keep a reference to it, or Python frees it and the label goes grey.
+
+app/views/video_frame.py::VideoFrame.clear
+Remove the last frame from the label.
+
+app/views/emotion_panel.py::EmotionPanel.__init__
+Three widgets: the emotion name in large letters, the percentage and a progress bar.
+
+app/views/emotion_panel.py::EmotionPanel.show
+Show the Hebrew name in the emotion's colour, the percentage and the bar. The colours are stored as BGR for OpenCV; Tk wants #RRGGBB, so swap the order.
+
+app/views/emotion_panel.py::EmotionPanel.clear
+No face: show "-" in grey and empty the percentage and bar.
+
+app/views/chart_frame.py::ChartFrame.__init__
+A matplotlib figure inside Tk with seven lines, one per emotion in its colour, y from 0 to 1. Create the lines once.
+
+app/views/chart_frame.py::ChartFrame.push
+Add the seven new values to their histories, update the lines' data and redraw (without rebuilding the figure).
+
+app/views/chart_frame.py::ChartFrame.clear
+Empty all histories and redraw an empty chart.
+
+app/views/stats_frame.py::StatsFrame.__init__
+Labels for the elapsed time, frames, FPS and the session summary.
+
+app/views/stats_frame.py::StatsFrame.update_live
+Refresh the time, frames and FPS labels.
+
+app/views/stats_frame.py::StatsFrame.show_summary
+After a session, show its duration, frames, FPS and the share of each emotion ("happy 42% | neutral 31% | ...").
+
+app/vision/dnn_detector.py::DnnFaceDetector.__init__
+Load the DNN face detector from its two model files; if one is missing, raise an error that says where to download it.
+
+app/vision/dnn_detector.py::DnnFaceDetector.detect
+Resize the frame to 300x300, run the network, keep the boxes above the confidence limit, and scale them back from 0-1 to frame pixels.
+
+app/ml/predictor.py::EmotionPredictor.predict_batch
+Classify several faces in one network call by stacking them into one batch.
+
+app/controllers/app_controller.py::AppController.change_detector
+Switch between the Haar and DNN detectors while running. If the new one cannot load, keep the old one and show why.

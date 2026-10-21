@@ -20,7 +20,7 @@ cycle** — a state machine where illegal moves are impossible and cancelling fr
 | `03_exercises/` | 13 short functions to write yourself (21 tests) + `solutions.py` | Write, run `pytest`, only then look at the solution |
 | `04_build/` | Architecture, the stage-by-stage build chapter, troubleshooting | Use it next to `TASKS.md` in your project |
 | `05_defence/` | Exam-style questions, answers, resources | Before the defence — and test yourself every few weeks |
-| `06_solve/` | `CHECKLIST.md`: all 113 functions of your skeleton, stage by stage, with the test that checks each · `HINTS.md`: hidden hints, numbers to check against and the common traps for the hard ones | Tick the checklist as you go; open a hint only after you tried |
+| `06_solve/` | `CHECKLIST.md`: all 113 functions of your skeleton, stage by stage, with the test that checks each · `HINTS.md`: hidden hints, numbers to check against and the common traps for the hard ones · `WALKTHROUGH.md`: every function explained - the problem, the finished code and its test - and the finished project with screenshots | Tick the checklist as you go; open a hint only after you tried |
 | `data/` | The 24 sample rooms and guests from your project | Notebook 02 uses the rooms |
 
 ## Setup (once)
@@ -82,7 +82,8 @@ ex10 must reproduce both invoices of the theory chapter to the agora: **4,445.06
 2. Read its docstring in your code again, slowly, and the matching step in `04_build/`.
 3. Open `06_solve/HINTS.md` at that function: the 💡 hint first, the 🔧 steps only if you need them.
    Compare your output with the "check yourself" numbers.
-4. Still red after 30 honest minutes? Send your supervisor the test name and the last 10 lines of the error.
+4. Still stuck, or finished and want to compare? `06_solve/WALKTHROUGH.md` has the problem and the full solution of every function.
+5. Still red after 30 honest minutes? Send your supervisor the test name and the last 10 lines of the error.
 
 ## The rule
 

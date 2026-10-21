@@ -1,0 +1,320 @@
+winegrader/data/loader.py::quality_to_grade
+Turn the 0-10 tasting score into one of three grades: 5 or less is low, 6 is medium, 7 or more is high. Seven separate scores would leave some classes with only a handful of wines.
+
+winegrader/data/loader.py::grades_from_quality
+Apply quality_to_grade to every score and return an int array.
+
+winegrader/data/loader.py::validate_values
+Check one wine and return None if it is fine, otherwise a sentence a person can act on: exactly 12 values, all real numbers, each inside its valid range ("ph = 15.2 is outside the valid range 0.0..14.0"), and is_red exactly 0 or 1. The file import and the lab form use the same check.
+
+winegrader/data/loader.py::parse_uci_csv
+Read one UCI file (";"-separated): refuse a file that is too big before opening it, check the header, and turn every line into 12 values plus the quality. A bad line is listed as rejected with its line number and reason; it does not stop the file.
+
+winegrader/data/loader.py::load_wine_quality
+Read the red and the white file, red first, and return all wines and their quality scores. Print how many lines were rejected from each file.
+
+winegrader/data/loader.py::duplicate_of
+For every wine, the index of the first identical wine (all 12 values and the quality equal), or None for the first copy: [[1,2], [3,4], [1,2]] with quality [5, 6, 5] gives [None, None, 0]. For k-NN a copy in both train and test is its own nearest neighbour - the score goes up and nothing was learned.
+
+winegrader/data/loader.py::drop_exact_duplicates
+Keep only the first copy of every wine (order unchanged) and return how many were dropped - 1,177 on the real data.
+
+winegrader/data/loader.py::class_balance
+The share of each grade, by name: {"low": 0.374, "medium": 0.437, "high": 0.190}. Every grade appears even with 0; an empty list is an error.
+
+winegrader/data/analysis.py::describe
+One row per feature with its mean, standard deviation, minimum and maximum.
+
+winegrader/data/analysis.py::correlation_with
+The Pearson correlation of every feature with the target (for example the quality score).
+
+winegrader/data/analysis.py::means_by_group
+The mean of each feature inside each group, for example per grade or red against white.
+
+winegrader/data/analysis.py::plot_histograms
+Draw one histogram per feature in a 3x4 grid and save it as a PNG.
+
+analyse.py::main
+Load the wines, drop duplicates, and write the analysis report (statistics, correlations, group means) with the histograms.
+
+winegrader/ml/metrics.py::minkowski_power
+The weighted distance before the root: sum of w[i] x |a[i] - b[i]| ** p. Ranking by this gives the same order as the real distance and is cheaper.
+
+winegrader/ml/metrics.py::minkowski
+The real Minkowski distance: minkowski_power to the power 1/p (p=2 is the usual straight-line distance).
+
+winegrader/ml/metrics.py::power_to_many
+The power distance from one wine to every row of X at once, with numpy - one number per row.
+
+winegrader/ml/metrics.py::power_matrix
+The power distances from every row of Q to every row of X, as a matrix (rows of Q x rows of X).
+
+winegrader/ml/scaler.py::StandardScaler.fit
+Learn each column's mean and standard deviation from the TRAINING rows; a column that never changes gets std 1 so it does not divide by zero.
+
+winegrader/ml/scaler.py::StandardScaler.transform
+(X - mean) / std. Using it before fit raises RuntimeError.
+
+winegrader/ml/scaler.py::StandardScaler.inverse_transform
+Back to lab units: Z x std + mean - used to show a neighbour's real values.
+
+winegrader/ml/scaler.py::MinMaxScaler.fit
+Learn each column's minimum and range (max - min); a zero range becomes 1.
+
+winegrader/ml/scaler.py::MinMaxScaler.transform
+(X - min) / range. Test wines may land a little outside 0..1 - that is fine.
+
+winegrader/ml/scaler.py::MinMaxScaler.inverse_transform
+Back to lab units: Z x range + min.
+
+winegrader/ml/scaler.py::scaler_from_dict
+Rebuild a fitted scaler from its saved dict.
+
+winegrader/ml/index.py::LinearIndex.build
+Keep the training wines as a float array and reset the counters. Linear search needs nothing else.
+
+winegrader/ml/index.py::LinearIndex.query
+Compute the distance to every training wine and return the k nearest as (distance, row), ties by row number. Count the distance calculations.
+
+winegrader/ml/index.py::LinearIndex.query_batch
+The same for many wines at once, a chunk at a time: a distance matrix, then argpartition to find the k smallest without sorting whole rows, then sort just those k.
+
+winegrader/ml/scoring.py::confusion_matrix
+cm[true][pred] = how many wines of grade `true` were called `pred`.
+
+winegrader/ml/scoring.py::precision_recall_f1
+Per grade: precision (of those called this grade, how many were right), recall (of the real ones, how many were found) and F1, from the confusion matrix. Divide-by-zero gives 0.
+
+winegrader/ml/scoring.py::macro_f1
+The plain average of the three F1 values, so the small "high" class counts as much as the others.
+
+winegrader/ml/scoring.py::accuracy
+The share of exact matches; 0 for empty input.
+
+winegrader/ml/classifiers.py::class_priors
+The share of each grade in the training labels. A grade that is absent gets 1.0 instead of 0, so the imbalance correction never divides by zero.
+
+winegrader/ml/classifiers.py::vote
+The vote for many wines at once from their k nearest neighbours: each neighbour votes with 1 / distance (or 1), divided by its grade's share ** alpha so a rare grade is not drowned out. The grade with the most votes wins; on a tie, the grade of the nearest neighbour among them. Confidence = winner's votes / all votes.
+
+winegrader/ml/classifiers.py::KNNClassifier.fit
+All that k-NN training does: keep the labels, compute the class shares and build the search index with the given weights and p.
+
+winegrader/ml/classifiers.py::KNNClassifier.predict_one
+Find the k nearest training wines, vote, and return the Prediction with its neighbours - they are the explanation the lab screen shows.
+
+winegrader/ml/classifiers.py::KNNClassifier.predict
+Grade many wines at once (batch search, then vote) - the same answers as predict_one in a loop.
+
+winegrader/ml/classifiers.py::MajorityClassifier.fit
+Remember the most common grade.
+
+winegrader/ml/classifiers.py::MajorityClassifier.predict_one
+Always answer the most common grade with confidence 1 - the baseline every real model must beat.
+
+winegrader/ml/classifiers.py::CentroidClassifier.fit
+Compute the average wine of each grade.
+
+winegrader/ml/classifiers.py::CentroidClassifier.predict_one
+Answer the grade whose average wine is nearest; confidence from 1 / distance to each average, normalised.
+
+winegrader/ml/folds.py::stratified_kfold
+Split the rows into `folds` (train, test) pairs with the same grade shares in each, using a fixed seed. Every row is in exactly one test set.
+
+winegrader/ml/evaluation.py::evaluate_split
+Fit the scaler and the model on the training rows only, grade the test rows, and return the scores, the median time to grade one wine and the distance calculations per query.
+
+winegrader/ml/evaluation.py::cross_validate
+Run evaluate_split on every fold. All models use the same splits, so the differences are differences between models.
+
+winegrader/ml/evaluation.py::summarise
+The mean and standard deviation of every score across the folds. Always report the spread - 0.61 against 0.60 means nothing when the folds differ by 0.02.
+
+winegrader/ml/index.py::KDTreeIndex.build
+Keep the wines, reset the counters and build the tree from all rows.
+
+winegrader/ml/index.py::KDTreeIndex._build
+Split the rows recursively: stop at a small leaf; otherwise pick the column with the widest (weighted) spread, sort by it and split at the middle position. Splitting by position, not by "< median", keeps both halves non-empty even with many equal values.
+
+winegrader/ml/index.py::KDTreeIndex.query
+Search the tree depth-first, keeping the k best in a heap, and skip a whole branch when it cannot contain anything closer than the current k-th best. The answers must equal the linear search.
+
+winegrader/ml/callbacks.py::EarlyStopping.update
+Record a score and return True when it is time to stop: an improvement smaller than min_delta counts as none, and after `patience` steps without improvement it stops.
+
+winegrader/ml/callbacks.py::HistoryLogger.on_round_end
+Keep the round number, the score and the weights of every round.
+
+winegrader/ml/callbacks.py::Checkpoint.on_round_end
+When the score is the best so far, save the round, score and weights - write a temporary file and rename it, so a crash never leaves half a file.
+
+winegrader/ml/tuning.py::prepare_folds
+Scale every fold once, fitting the scaler on that fold's training rows only, and return the scaled folds.
+
+winegrader/ml/tuning.py::fold_neighbours
+For every test wine of a fold, the distances and grades of its k nearest training wines.
+
+winegrader/ml/tuning.py::score_votes
+Vote with the first k neighbours and return (macro-F1, recall of high) for one fold.
+
+winegrader/ml/tuning.py::choose_configuration
+The selection rule: among the configurations whose macro-F1 is within the tolerance of the best, take the one with the highest recall of "high" (the first on a tie).
+
+winegrader/ml/tuning.py::grid_search
+Try every scaling x p x alpha x k on the inner folds, stop the k sweep early when it stops improving, and return the best configuration and all result rows.
+
+winegrader/ml/weights.py::cv_score
+The mean macro-F1 over the folds with given feature weights - the simple, slow reference the fast version must agree with.
+
+winegrader/ml/weights.py::neighbours_from_matrix
+The k smallest of every row of a distance matrix, nearest first - exactly like LinearIndex.query_batch.
+
+winegrader/ml/weights.py::FoldDistances.__init__
+Keep a fold and p, and compute its full distance matrix with the current weights.
+
+winegrader/ml/weights.py::FoldDistances.term
+One feature's part of the distance matrix, without its weight: |test value - train value| ** p.
+
+winegrader/ml/weights.py::FoldDistances.score
+The fold's macro-F1 for a given distance matrix.
+
+winegrader/ml/weights.py::learn_weights
+Learn a weight per feature by coordinate search: for each feature try a few factors (including 0 = remove it), keep a change only when the cross-validated macro-F1 improves by more than the tolerance, and repeat rounds until nothing improves. Update the distance matrices by changing one feature's term instead of recomputing everything.
+
+winegrader/ml/evaluation.py::nested_cv
+The honest estimate: for every outer fold, tune (and learn weights) on its training part only, with inner folds, then measure once on the untouched outer test part.
+
+winegrader/ml/bundle.py::compute_checksum
+One SHA-256 over the bundle files in a fixed order, including each file's name, so swapping two files changes it.
+
+winegrader/ml/bundle.py::save
+Write the model folder: the training wines, the scaler, the model (features, weights, parameters) and meta.json with the version, scores and checksum - meta.json last, because its checksum covers the others.
+
+winegrader/ml/bundle.py::load
+Check before using: all files present, checksum unchanged, the feature list exactly config's, sizes consistent - every failure is a BundleError in plain words. Then rebuild the scaler, parameters and arrays.
+
+winegrader/ml/bundle.py::latest
+The newest bundle folder (names start with "wg-" and a timestamp, so the newest is the largest name); FileNotFoundError when there is none.
+
+winegrader/service.py::GradingService.from_bundle
+Load a bundle (the newest by default) and build the grading service from it.
+
+winegrader/service.py::GradingService.grade
+Grade 12 raw lab values: validate them, scale them with the scaler saved at training time (never a new one), and ask the model.
+
+winegrader/service.py::GradingService.neighbour_values
+A neighbour's 12 values in lab units, for display.
+
+winegrader/service.py::GradingService.feature_gaps
+How much each feature adds to the distance to a neighbour (weight x |difference| ** p) - they add up to the distance. The screen shows the biggest one.
+
+winegrader/database/db.py::connect
+Open the database with dict-like rows and foreign keys switched on.
+
+winegrader/database/db.py::initialise
+Create the tables (safe on every start) and commit.
+
+winegrader/database/repositories.py::WineRepository.add
+Insert one wine and return its id. A wine typed at the lab is not approved by default, so one wrong label cannot quietly change the model. commit=False lets an import insert thousands in one transaction.
+
+winegrader/database/repositories.py::WineRepository.import_arrays
+Insert every wine in one transaction, marking each duplicate with the database id of its first copy (duplicates are kept, marked). Return (inserted, duplicates).
+
+winegrader/database/repositories.py::WineRepository.training_set
+The ids, values and quality of every approved, non-duplicate wine. Build the SELECT from config.FEATURES so the columns come out in the right order.
+
+winegrader/database/repositories.py::WineRepository.balance
+The number of training wines per grade and colour.
+
+winegrader/database/repositories.py::EvaluationRepository.add
+Save one fold's result (scores and parameters) with its non-zero confusion cells and return the id.
+
+winegrader/database/repositories.py::EvaluationRepository.add_weights
+Save the learned weight of every feature for one evaluation.
+
+winegrader/database/repositories.py::EvaluationRepository.summary
+For one run, the mean macro-F1, mean recall of high and fold count per configuration, best first - the tuning table.
+
+winegrader/database/repositories.py::EvaluationRepository.weight_stability
+For each feature, the mean, minimum and maximum learned weight across the folds - a weight that jumps around was chosen by chance.
+
+winegrader/database/repositories.py::GradingRepository.add
+Save one grading done at the lab (the 12 values as JSON and the answer) and return its id.
+
+winegrader/database/repositories.py::GradingRepository.recent
+The newest gradings first.
+
+winegrader/controllers/app_controller.py::AppController.parse_form
+Turn the form's 12 strings into numbers in feature order. An empty field or text that is not a number raises DataError naming the field ("Alcohol (% vol): 'twelve' is not a number"). Accept "9,5" as 9.5.
+
+winegrader/controllers/app_controller.py::AppController.classify
+Parse the form, grade the wine, save the grading and return what the screen shows: the grade, its colour, the confidence, a sentence, and the five nearest neighbours.
+
+winegrader/controllers/app_controller.py::AppController.format
+Build the display dict from a prediction, including each shown neighbour's main difference (the feature that keeps it furthest away).
+
+winegrader/controllers/app_controller.py::AppController.add_manual_wine
+Save a wine typed at the lab, validated like a grading and with a whole quality 0-10. It is not approved, so it does not join training yet.
+
+winegrader/controllers/app_controller.py::AppController.weights
+The learned feature weights, largest first.
+
+winegrader/controllers/app_controller.py::AppController.model_info
+The model's version, parameters, training size and stored scores for the Model tab.
+
+winegrader/controllers/app_controller.py::AppController.history
+The recent gradings as dicts for the history table.
+
+winegrader/views/main_window.py::MainWindow.build
+Set the title and size and create the notebook with the four tabs.
+
+winegrader/views/classify_view.py::ClassifyView.build
+Lay out the grading tab: an entry for each of the 12 values, Example / Clear / Grade buttons, a coloured result banner, the confidence and sentence, and the neighbours table.
+
+winegrader/views/classify_view.py::ClassifyView.on_example
+Fill the form with a real example wine, so the screen can be tried at once.
+
+winegrader/views/classify_view.py::ClassifyView.on_clear
+Empty every field and reset the result area.
+
+winegrader/views/classify_view.py::ClassifyView.on_grade
+Send the field strings to the controller and show the result; a DataError is shown as a message.
+
+winegrader/views/classify_view.py::ClassifyView.display
+Show the result: banner text and colour, confidence, sentence and the neighbour rows.
+
+winegrader/views/model_views.py::WeightsView.build
+A horizontal bar chart of the learned weights inside the tab.
+
+winegrader/views/model_views.py::ModelView.build
+Show the model information as rows of labels.
+
+winegrader/views/model_views.py::HistoryView.build
+A table of past gradings (when, grade, confidence, model) and a Refresh button.
+
+winegrader/views/model_views.py::HistoryView.refresh
+Reload the history rows.
+
+train.py::main
+The training pipeline: import the wines into the database on the first run, read the training set, tune k-NN, learn the feature weights (unless --no-weights) and save a model bundle, printing every step.
+
+run.py::main
+Load the newest bundle (or say "run train.py first"), build the controller and open the window.
+
+winegrader/database/repositories.py::EvaluationRepository.add_predictions
+Save one row per graded test wine - the raw material for the error analysis.
+
+winegrader/database/repositories.py::EvaluationRepository.accuracy_by_colour
+The number of wines and the accuracy for red and for white over one run - if the model is clearly worse on red, it learned mostly white wine.
+
+winegrader/database/repositories.py::EvaluationRepository.save_folds
+Record which outer fold each wine was tested in, so a run can be repeated exactly.
+
+winegrader/ml/evaluation.py::kdtree_dimension_curve
+How much the k-d tree saves as the number of features grows: keep the d features most related to the grade, build a tree, and measure what share of the wines a search still looks at. It is the curse of dimensionality, measured.
+
+evaluate.py::main
+The final comparison: on the same outer folds, run the baselines, k-NN without scaling, and nested k-NN with uniform and learned weights. Store every result and write the report with the targets of the proposal.
+
+evaluate.py::write_report
+Write reports/evaluation.md: the comparison table with spreads, the targets with PASS/FAIL, the weight stability and the accuracy by colour.
