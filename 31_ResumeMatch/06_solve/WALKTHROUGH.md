@@ -8,6 +8,36 @@ Every function you write in this project (73 of them), in the order of `TASKS.md
 
 Try each function yourself first, then compare. Run the check after every function, not at the end.
 
+## Where the code goes
+
+Every path below starts in your project folder `ResumeMatch/` (the folder with `TASKS.md`). For each file:
+
+1. **Imports** — if the file section lists imports, add the lines that are missing to the top of the file, next to the other `import` lines.
+2. **Helper code** — paste it once, where the section says: *in the file* means below the imports and above the first class; *inside class X* means inside that class, next to its other methods (indented like them).
+3. **Each function** — in your skeleton, find the `def` with the same name. Delete the whole function — the `def` line, the TODO text and `raise NotImplementedError` — and paste the solution in its place. Inside a class, every line moves 4 spaces to the right, so the `def` lines up with the other methods.
+4. **New files** — at the end, under *Files the solution adds*: create the file at that path and paste the whole code.
+
+Before and after, for a method inside a class:
+
+```python
+class Example:
+
+    def total(self, items):          # BEFORE - the skeleton
+        """
+        TODO stage 3: add up the prices.
+        """
+        raise NotImplementedError
+```
+
+```python
+class Example:
+
+    def total(self, items):          # AFTER - the solution pasted in its place
+        return sum(item.price for item in items)
+```
+
+Then run the **Check** command from the project folder.
+
 ## Contents
 
 - [Stage 1 — load documents (≈2 weeks)](#stage-1--load-documents-2-weeks) (6 functions)
@@ -28,27 +58,35 @@ Try each function yourself first, then compare. Run the check after every functi
 
 ### `resumematch/nlp/loader.py`
 
+Open `ResumeMatch/resumematch/nlp/loader.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import re
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`SUPPORTED`
+`SUPPORTED` — paste in the file, below the imports:
 
 ```python
 SUPPORTED = (".pdf", ".docx", ".txt")
 ```
 
-`HYPHEN_BREAK`
+`HYPHEN_BREAK` — paste in the file, below the imports:
 
 ```python
 HYPHEN_BREAK = re.compile(r"(\w)-\n(\w)")
 ```
 
-`CONTROL`
+`CONTROL` — paste in the file, below the imports:
 
 ```python
 CONTROL = re.compile(r"[\x00-\x09\x0b-\x1f\x7f]")
 ```
 
-`SPACES`
+`SPACES` — paste in the file, below the imports:
 
 ```python
 SPACES = re.compile(r"[ \t\r\f\v\xa0]+")
@@ -58,7 +96,7 @@ SPACES = re.compile(r"[ \t\r\f\v\xa0]+")
 
 **Problem.** Read one CV file into a Document. Refuse a missing file, a file bigger than the limit, or an unsupported type with a ResumeMatchError. Pick the reader by extension (.pdf, .docx, .txt), clean the text, cut it at the size limit, and use the file name (without extension) as the id.
 
-**Solution.**
+**Solution.** Paste in `resumematch/nlp/loader.py`, inside class `DocumentLoader` (indented 4 spaces), in place of the skeleton's `def load`:
 
 ```python
 def load(self, path: str) -> Document:
@@ -82,7 +120,7 @@ def load(self, path: str) -> Document:
 
 **Problem.** Read the text of every page of a PDF and return (text, page count). Refuse PDFs with too many pages. A broken PDF must become a ResumeMatchError, never a crash.
 
-**Solution.**
+**Solution.** Paste in `resumematch/nlp/loader.py`, inside class `DocumentLoader` (indented 4 spaces), in place of the skeleton's `def _load_pdf`:
 
 ```python
 def _load_pdf(self, path: str) -> tuple:
@@ -105,7 +143,7 @@ def _load_pdf(self, path: str) -> tuple:
 
 **Problem.** Read a Word file: the text of every paragraph and also of every table row - many CVs keep half their content in tables. Return (text, 0).
 
-**Solution.**
+**Solution.** Paste in `resumematch/nlp/loader.py`, inside class `DocumentLoader` (indented 4 spaces), in place of the skeleton's `def _load_docx`:
 
 ```python
 def _load_docx(self, path: str) -> tuple:
@@ -127,7 +165,7 @@ def _load_docx(self, path: str) -> tuple:
 
 **Problem.** Read a text file as UTF-8, replacing bytes that are not valid UTF-8 instead of crashing. Return (text, 0).
 
-**Solution.**
+**Solution.** Paste in `resumematch/nlp/loader.py`, inside class `DocumentLoader` (indented 4 spaces), in place of the skeleton's `def _load_txt`:
 
 ```python
 def _load_txt(self, path: str) -> tuple:
@@ -141,7 +179,7 @@ def _load_txt(self, path: str) -> tuple:
 
 **Problem.** Fix what real CV files get wrong: join words split by a hyphen at the end of a line ("develo-\nper" -> "developer"), remove control characters and squeeze runs of spaces into one.
 
-**Solution.**
+**Solution.** Paste in `resumematch/nlp/loader.py`, inside class `DocumentLoader` (indented 4 spaces), in place of the skeleton's `def _clean`:
 
 ```python
 def _clean(self, text: str) -> str:
@@ -159,7 +197,7 @@ def _clean(self, text: str) -> str:
 
 **Problem.** Load every supported file in a folder. One bad file must not stop the batch: collect the failures and return (documents, failures).
 
-**Solution.**
+**Solution.** Paste in `resumematch/nlp/loader.py`, inside class `DocumentLoader` (indented 4 spaces), in place of the skeleton's `def load_directory`:
 
 ```python
 def load_directory(self, directory: str) -> list:
@@ -187,11 +225,13 @@ def load_directory(self, directory: str) -> list:
 
 ### `resumematch/nlp/pii.py`
 
+Open `ResumeMatch/resumematch/nlp/pii.py`.
+
 #### `PiiScrubber.scrub(text)`
 
 **Problem.** Replace URLs, e-mail addresses, 9-digit ID numbers and phone numbers with a space, in that order (a URL can contain something that looks like an e-mail). Personal data must never reach the index.
 
-**Solution.**
+**Solution.** Paste in `resumematch/nlp/pii.py`, inside class `PiiScrubber` (indented 4 spaces), in place of the skeleton's `def scrub`:
 
 ```python
 def scrub(self, text: str) -> str:
@@ -206,7 +246,7 @@ def scrub(self, text: str) -> str:
 
 **Problem.** Count the e-mails, phones, IDs and URLs in a text without changing it, so the user can see that scrubbing happened.
 
-**Solution.**
+**Solution.** Paste in `resumematch/nlp/pii.py`, inside class `PiiScrubber` (indented 4 spaces), in place of the skeleton's `def find`:
 
 ```python
 def find(self, text: str) -> dict:
@@ -218,33 +258,43 @@ def find(self, text: str) -> dict:
 
 ### `resumematch/nlp/preprocessor.py`
 
+Open `ResumeMatch/resumematch/nlp/preprocessor.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import SnowballStemmer
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`HEBREW_CHAR`
+`HEBREW_CHAR` — paste in the file, below the imports:
 
 ```python
 HEBREW_CHAR = re.compile(r"[֐-׿]")
 ```
 
-`TextPreprocessor.unigrams`
+`TextPreprocessor.unigrams` — paste inside class `TextPreprocessor`:
 
 ```python
 def unigrams(self, text: str) -> list:
-        return [t for t in self.process(text) if " " not in t]
+    return [t for t in self.process(text) if " " not in t]
 ```
 
-`TextPreprocessor.with_ngrams`
+`TextPreprocessor.with_ngrams` — paste inside class `TextPreprocessor`:
 
 ```python
 def with_ngrams(self, unigrams: list) -> list:
-        return list(unigrams) + (self._bigrams(unigrams) if self.ngram_max >= 2 else [])
+    return list(unigrams) + (self._bigrams(unigrams) if self.ngram_max >= 2 else [])
 ```
 
 #### `TextPreprocessor.__init__(use_stemming, ngram_max)`
 
 **Problem.** Set up the pipeline once: the stemming and n-gram settings, the PII scrubber, the token regex, the stemmer and both stopword lists. Loading NLTK data inside process() would make it very slow.
 
-**Solution.**
+**Solution.** Paste in `resumematch/nlp/preprocessor.py`, inside class `TextPreprocessor` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, use_stemming: bool = None, ngram_max: int = None):
@@ -267,7 +317,7 @@ def __init__(self, use_stemming: bool = None, ngram_max: int = None):
 
 **Problem.** Turn text into the list of terms everything else compares: scrub personal data, split into tokens, lower-case, drop stopwords, stem, drop 1-letter tokens, then add the bigrams. "Python" in a CV and "python" in a job must end up as the same term.
 
-**Solution.**
+**Solution.** Paste in `resumematch/nlp/preprocessor.py`, inside class `TextPreprocessor` (indented 4 spaces), in place of the skeleton's `def process`:
 
 ```python
 def process(self, text: str) -> list:
@@ -289,7 +339,7 @@ def process(self, text: str) -> list:
 
 **Problem.** Return True when the token is in the English or the Hebrew stopword list.
 
-**Solution.**
+**Solution.** Paste in `resumematch/nlp/preprocessor.py`, inside class `TextPreprocessor` (indented 4 spaces), in place of the skeleton's `def _is_stopword`:
 
 ```python
 def _is_stopword(self, token: str) -> bool:
@@ -302,7 +352,7 @@ def _is_stopword(self, token: str) -> bool:
 
 **Problem.** Stem a token: Hebrew words go through the simple Hebrew rule, everything else through the English Snowball stemmer ("developing" -> "develop").
 
-**Solution.**
+**Solution.** Paste in `resumematch/nlp/preprocessor.py`, inside class `TextPreprocessor` (indented 4 spaces), in place of the skeleton's `def _stem`:
 
 ```python
 def _stem(self, token: str) -> str:
@@ -317,7 +367,7 @@ def _stem(self, token: str) -> str:
 
 **Problem.** Remove one common prefix letter (ה, ו, ב, ל, מ, ש, כ) from Hebrew words longer than 3 letters. Only one letter, never from short words - stripping more merges unrelated words.
 
-**Solution.**
+**Solution.** Paste in `resumematch/nlp/preprocessor.py`, inside class `TextPreprocessor` (indented 4 spaces), in place of the skeleton's `def _stem_hebrew`:
 
 ```python
 def _stem_hebrew(self, token: str) -> str:
@@ -332,7 +382,7 @@ def _stem_hebrew(self, token: str) -> str:
 
 **Problem.** Return every pair of neighbouring tokens joined by a space: ["machine", "learning", "engineer"] -> ["machine learning", "learning engineer"]. "Machine learning" is one skill, not two words.
 
-**Solution.**
+**Solution.** Paste in `resumematch/nlp/preprocessor.py`, inside class `TextPreprocessor` (indented 4 spaces), in place of the skeleton's `def _bigrams`:
 
 ```python
 def _bigrams(self, tokens: list) -> list:
@@ -345,7 +395,7 @@ def _bigrams(self, tokens: list) -> list:
 
 **Problem.** Return the settings of this pipeline as a dict (lowercase, regex, stopword versions, stemmer, n-grams, version). It is saved with the index, and machine B refuses to rank if its own fingerprint differs - otherwise every score would silently be 0.
 
-**Solution.**
+**Solution.** Paste in `resumematch/nlp/preprocessor.py`, inside class `TextPreprocessor` (indented 4 spaces), in place of the skeleton's `def fingerprint`:
 
 ```python
 def fingerprint(self) -> dict:
@@ -363,11 +413,19 @@ def fingerprint(self) -> dict:
 
 ### `resumematch/nlp/vocabulary.py`
 
+Open `ResumeMatch/resumematch/nlp/vocabulary.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from collections import Counter
+```
+
 #### `VocabularyBuilder.__init__(min_df, max_df)`
 
 **Problem.** Store min_df and max_df, using the config values only when the argument is None (min_df=0 is a real value).
 
-**Solution.**
+**Solution.** Paste in `resumematch/nlp/vocabulary.py`, inside class `VocabularyBuilder` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, min_df: int = None, max_df: float = None):
@@ -381,7 +439,7 @@ def __init__(self, min_df: int = None, max_df: float = None):
 
 **Problem.** Count in how many documents each term appears (once per document), keep the terms with min_df <= df <= max_df x documents, sort them so every build gives the same columns, and return (vocabulary {term: column}, idf list, document frequencies).
 
-**Solution.**
+**Solution.** Paste in `resumematch/nlp/vocabulary.py`, inside class `VocabularyBuilder` (indented 4 spaces), in place of the skeleton's `def build`:
 
 ```python
 def build(self, processed_docs: list):
@@ -401,7 +459,7 @@ def build(self, processed_docs: list):
 
 **Problem.** The smoothed IDF used for TF-IDF: ln((1 + N) / (1 + df)) + 1. A term in every document still gets 1, not 0.
 
-**Solution.**
+**Solution.** Paste in `resumematch/nlp/vocabulary.py`, inside class `VocabularyBuilder` (indented 4 spaces), in place of the skeleton's `def compute_idf`:
 
 ```python
 @staticmethod
@@ -416,11 +474,13 @@ def compute_idf(df: int, n_docs: int) -> float:
 
 ### `resumematch/rank/base.py`
 
+Open `ResumeMatch/resumematch/rank/base.py`.
+
 #### `Ranker._normalise(scores)`
 
 **Problem.** Divide every score by the highest one, so the best candidate gets 1.0 (leave the list as it is when the best is 0). This makes scores comparable within one ranking only.
 
-**Solution.**
+**Solution.** Paste in `resumematch/rank/base.py`, inside class `Ranker` (indented 4 spaces), in place of the skeleton's `def _normalise`:
 
 ```python
 def _normalise(self, scores):
@@ -433,26 +493,34 @@ def _normalise(self, scores):
 
 ### `resumematch/rank/tfidf.py`
 
+Open `ResumeMatch/resumematch/rank/tfidf.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from collections import Counter
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`TfidfRanker.restore`
+`TfidfRanker.restore` — paste inside class `TfidfRanker`:
 
 ```python
 def restore(self, matrix, vocabulary: dict, idf, doc_refs: list) -> None:
-        self.matrix = sparse.csr_matrix(matrix)
-        self.vocabulary = vocabulary
-        self.idf = np.array(idf, dtype=float)
-        self.doc_refs = list(doc_refs)
-        self.terms = [None] * len(vocabulary)
-        for term, col in vocabulary.items():
-            self.terms[col] = term
+    self.matrix = sparse.csr_matrix(matrix)
+    self.vocabulary = vocabulary
+    self.idf = np.array(idf, dtype=float)
+    self.doc_refs = list(doc_refs)
+    self.terms = [None] * len(vocabulary)
+    for term, col in vocabulary.items():
+        self.terms[col] = term
 ```
 
 #### `TfidfRanker.fit(processed_docs, vocabulary, idf)`
 
 **Problem.** Build the sparse TF-IDF matrix: one row per CV, one column per vocabulary term, value = count x idf. Then scale every row to length 1.
 
-**Solution.**
+**Solution.** Paste in `resumematch/rank/tfidf.py`, inside class `TfidfRanker` (indented 4 spaces), in place of the skeleton's `def fit`:
 
 ```python
 def fit(self, processed_docs: list, vocabulary: dict, idf: list) -> None:
@@ -479,7 +547,7 @@ def fit(self, processed_docs: list, vocabulary: dict, idf: list) -> None:
 
 **Problem.** Divide each row by its own length (L2 norm) so every row has length 1; an empty row stays empty. After this, cosine similarity is a plain dot product.
 
-**Solution.**
+**Solution.** Paste in `resumematch/rank/tfidf.py`, inside class `TfidfRanker` (indented 4 spaces), in place of the skeleton's `def _l2_normalise_rows`:
 
 ```python
 @staticmethod
@@ -495,7 +563,7 @@ def _l2_normalise_rows(m):
 
 **Problem.** Turn the job's terms into a vector in the same space as the CVs: counts x the collection's idf, then length 1. Never compute idf from the job alone.
 
-**Solution.**
+**Solution.** Paste in `resumematch/rank/tfidf.py`, inside class `TfidfRanker` (indented 4 spaces), in place of the skeleton's `def _vectorise_job`:
 
 ```python
 def _vectorise_job(self, job_terms: list):
@@ -514,7 +582,7 @@ def _vectorise_job(self, job_terms: list):
 
 **Problem.** Score every CV in one matrix x vector product, take the top_k, and return RankResults (positions from 1) with the shared-term count and the explanation.
 
-**Solution.**
+**Solution.** Paste in `resumematch/rank/tfidf.py`, inside class `TfidfRanker` (indented 4 spaces), in place of the skeleton's `def rank`:
 
 ```python
 def rank(self, job_terms: list, top_k: int) -> list:
@@ -541,7 +609,7 @@ def rank(self, job_terms: list, top_k: int) -> list:
 
 **Problem.** Split one CV's score into its terms: each shared term adds row value x job value. Return the biggest contributions. Together they add up exactly to the score.
 
-**Solution.**
+**Solution.** Paste in `resumematch/rank/tfidf.py`, inside class `TfidfRanker` (indented 4 spaces), in place of the skeleton's `def explain`:
 
 ```python
 def explain(self, doc_row: int, q) -> list:
@@ -561,11 +629,13 @@ def explain(self, doc_row: int, q) -> list:
 
 ### `resumematch/nlp/vocabulary.py`
 
+Open `ResumeMatch/resumematch/nlp/vocabulary.py`.
+
 #### `VocabularyBuilder.compute_idf_bm25(df, n_docs)`
 
 **Problem.** The IDF used by BM25: ln((N - df + 0.5) / (df + 0.5) + 1). The +1 inside the log keeps it positive for very common terms.
 
-**Solution.**
+**Solution.** Paste in `resumematch/nlp/vocabulary.py`, inside class `VocabularyBuilder` (indented 4 spaces), in place of the skeleton's `def compute_idf_bm25`:
 
 ```python
 @staticmethod
@@ -577,11 +647,13 @@ def compute_idf_bm25(df: int, n_docs: int) -> float:
 
 ### `resumematch/rank/bm25.py`
 
+Open `ResumeMatch/resumematch/rank/bm25.py`.
+
 #### `Bm25Ranker.fit(processed_docs, vocabulary, idf)`
 
 **Problem.** Build the inverted index: for each term, the list of (CV row, how often it appears). Also store every CV's length, the average length and the BM25 idf of each term.
 
-**Solution.**
+**Solution.** Paste in `resumematch/rank/bm25.py`, inside class `Bm25Ranker` (indented 4 spaces), in place of the skeleton's `def fit`:
 
 ```python
 def fit(self, processed_docs: list, vocabulary: dict, idf: list) -> None:
@@ -606,7 +678,7 @@ def fit(self, processed_docs: list, vocabulary: dict, idf: list) -> None:
 
 **Problem.** Add up the BM25 score only for CVs that contain a job term (the inverted index gives them directly), sort, normalise, and return top_k results with each one's best terms. Fill up with zero-score CVs if fewer than top_k scored.
 
-**Solution.**
+**Solution.** Paste in `resumematch/rank/bm25.py`, inside class `Bm25Ranker` (indented 4 spaces), in place of the skeleton's `def rank`:
 
 ```python
 def rank(self, job_terms: list, top_k: int) -> list:
@@ -646,7 +718,7 @@ def rank(self, job_terms: list, top_k: int) -> list:
 
 **Problem.** The BM25 score of one term in one CV: idf x tf x (k1 + 1) / (tf + k1 x (1 - b + b x length / average length)). Repeats help less and less (saturation), and long CVs are pushed down (b).
 
-**Solution.**
+**Solution.** Paste in `resumematch/rank/bm25.py`, inside class `Bm25Ranker` (indented 4 spaces), in place of the skeleton's `def _term_score`:
 
 ```python
 def _term_score(self, tf: int, doc_length: int, idf: float) -> float:
@@ -660,11 +732,21 @@ def _term_score(self, tf: int, doc_length: int, idf: float) -> float:
 
 ### `evaluate.py`
 
+Open `ResumeMatch/evaluate.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import config
+from resumematch.controllers.app_controller import AppController
+from resumematch.models.entities import ResumeMatchError
+```
+
 #### `main()`
 
 **Problem.** Load the index, evaluate both methods on the labelled jobs (at least 10), print a comparison table and save each result.
 
-**Solution.**
+**Solution.** Paste in `evaluate.py`, at the top level of the file, in place of the skeleton's `def main`:
 
 ```python
 def main():
@@ -687,11 +769,20 @@ def main():
 
 ### `resumematch/eval/metrics.py`
 
+Open `ResumeMatch/resumematch/eval/metrics.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from time import perf_counter
+from resumematch.models.entities import EvalResult
+```
+
 #### `precision_at_k(ranking, relevant, k)`
 
 **Problem.** Of the first k candidates, what share is relevant? Divide by k, not by the list length: missing places count as misses.
 
-**Solution.**
+**Solution.** Paste in `resumematch/eval/metrics.py`, at the top level of the file, in place of the skeleton's `def precision_at_k`:
 
 ```python
 def precision_at_k(ranking: list, relevant: set, k: int) -> float:
@@ -704,7 +795,7 @@ def precision_at_k(ranking: list, relevant: set, k: int) -> float:
 
 **Problem.** 1 / the position of the first relevant candidate (first place 1.0, second 0.5...), or 0.0 when none is relevant.
 
-**Solution.**
+**Solution.** Paste in `resumematch/eval/metrics.py`, at the top level of the file, in place of the skeleton's `def reciprocal_rank`:
 
 ```python
 def reciprocal_rank(ranking: list, relevant: set) -> float:
@@ -720,7 +811,7 @@ def reciprocal_rank(ranking: list, relevant: set) -> float:
 
 **Problem.** The average reciprocal rank over the jobs that have labels. A job without labels is skipped, not counted as 0.
 
-**Solution.**
+**Solution.** Paste in `resumematch/eval/metrics.py`, at the top level of the file, in place of the skeleton's `def mean_reciprocal_rank`:
 
 ```python
 def mean_reciprocal_rank(rankings: dict, relevant: dict) -> float:
@@ -734,7 +825,7 @@ def mean_reciprocal_rank(rankings: dict, relevant: dict) -> float:
 
 **Problem.** Rank every labelled job, time each ranking, and return the average precision@5, precision@10, MRR and the median time. Use the median, so the first slow run does not distort it.
 
-**Solution.**
+**Solution.** Paste in `resumematch/eval/metrics.py`, at the top level of the file, in place of the skeleton's `def evaluate`:
 
 ```python
 def evaluate(ranker, jobs: list, relevant: dict, preprocessor, k_values=(5, 10)):
@@ -765,11 +856,13 @@ def evaluate(ranker, jobs: list, relevant: dict, preprocessor, k_values=(5, 10))
 
 ### `resumematch/rank/explainer.py`
 
+Open `ResumeMatch/resumematch/rank/explainer.py`.
+
 #### `RankExplainer.to_lines(result)`
 
 **Problem.** Turn a result into short lines for the screen: the terms it matched with their weights, the skills found, the skills missing, and "3 of 4 required skills (75%)". Report facts, never judge the person.
 
-**Solution.**
+**Solution.** Paste in `resumematch/rank/explainer.py`, inside class `RankExplainer` (indented 4 spaces), in place of the skeleton's `def to_lines`:
 
 ```python
 def to_lines(self, result: RankResult) -> list:
@@ -793,7 +886,7 @@ def to_lines(self, result: RankResult) -> list:
 
 **Problem.** Return a warning when the text is very similar (score above 0.6) but few required skills are present (coverage below 0.35) - the CV may have copied the job advert. Otherwise return "".
 
-**Solution.**
+**Solution.** Paste in `resumematch/rank/explainer.py`, inside class `RankExplainer` (indented 4 spaces), in place of the skeleton's `def warning_for`:
 
 ```python
 def warning_for(self, result: RankResult, coverage: float) -> str:
@@ -807,29 +900,37 @@ def warning_for(self, result: RankResult, coverage: float) -> str:
 
 ### `resumematch/rank/skills.py`
 
+Open `ResumeMatch/resumematch/rank/skills.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import re
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`SKILLS_SECTION`
+`SKILLS_SECTION` — paste in the file, below the imports:
 
 ```python
 SKILLS_SECTION = re.compile(r"\bskills?\s*:\s*(.*?)(?:\.\s|\n|$)", re.IGNORECASE)
 ```
 
-`SkillExtractor.evidence_terms`
+`SkillExtractor.evidence_terms` — paste inside class `SkillExtractor`:
 
 ```python
 def evidence_terms(self, raw_text: str, all_terms: list) -> list:
-        match = SKILLS_SECTION.search(raw_text or "")
-        if match and match.group(1).strip():
-            return self.preprocessor.process(match.group(1))
-        return all_terms
+    match = SKILLS_SECTION.search(raw_text or "")
+    if match and match.group(1).strip():
+        return self.preprocessor.process(match.group(1))
+    return all_terms
 ```
 
 #### `SkillExtractor.__init__(preprocessor)`
 
 **Problem.** Store the preprocessor and start an empty {normalised form: skill name} dictionary and a dict of skills by category.
 
-**Solution.**
+**Solution.** Paste in `resumematch/rank/skills.py`, inside class `SkillExtractor` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, preprocessor):
@@ -844,7 +945,7 @@ def __init__(self, preprocessor):
 
 **Problem.** Read skills.csv and, for every skill and alias, store its preprocessed form ("Machine Learning" -> "machin learn") pointing back to the display name. The dictionary must go through the same pipeline as the CVs or nothing matches.
 
-**Solution.**
+**Solution.** Paste in `resumematch/rank/skills.py`, inside class `SkillExtractor` (indented 4 spaces), in place of the skeleton's `def load`:
 
 ```python
 def load(self, csv_path: str = None) -> None:
@@ -870,7 +971,7 @@ def load(self, csv_path: str = None) -> None:
 
 **Problem.** Return the sorted names of every skill whose normalised form is in the term list. Bigrams are already in the terms, so two-word skills match too.
 
-**Solution.**
+**Solution.** Paste in `resumematch/rank/skills.py`, inside class `SkillExtractor` (indented 4 spaces), in place of the skeleton's `def extract`:
 
 ```python
 def extract(self, terms: list) -> list:
@@ -887,7 +988,7 @@ def extract(self, terms: list) -> list:
 
 **Problem.** Return (matched, missing): the job's skills the CV has, and the job's skills it lacks.
 
-**Solution.**
+**Solution.** Paste in `resumematch/rank/skills.py`, inside class `SkillExtractor` (indented 4 spaces), in place of the skeleton's `def compare`:
 
 ```python
 def compare(self, job_skills: list, resume_skills: list) -> tuple:
@@ -902,7 +1003,7 @@ def compare(self, job_skills: list, resume_skills: list) -> tuple:
 
 **Problem.** The share of required skills that were matched, or 0.0 when the job requires none.
 
-**Solution.**
+**Solution.** Paste in `resumematch/rank/skills.py`, inside class `SkillExtractor` (indented 4 spaces), in place of the skeleton's `def coverage`:
 
 ```python
 @staticmethod
@@ -917,11 +1018,22 @@ def coverage(matched: list, required: list) -> float:
 
 ### `build_index.py`
 
+Open `ResumeMatch/build_index.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import os
+import config
+from resumematch.controllers.app_controller import AppController
+from resumematch.models.entities import ResumeMatchError
+```
+
 #### `main(argv)`
 
 **Problem.** Machine A: import the CVs from a folder, build the index, and print the counts, the vocabulary size and the SHA-256 to compare on machine B.
 
-**Solution.**
+**Solution.** Paste in `build_index.py`, at the top level of the file, in place of the skeleton's `def main`:
 
 ```python
 def main(argv):
@@ -951,11 +1063,21 @@ def main(argv):
 
 ### `resumematch/rank/bundle.py`
 
+Open `ResumeMatch/resumematch/rank/bundle.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from datetime import datetime
+import numpy as np
+from scipy import sparse
+```
+
 #### `IndexBundle.save(directory)`
 
 **Problem.** Write the index to a folder: vocabulary (JSON), idf (npy), matrix (npz), the preprocessing fingerprint and a meta file with the code version, counts and the SHA-256 of the matrix. No pickle - loading a pickle can run code.
 
-**Solution.**
+**Solution.** Paste in `resumematch/rank/bundle.py`, inside class `IndexBundle` (indented 4 spaces), in place of the skeleton's `def save`:
 
 ```python
 def save(self, directory: str) -> None:
@@ -983,7 +1105,7 @@ def save(self, directory: str) -> None:
 
 **Problem.** Check before trusting the index: all files present, same code version, matrix SHA-256 unchanged, and every fingerprint field equal to this machine's. Any difference raises IndexContractError; only then load the arrays.
 
-**Solution.**
+**Solution.** Paste in `resumematch/rank/bundle.py`, inside class `IndexBundle` (indented 4 spaces), in place of the skeleton's `def load`:
 
 ```python
 @classmethod
@@ -1019,7 +1141,7 @@ def load(cls, directory: str, local_fingerprint: dict):
 
 **Problem.** The SHA-256 of a file, read in binary chunks so a big file does not fill the memory.
 
-**Solution.**
+**Solution.** Paste in `resumematch/rank/bundle.py`, inside class `IndexBundle` (indented 4 spaces), in place of the skeleton's `def _sha256`:
 
 ```python
 @staticmethod
@@ -1038,9 +1160,17 @@ def _sha256(path: str) -> str:
 
 ### `resumematch/database/db.py`
 
+Open `ResumeMatch/resumematch/database/db.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from contextlib import contextmanager
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`Database.connection`
+`Database.connection` — paste inside class `Database`:
 
 ```python
 @contextmanager
@@ -1057,7 +1187,7 @@ def connection(self):
 
 **Problem.** A singleton: create the one Database object on the first call and return the same one afterwards.
 
-**Solution.**
+**Solution.** Paste in `resumematch/database/db.py`, inside class `Database` (indented 4 spaces), in place of the skeleton's `def __new__`:
 
 ```python
 def __new__(cls, path: str = None):
@@ -1073,7 +1203,7 @@ def __new__(cls, path: str = None):
 
 **Problem.** Open the one SQLite connection (usable from any thread), make rows behave like dicts, switch foreign keys on and create the tables.
 
-**Solution.**
+**Solution.** Paste in `resumematch/database/db.py`, inside class `Database` (indented 4 spaces), in place of the skeleton's `def _init`:
 
 ```python
 def _init(self, path: str) -> None:
@@ -1092,7 +1222,7 @@ def _init(self, path: str) -> None:
 
 **Problem.** Close the connection and forget the singleton, so the next Database() starts fresh (used between tests).
 
-**Solution.**
+**Solution.** Paste in `resumematch/database/db.py`, inside class `Database` (indented 4 spaces), in place of the skeleton's `def reset`:
 
 ```python
 @classmethod
@@ -1106,9 +1236,18 @@ def reset(cls) -> None:
 
 ### `resumematch/database/repositories.py`
 
+Open `ResumeMatch/resumematch/database/repositories.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import os
+from resumematch.models.entities import EvalResult, Job, ResumeMatchError
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`_row_to_job`
+`_row_to_job` — paste in the file, below the imports:
 
 ```python
 def _row_to_job(r) -> Job:
@@ -1118,7 +1257,7 @@ def _row_to_job(r) -> Job:
                is_labelled=bool(r["is_labelled"]))
 ```
 
-`_row_to_resume`
+`_row_to_resume` — paste in the file, below the imports:
 
 ```python
 def _row_to_resume(r) -> dict:
@@ -1129,7 +1268,7 @@ def _row_to_resume(r) -> dict:
             "extraction_ok": bool(r["extraction_ok"]), "is_synthetic": bool(r["is_synthetic"])}
 ```
 
-`EvalRepository`
+`EvalRepository` — paste in the file, below the imports:
 
 ```python
 class EvalRepository:
@@ -1156,72 +1295,72 @@ class EvalRepository:
         return [dict(r) for r in rows]
 ```
 
-`JobRepository.list_all`
+`JobRepository.list_all` — paste inside class `JobRepository`:
 
 ```python
 def list_all(self) -> list:
-        with self.db.connection() as conn:
-            rows = conn.execute("SELECT * FROM jobs ORDER BY id").fetchall()
-        return [_row_to_job(r) for r in rows]
+    with self.db.connection() as conn:
+        rows = conn.execute("SELECT * FROM jobs ORDER BY id").fetchall()
+    return [_row_to_job(r) for r in rows]
 ```
 
-`JobRepository.find_by_title`
+`JobRepository.find_by_title` — paste inside class `JobRepository`:
 
 ```python
 def find_by_title(self, title: str):
-        with self.db.connection() as conn:
-            row = conn.execute("SELECT * FROM jobs WHERE title = ?", (title,)).fetchone()
-        return _row_to_job(row) if row else None
+    with self.db.connection() as conn:
+        row = conn.execute("SELECT * FROM jobs WHERE title = ?", (title,)).fetchone()
+    return _row_to_job(row) if row else None
 ```
 
-`JobRepository.set_labelled`
+`JobRepository.set_labelled` — paste inside class `JobRepository`:
 
 ```python
 def set_labelled(self, job_id: int, labelled: bool = True) -> None:
-        with self.db.connection() as conn:
-            conn.execute("UPDATE jobs SET is_labelled = ? WHERE id = ?", (int(labelled), job_id))
+    with self.db.connection() as conn:
+        conn.execute("UPDATE jobs SET is_labelled = ? WHERE id = ?", (int(labelled), job_id))
 ```
 
-`ResumeRepository.list_all`
+`ResumeRepository.list_all` — paste inside class `ResumeRepository`:
 
 ```python
 def list_all(self) -> list:
-        with self.db.connection() as conn:
-            rows = conn.execute("SELECT * FROM resumes ORDER BY id").fetchall()
-        return [_row_to_resume(r) for r in rows]
+    with self.db.connection() as conn:
+        rows = conn.execute("SELECT * FROM resumes ORDER BY id").fetchall()
+    return [_row_to_resume(r) for r in rows]
 ```
 
-`ResumeRepository.known_files`
+`ResumeRepository.known_files` — paste inside class `ResumeRepository`:
 
 ```python
 def known_files(self) -> set:
-        with self.db.connection() as conn:
-            rows = conn.execute("SELECT source_file FROM resumes").fetchall()
-        return {r["source_file"] for r in rows}
+    with self.db.connection() as conn:
+        rows = conn.execute("SELECT source_file FROM resumes").fetchall()
+    return {r["source_file"] for r in rows}
 ```
 
-`ResumeRepository.by_source_name`
+`ResumeRepository.by_source_name` — paste inside class `ResumeRepository`:
 
 ```python
 def by_source_name(self) -> dict:
-        with self.db.connection() as conn:
-            rows = conn.execute("SELECT id, source_file FROM resumes").fetchall()
-        return {os.path.splitext(os.path.basename(r["source_file"]))[0]: r["id"] for r in rows}
+    with self.db.connection() as conn:
+        rows = conn.execute("SELECT id, source_file FROM resumes").fetchall()
+    return {os.path.splitext(os.path.basename(r["source_file"]))[0]: r["id"] for r in rows}
 ```
 
-`ResumeRepository.count`
+`ResumeRepository.count` — paste inside class `ResumeRepository`:
 
 ```python
 def count(self) -> int:
-        with self.db.connection() as conn:
-            return conn.execute("SELECT COUNT(*) FROM resumes WHERE extraction_ok = 1").fetchone()[0]
+    with self.db.connection() as conn:
+        return conn.execute("SELECT COUNT(*) FROM resumes WHERE extraction_ok = 1").fetchone()[0]
 ```
 
 #### `JobRepository.add(title, description, processed_terms, skills, company)`
 
 **Problem.** Insert a job advert with its processed terms and required skills and return its id.
 
-**Solution.**
+**Solution.** Paste in `resumematch/database/repositories.py`, inside class `JobRepository` (indented 4 spaces), in place of the skeleton's `def add`:
 
 ```python
 def add(self, title, description, processed_terms, skills, company=None) -> int:
@@ -1243,7 +1382,7 @@ def add(self, title, description, processed_terms, skills, company=None) -> int:
 
 **Problem.** Read one job by id; raise ResumeMatchError when it does not exist.
 
-**Solution.**
+**Solution.** Paste in `resumematch/database/repositories.py`, inside class `JobRepository` (indented 4 spaces), in place of the skeleton's `def get`:
 
 ```python
 def get(self, job_id: int):
@@ -1260,7 +1399,7 @@ def get(self, job_id: int):
 
 **Problem.** Return the jobs marked as labelled - the evaluation set.
 
-**Solution.**
+**Solution.** Paste in `resumematch/database/repositories.py`, inside class `JobRepository` (indented 4 spaces), in place of the skeleton's `def all_labelled`:
 
 ```python
 def all_labelled(self) -> list:
@@ -1275,7 +1414,7 @@ def all_labelled(self) -> list:
 
 **Problem.** Insert one processed CV under an anonymous name ("candidate_0142"), storing only the scrubbed terms, never the raw text, name or contact details.
 
-**Solution.**
+**Solution.** Paste in `resumematch/database/repositories.py`, inside class `ResumeRepository` (indented 4 spaces), in place of the skeleton's `def add`:
 
 ```python
 def add(self, processed_doc, source_file, file_type, is_synthetic=False) -> int:
@@ -1297,7 +1436,7 @@ def add(self, processed_doc, source_file, file_type, is_synthetic=False) -> int:
 
 **Problem.** Store which row of the index matrix belongs to this CV.
 
-**Solution.**
+**Solution.** Paste in `resumematch/database/repositories.py`, inside class `ResumeRepository` (indented 4 spaces), in place of the skeleton's `def set_matrix_row`:
 
 ```python
 def set_matrix_row(self, resume_id: int, row: int) -> None:
@@ -1311,7 +1450,7 @@ def set_matrix_row(self, resume_id: int, row: int) -> None:
 
 **Problem.** Return every CV whose text was extracted successfully, in id order.
 
-**Solution.**
+**Solution.** Paste in `resumematch/database/repositories.py`, inside class `ResumeRepository` (indented 4 spaces), in place of the skeleton's `def all_active`:
 
 ```python
 def all_active(self) -> list:
@@ -1326,7 +1465,7 @@ def all_active(self) -> list:
 
 **Problem.** The right to be forgotten: delete the CV file, delete its row (rankings and labels go with it), and report that the index must be rebuilt because every other row number has moved.
 
-**Solution.**
+**Solution.** Paste in `resumematch/database/repositories.py`, inside class `ResumeRepository` (indented 4 spaces), in place of the skeleton's `def delete_completely`:
 
 ```python
 def delete_completely(self, resume_id: int) -> None:
@@ -1347,7 +1486,7 @@ def delete_completely(self, resume_id: int) -> None:
 
 **Problem.** Save a whole ranking in one executemany call, with each result's top terms as JSON. A new ranking of the same job and method replaces the old one.
 
-**Solution.**
+**Solution.** Paste in `resumematch/database/repositories.py`, inside class `RankingRepository` (indented 4 spaces), in place of the skeleton's `def save_many`:
 
 ```python
 def save_many(self, job_id, method, results, run_id=None) -> None:
@@ -1373,7 +1512,7 @@ def save_many(self, job_id, method, results, run_id=None) -> None:
 
 **Problem.** Return the saved ranking of a job and method, best score first.
 
-**Solution.**
+**Solution.** Paste in `resumematch/database/repositories.py`, inside class `RankingRepository` (indented 4 spaces), in place of the skeleton's `def for_job`:
 
 ```python
 def for_job(self, job_id: int, method: str) -> list:
@@ -1390,7 +1529,7 @@ def for_job(self, job_id: int, method: str) -> list:
 
 **Problem.** The research query: for one job, each candidate's position under TF-IDF and under BM25 and the gap between them, with the CV length - to show that the methods disagree on long and short CVs.
 
-**Solution.**
+**Solution.** Paste in `resumematch/database/repositories.py`, inside class `RankingRepository` (indented 4 spaces), in place of the skeleton's `def method_disagreement`:
 
 ```python
 def method_disagreement(self, job_id: int) -> list:
@@ -1414,7 +1553,7 @@ def method_disagreement(self, job_id: int) -> list:
 
 **Problem.** Store (or replace) whether a candidate is relevant for a job, who labelled it and whether it was labelled before seeing any ranking.
 
-**Solution.**
+**Solution.** Paste in `resumematch/database/repositories.py`, inside class `LabelRepository` (indented 4 spaces), in place of the skeleton's `def set_label`:
 
 ```python
 def set_label(self, job_id, resume_id, is_relevant, labeller, before_ranking=True):
@@ -1432,7 +1571,7 @@ def set_label(self, job_id, resume_id, is_relevant, labeller, before_ranking=Tru
 
 **Problem.** Return the set of candidates labelled relevant for a job, using only labels made before ranking.
 
-**Solution.**
+**Solution.** Paste in `resumematch/database/repositories.py`, inside class `LabelRepository` (indented 4 spaces), in place of the skeleton's `def relevant_for`:
 
 ```python
 def relevant_for(self, job_id: int) -> set:
@@ -1450,148 +1589,171 @@ def relevant_for(self, job_id: int) -> set:
 
 ### `resumematch/controllers/app_controller.py`
 
+Open `ResumeMatch/resumematch/controllers/app_controller.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import csv
+import os
+from dataclasses import replace
+from resumematch.database.db import Database
+from resumematch.database.repositories import (EvalRepository, JobRepository, LabelRepository, RankingRepository,
+                                               ResumeRepository)
+from resumematch.eval.metrics import evaluate
+from resumematch.models.entities import IndexContractError, ProcessedDoc, ResumeMatchError
+from resumematch.nlp.loader import DocumentLoader
+from resumematch.nlp.preprocessor import TextPreprocessor
+from resumematch.nlp.vocabulary import VocabularyBuilder
+from resumematch.rank.bm25 import Bm25Ranker
+from resumematch.rank.bundle import IndexBundle
+from resumematch.rank.explainer import RankExplainer
+from resumematch.rank.skills import SkillExtractor
+from resumematch.rank.tfidf import TfidfRanker
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`METHODS`
+`METHODS` — paste in the file, below the imports:
 
 ```python
 METHODS = ("tfidf_cosine", "bm25")
 ```
 
-`AppController.add_job`
+`AppController.add_job` — paste inside class `AppController`:
 
 ```python
 def add_job(self, title: str, description: str, company: str = None) -> tuple:
-        title, description = (title or "").strip(), (description or "").strip()
-        if not title or not description:
-            raise ResumeMatchError("A job needs a title and a description")
-        terms = self.preprocessor.process(description)
-        skills = self.skills.extract(terms)
-        return self.job_repo.add(title, description, terms, skills, (company or "").strip() or None), skills
+    title, description = (title or "").strip(), (description or "").strip()
+    if not title or not description:
+        raise ResumeMatchError("A job needs a title and a description")
+    terms = self.preprocessor.process(description)
+    skills = self.skills.extract(terms)
+    return self.job_repo.add(title, description, terms, skills, (company or "").strip() or None), skills
 ```
 
-`AppController.list_jobs`
+`AppController.list_jobs` — paste inside class `AppController`:
 
 ```python
 def list_jobs(self) -> list:
-        return self.job_repo.list_all()
+    return self.job_repo.list_all()
 ```
 
-`AppController.import_labelled_jobs`
+`AppController.import_labelled_jobs` — paste inside class `AppController`:
 
 ```python
 def import_labelled_jobs(self, csv_path: str, labeller: str = "teacher") -> dict:
-        by_name = self.resume_repo.by_source_name()
-        if not by_name:
-            raise ResumeMatchError("Import the CVs before the labelled jobs")
-        added, labels, unknown = 0, 0, []
-        with open(csv_path, encoding="utf-8-sig", newline="") as fh:
-            for row in csv.DictReader(fh):
-                existing = self.job_repo.find_by_title(row["title"])
-                job_id = existing.id if existing else self.add_job(row["title"], row["text"])[0]
-                added += existing is None
-                relevant = set(row.get("relevant_ids", "").split())
-                for name, resume_id in by_name.items():
-                    self.label_repo.set_label(job_id, resume_id, name in relevant, labeller, before_ranking=True)
-                    labels += name in relevant
-                unknown += [r for r in relevant if r not in by_name]
-                self.job_repo.set_labelled(job_id, True)
-        return {"jobs_added": added, "relevant_labels": labels, "unknown_ids": unknown}
+    by_name = self.resume_repo.by_source_name()
+    if not by_name:
+        raise ResumeMatchError("Import the CVs before the labelled jobs")
+    added, labels, unknown = 0, 0, []
+    with open(csv_path, encoding="utf-8-sig", newline="") as fh:
+        for row in csv.DictReader(fh):
+            existing = self.job_repo.find_by_title(row["title"])
+            job_id = existing.id if existing else self.add_job(row["title"], row["text"])[0]
+            added += existing is None
+            relevant = set(row.get("relevant_ids", "").split())
+            for name, resume_id in by_name.items():
+                self.label_repo.set_label(job_id, resume_id, name in relevant, labeller, before_ranking=True)
+                labels += name in relevant
+            unknown += [r for r in relevant if r not in by_name]
+            self.job_repo.set_labelled(job_id, True)
+    return {"jobs_added": added, "relevant_labels": labels, "unknown_ids": unknown}
 ```
 
-`AppController.list_resumes`
+`AppController.list_resumes` — paste inside class `AppController`:
 
 ```python
 def list_resumes(self) -> list:
-        return self.resume_repo.list_all()
+    return self.resume_repo.list_all()
 ```
 
-`AppController.delete_candidate`
+`AppController.delete_candidate` — paste inside class `AppController`:
 
 ```python
 def delete_candidate(self, resume_id: int) -> None:
-        self.resume_repo.delete_completely(resume_id)
-        self.rankers = {}
-        self.index_stale = True
+    self.resume_repo.delete_completely(resume_id)
+    self.rankers = {}
+    self.index_stale = True
 ```
 
-`AppController._processed_docs`
+`AppController._processed_docs` — paste inside class `AppController`:
 
 ```python
 def _processed_docs(self, rows: list) -> list:
-        docs = []
-        for r in rows:
-            unigrams = r["processed_text"].split(" ") if r["processed_text"] else []
-            terms = self.preprocessor.with_ngrams(unigrams)
-            docs.append(ProcessedDoc(doc_id=r["candidate_ref"], terms=terms, term_count=len(terms),
-                                     unique_terms=len(set(terms)), skills_found=r["skills_found"]))
-        return docs
+    docs = []
+    for r in rows:
+        unigrams = r["processed_text"].split(" ") if r["processed_text"] else []
+        terms = self.preprocessor.with_ngrams(unigrams)
+        docs.append(ProcessedDoc(doc_id=r["candidate_ref"], terms=terms, term_count=len(terms),
+                                 unique_terms=len(set(terms)), skills_found=r["skills_found"]))
+    return docs
 ```
 
-`AppController.index_info`
+`AppController.index_info` — paste inside class `AppController`:
 
 ```python
 def index_info(self) -> dict:
-        if not self.bundle:
-            return {}
-        return {k: self.bundle.meta.get(k) for k in ("built_at", "n_docs", "vocab_size", "avgdl", "sha256")}
+    if not self.bundle:
+        return {}
+    return {k: self.bundle.meta.get(k) for k in ("built_at", "n_docs", "vocab_size", "avgdl", "sha256")}
 ```
 
-`AppController._require_index`
+`AppController._require_index` — paste inside class `AppController`:
 
 ```python
 def _require_index(self) -> None:
-        if not self.rankers:
-            raise ResumeMatchError("There is no index yet - import CVs and press 'Build index'")
-        if self.index_stale:
-            raise ResumeMatchError("The CVs changed since the index was built - press 'Build index' again")
+    if not self.rankers:
+        raise ResumeMatchError("There is no index yet - import CVs and press 'Build index'")
+    if self.index_stale:
+        raise ResumeMatchError("The CVs changed since the index was built - press 'Build index' again")
 ```
 
-`AppController.explain`
+`AppController.explain` — paste inside class `AppController`:
 
 ```python
 def explain(self, result, job_id: int) -> tuple:
-        job = self.job_repo.get(job_id)
-        coverage = self.skills.coverage(result.skills_matched, job.required_skills)
-        return self.explainer.to_lines(result), self.explainer.warning_for(result, coverage)
+    job = self.job_repo.get(job_id)
+    coverage = self.skills.coverage(result.skills_matched, job.required_skills)
+    return self.explainer.to_lines(result), self.explainer.warning_for(result, coverage)
 ```
 
-`AppController.labelled_jobs`
+`AppController.labelled_jobs` — paste inside class `AppController`:
 
 ```python
 def labelled_jobs(self) -> tuple:
-        jobs = self.job_repo.all_labelled()
-        relevant = {job.id: self.label_repo.relevant_for(job.id) for job in jobs}
-        return jobs, relevant
+    jobs = self.job_repo.all_labelled()
+    relevant = {job.id: self.label_repo.relevant_for(job.id) for job in jobs}
+    return jobs, relevant
 ```
 
-`AppController.evaluate`
+`AppController.evaluate` — paste inside class `AppController`:
 
 ```python
 def evaluate(self, rankers: dict = None, save: bool = True, notes: dict = None) -> list:
-        self._require_index()
-        jobs, relevant = self.labelled_jobs()
-        labelled = [j for j in jobs if relevant.get(j.id)]
-        if len(labelled) < 10:
-            raise ResumeMatchError(f"Only {len(labelled)} jobs are labelled - at least 10 are needed, "
-                                   f"metrics on fewer jobs are noise, not evidence")
-        out = []
-        for ranker in (rankers or self.rankers).values():
-            result = evaluate(ranker, labelled, relevant, self.preprocessor)
-            if save:
-                self.eval_repo.save(result, vocab_size=len(self.bundle.vocabulary),
-                                    min_df=self.vocab_builder.min_df, max_df=self.vocab_builder.max_df,
-                                    ngram_max=self.preprocessor.ngram_max,
-                                    stemming=self.preprocessor.use_stemming)
-            out.append(result)
-        return out
+    self._require_index()
+    jobs, relevant = self.labelled_jobs()
+    labelled = [j for j in jobs if relevant.get(j.id)]
+    if len(labelled) < 10:
+        raise ResumeMatchError(f"Only {len(labelled)} jobs are labelled - at least 10 are needed, "
+                               f"metrics on fewer jobs are noise, not evidence")
+    out = []
+    for ranker in (rankers or self.rankers).values():
+        result = evaluate(ranker, labelled, relevant, self.preprocessor)
+        if save:
+            self.eval_repo.save(result, vocab_size=len(self.bundle.vocabulary),
+                                min_df=self.vocab_builder.min_df, max_df=self.vocab_builder.max_df,
+                                ngram_max=self.preprocessor.ngram_max,
+                                stemming=self.preprocessor.use_stemming)
+        out.append(result)
+    return out
 ```
 
 #### `AppController.__init__()`
 
 **Problem.** Create everything once: the database, preprocessor, skill dictionary, loader, explainer, repositories and vocabulary builder. The rankers are filled when the index is built or loaded.
 
-**Solution.**
+**Solution.** Paste in `resumematch/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, db_path: str = None, index_dir: str = None, use_stemming: bool = None,
@@ -1620,7 +1782,7 @@ def __init__(self, db_path: str = None, index_dir: str = None, use_stemming: boo
 
 **Problem.** Load a folder of CVs, skip files already imported, process each one and store it. Flag CVs with too few terms (probably scanned PDFs) instead of indexing an empty CV. Take skills from the CV's own "Skills:" line when it has one. Return a summary for the screen.
 
-**Solution.**
+**Solution.** Paste in `resumematch/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def import_resumes`:
 
 ```python
 def import_resumes(self, directory: str) -> dict:
@@ -1652,7 +1814,7 @@ def import_resumes(self, directory: str) -> dict:
 
 **Problem.** Refuse with fewer than 50 CVs. Build the vocabulary, fit both rankers, store each CV's matrix row, save the index bundle, and warn if the vocabulary shrank by more than 20% since the last build.
 
-**Solution.**
+**Solution.** Paste in `resumematch/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def build_index`:
 
 ```python
 def build_index(self) -> dict:
@@ -1698,7 +1860,7 @@ def build_index(self) -> dict:
 
 **Problem.** Machine B: load the bundle with this machine's fingerprint (a mismatch raises), check it matches the CVs in the database, then restore the TF-IDF ranker from the matrix and refit BM25.
 
-**Solution.**
+**Solution.** Paste in `resumematch/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def load_index`:
 
 ```python
 def load_index(self) -> None:
@@ -1724,7 +1886,7 @@ def load_index(self) -> None:
 
 **Problem.** Rank the CVs for one job with the chosen method, add each candidate's matched and missing skills, save the ranking and return it. If every score is 0, raise an error that points at the preprocessing - that is a silent failure, not a result.
 
-**Solution.**
+**Solution.** Paste in `resumematch/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def rank_job`:
 
 ```python
 def rank_job(self, job_id: int, method: str, top_k: int = None) -> list:
@@ -1752,7 +1914,7 @@ def rank_job(self, job_id: int, method: str, top_k: int = None) -> list:
 
 **Problem.** Rank one job with both methods and return both lists plus the disagreement rows for the scatter plot.
 
-**Solution.**
+**Solution.** Paste in `resumematch/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def compare_methods`:
 
 ```python
 def compare_methods(self, job_id: int) -> dict:
@@ -1769,98 +1931,108 @@ def compare_methods(self, job_id: int) -> dict:
 
 ### `resumematch/views/candidates_view.py`
 
+Open `ResumeMatch/resumematch/views/candidates_view.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from tkinter import filedialog, ttk
+import config
+from resumematch.models.entities import ResumeMatchError
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`CandidatesView.refresh`
+`CandidatesView.refresh` — paste inside class `CandidatesView`:
 
 ```python
 def refresh(self) -> None:
-        self.tree.delete(*self.tree.get_children())
-        rows = self.controller.list_resumes()
-        for r in rows:
-            self.tree.insert("", "end", iid=str(r["id"]), tags=() if r["extraction_ok"] else ("bad",),
-                             values=(r["candidate_ref"], r["file_type"], r["term_count"],
-                                     "" if r["matrix_row"] is None else r["matrix_row"],
-                                     ", ".join(r["skills_found"])))
-        info = self.controller.index_info()
-        state = "index is out of date - build it" if self.controller.index_stale else \
-            (f"index: {info.get('vocab_size')} terms" if info else "no index yet")
-        self.summary.configure(text=f"{len(rows)} CVs - {state}")
+    self.tree.delete(*self.tree.get_children())
+    rows = self.controller.list_resumes()
+    for r in rows:
+        self.tree.insert("", "end", iid=str(r["id"]), tags=() if r["extraction_ok"] else ("bad",),
+                         values=(r["candidate_ref"], r["file_type"], r["term_count"],
+                                 "" if r["matrix_row"] is None else r["matrix_row"],
+                                 ", ".join(r["skills_found"])))
+    info = self.controller.index_info()
+    state = "index is out of date - build it" if self.controller.index_stale else \
+        (f"index: {info.get('vocab_size')} terms" if info else "no index yet")
+    self.summary.configure(text=f"{len(rows)} CVs - {state}")
 ```
 
-`CandidatesView.import_folder`
+`CandidatesView.import_folder` — paste inside class `CandidatesView`:
 
 ```python
 def import_folder(self, directory: str) -> dict:
-        try:
-            summary = self.controller.import_resumes(directory)
-        except ResumeMatchError as err:
-            self.winfo_toplevel().show_error(err.args[0])
-            return {}
-        lines = []
-        if summary["flagged_short"]:
-            lines.append(f"FLAGGED - fewer than {config.MIN_TERMS_PER_RESUME} terms, probably scanned PDFs "
-                         f"(not indexed): " + ", ".join(summary["flagged_short"]))
-        if summary["failed"]:
-            lines.append("FAILED: " + "; ".join(f"{name}: {why}" for name, why in summary["failed"]))
-        self.flagged.configure(text="\n".join(lines))
-        self.winfo_toplevel().set_status(f"Loaded {summary['loaded']} CVs ({summary['skipped_existing']} already "
-                                         f"imported, {len(summary['failed'])} failed) - now build the index")
-        self.refresh()
-        return summary
+    try:
+        summary = self.controller.import_resumes(directory)
+    except ResumeMatchError as err:
+        self.winfo_toplevel().show_error(err.args[0])
+        return {}
+    lines = []
+    if summary["flagged_short"]:
+        lines.append(f"FLAGGED - fewer than {config.MIN_TERMS_PER_RESUME} terms, probably scanned PDFs "
+                     f"(not indexed): " + ", ".join(summary["flagged_short"]))
+    if summary["failed"]:
+        lines.append("FAILED: " + "; ".join(f"{name}: {why}" for name, why in summary["failed"]))
+    self.flagged.configure(text="\n".join(lines))
+    self.winfo_toplevel().set_status(f"Loaded {summary['loaded']} CVs ({summary['skipped_existing']} already "
+                                     f"imported, {len(summary['failed'])} failed) - now build the index")
+    self.refresh()
+    return summary
 ```
 
-`CandidatesView.choose_folder`
+`CandidatesView.choose_folder` — paste inside class `CandidatesView`:
 
 ```python
 def choose_folder(self) -> None:
-        directory = filedialog.askdirectory(title="Folder with CVs", initialdir=config.RESUME_DIR)
-        if directory:
-            self.import_folder(directory)
+    directory = filedialog.askdirectory(title="Folder with CVs", initialdir=config.RESUME_DIR)
+    if directory:
+        self.import_folder(directory)
 ```
 
-`CandidatesView.build_index`
+`CandidatesView.build_index` — paste inside class `CandidatesView`:
 
 ```python
 def build_index(self) -> None:
-        try:
-            stats = self.controller.build_index()
-        except ResumeMatchError as err:
-            self.winfo_toplevel().show_error(err.args[0])
-            return
-        self.winfo_toplevel().set_status(
-            f"Index built: {stats['n_docs']} CVs, {stats['vocab_size']} terms, avgdl {stats['avgdl']:.1f}, "
-            f"sha256 {stats['sha256'][:12]}..." + (f"  WARNING: {stats['warning']}" if stats["warning"] else ""),
-            warning=bool(stats["warning"]))
-        self.refresh()
+    try:
+        stats = self.controller.build_index()
+    except ResumeMatchError as err:
+        self.winfo_toplevel().show_error(err.args[0])
+        return
+    self.winfo_toplevel().set_status(
+        f"Index built: {stats['n_docs']} CVs, {stats['vocab_size']} terms, avgdl {stats['avgdl']:.1f}, "
+        f"sha256 {stats['sha256'][:12]}..." + (f"  WARNING: {stats['warning']}" if stats["warning"] else ""),
+        warning=bool(stats["warning"]))
+    self.refresh()
 ```
 
-`CandidatesView.delete_selected`
+`CandidatesView.delete_selected` — paste inside class `CandidatesView`:
 
 ```python
 def delete_selected(self) -> None:
-        selection = self.tree.selection()
-        if not selection:
-            self.winfo_toplevel().show_error("Select a candidate first")
-            return
-        from tkinter import messagebox
-        if not messagebox.askyesno("ResumeMatch", "Delete this candidate completely (file, data, rankings)?",
-                                   parent=self):
-            return
-        try:
-            self.controller.delete_candidate(int(selection[0]))
-        except ResumeMatchError as err:
-            self.winfo_toplevel().show_error(err.args[0])
-            return
-        self.winfo_toplevel().set_status("Candidate deleted - the index must be rebuilt", warning=True)
-        self.refresh()
+    selection = self.tree.selection()
+    if not selection:
+        self.winfo_toplevel().show_error("Select a candidate first")
+        return
+    from tkinter import messagebox
+    if not messagebox.askyesno("ResumeMatch", "Delete this candidate completely (file, data, rankings)?",
+                               parent=self):
+        return
+    try:
+        self.controller.delete_candidate(int(selection[0]))
+    except ResumeMatchError as err:
+        self.winfo_toplevel().show_error(err.args[0])
+        return
+    self.winfo_toplevel().set_status("Candidate deleted - the index must be rebuilt", warning=True)
+    self.refresh()
 ```
 
 #### `CandidatesView.__init__(parent, controller)`
 
 **Problem.** The candidates tab: choose a folder to import, build the index, delete a candidate, the table of CVs, and a red list of flagged (probably scanned) files.
 
-**Solution.**
+**Solution.** Paste in `resumematch/views/candidates_view.py`, inside class `CandidatesView` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, parent, controller):
@@ -1889,67 +2061,77 @@ def __init__(self, parent, controller):
 
 ### `resumematch/views/comparison_view.py`
 
+Open `ResumeMatch/resumematch/views/comparison_view.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+from resumematch.models.entities import ResumeMatchError
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`ComparisonView.refresh`
+`ComparisonView.refresh` — paste inside class `ComparisonView`:
 
 ```python
 def refresh(self) -> None:
-        self.job_ids = {f"#{j.id} {j.title}": j.id for j in self.controller.list_jobs()}
-        self.job_combo.configure(values=list(self.job_ids))
-        if self.job_ids and self.job_var.get() not in self.job_ids:
-            self.job_var.set(next(iter(self.job_ids)))
+    self.job_ids = {f"#{j.id} {j.title}": j.id for j in self.controller.list_jobs()}
+    self.job_combo.configure(values=list(self.job_ids))
+    if self.job_ids and self.job_var.get() not in self.job_ids:
+        self.job_var.set(next(iter(self.job_ids)))
 ```
 
-`ComparisonView.compare`
+`ComparisonView.compare` — paste inside class `ComparisonView`:
 
 ```python
 def compare(self) -> None:
-        job_id = self.job_ids.get(self.job_var.get())
-        if job_id is None:
-            self.winfo_toplevel().show_error("Add a job first (Jobs tab)")
-            return
-        try:
-            data = self.controller.compare_methods(job_id)
-        except ResumeMatchError as err:
-            self.winfo_toplevel().show_error(err.args[0])
-            return
-        for key in ("tfidf", "bm25"):
-            tree = self.tables[key]
-            tree.delete(*tree.get_children())
-            for r in data[key][:20]:
-                tree.insert("", "end", values=(r.rank_position, r.candidate_ref, f"{r.score:.3f}"))
-        rows = data["disagreement"]
-        self.ax.clear()
-        if rows:
-            xs = [r["tfidf_score"] for r in rows]
-            ys = [r["bm25_score"] for r in rows]
-            sizes = [max(8, r["term_count"] / 3) for r in rows]
-            colours = [r["term_count"] for r in rows]
-            points = self.ax.scatter(xs, ys, s=sizes, c=colours, cmap="viridis", alpha=0.7, edgecolors="none")
-            self.ax.plot([0, 1], [0, 1], "k--", linewidth=0.8)
-            if not hasattr(self, "_colorbar"):
-                self._colorbar = self.figure.colorbar(points, ax=self.ax, label="CV length (terms)")
-            else:
-                self._colorbar.update_normal(points)
-        self.ax.set_xlabel("TF-IDF cosine score")
-        self.ax.set_ylabel("BM25 score (normalised)")
-        self.ax.set_title("One dot per candidate - far from the line = the methods disagree")
-        self.ax.set_xlim(-0.02, 1.05)
-        self.ax.set_ylim(-0.02, 1.05)
-        self.figure.tight_layout()
-        self.canvas.draw_idle()
-        top = rows[:5]
-        self.gap_label.configure(text="Largest disagreements: " + "; ".join(
-            f"{r['candidate_ref']} ({r['term_count']} terms) - TF-IDF #{r['tfidf_rank']}, BM25 #{r['bm25_rank']}"
-            for r in top))
+    job_id = self.job_ids.get(self.job_var.get())
+    if job_id is None:
+        self.winfo_toplevel().show_error("Add a job first (Jobs tab)")
+        return
+    try:
+        data = self.controller.compare_methods(job_id)
+    except ResumeMatchError as err:
+        self.winfo_toplevel().show_error(err.args[0])
+        return
+    for key in ("tfidf", "bm25"):
+        tree = self.tables[key]
+        tree.delete(*tree.get_children())
+        for r in data[key][:20]:
+            tree.insert("", "end", values=(r.rank_position, r.candidate_ref, f"{r.score:.3f}"))
+    rows = data["disagreement"]
+    self.ax.clear()
+    if rows:
+        xs = [r["tfidf_score"] for r in rows]
+        ys = [r["bm25_score"] for r in rows]
+        sizes = [max(8, r["term_count"] / 3) for r in rows]
+        colours = [r["term_count"] for r in rows]
+        points = self.ax.scatter(xs, ys, s=sizes, c=colours, cmap="viridis", alpha=0.7, edgecolors="none")
+        self.ax.plot([0, 1], [0, 1], "k--", linewidth=0.8)
+        if not hasattr(self, "_colorbar"):
+            self._colorbar = self.figure.colorbar(points, ax=self.ax, label="CV length (terms)")
+        else:
+            self._colorbar.update_normal(points)
+    self.ax.set_xlabel("TF-IDF cosine score")
+    self.ax.set_ylabel("BM25 score (normalised)")
+    self.ax.set_title("One dot per candidate - far from the line = the methods disagree")
+    self.ax.set_xlim(-0.02, 1.05)
+    self.ax.set_ylim(-0.02, 1.05)
+    self.figure.tight_layout()
+    self.canvas.draw_idle()
+    top = rows[:5]
+    self.gap_label.configure(text="Largest disagreements: " + "; ".join(
+        f"{r['candidate_ref']} ({r['term_count']} terms) - TF-IDF #{r['tfidf_rank']}, BM25 #{r['bm25_rank']}"
+        for r in top))
 ```
 
 #### `ComparisonView.__init__(parent, controller)`
 
 **Problem.** The comparison tab: both rankings side by side and a scatter plot of TF-IDF score against BM25 score, dot size and colour by CV length. Dots far from the diagonal are where the methods disagree.
 
-**Solution.**
+**Solution.** Paste in `resumematch/views/comparison_view.py`, inside class `ComparisonView` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, parent, controller):
@@ -1990,56 +2172,64 @@ def __init__(self, parent, controller):
 
 ### `resumematch/views/jobs_view.py`
 
+Open `ResumeMatch/resumematch/views/jobs_view.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from resumematch.models.entities import ResumeMatchError
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`JobsView.refresh`
+`JobsView.refresh` — paste inside class `JobsView`:
 
 ```python
 def refresh(self) -> None:
-        self.tree.delete(*self.tree.get_children())
-        self.jobs = {j.id: j for j in self.controller.list_jobs()}
-        for job in self.jobs.values():
-            self.tree.insert("", "end", iid=str(job.id), values=(job.title, job.company or "",
-                                                                  ", ".join(job.required_skills),
-                                                                  "yes" if job.is_labelled else ""))
+    self.tree.delete(*self.tree.get_children())
+    self.jobs = {j.id: j for j in self.controller.list_jobs()}
+    for job in self.jobs.values():
+        self.tree.insert("", "end", iid=str(job.id), values=(job.title, job.company or "",
+                                                              ", ".join(job.required_skills),
+                                                              "yes" if job.is_labelled else ""))
 ```
 
-`JobsView._on_select`
+`JobsView._on_select` — paste inside class `JobsView`:
 
 ```python
 def _on_select(self, _event=None) -> None:
-        selection = self.tree.selection()
-        if not selection:
-            return
-        job = self.jobs[int(selection[0])]
-        self.title_var.set(job.title)
-        self.company_var.set(job.company or "")
-        self.text.delete("1.0", "end")
-        self.text.insert("1.0", job.description)
-        self.skills_label.configure(text="Skills found: " + (", ".join(job.required_skills) or "none"))
+    selection = self.tree.selection()
+    if not selection:
+        return
+    job = self.jobs[int(selection[0])]
+    self.title_var.set(job.title)
+    self.company_var.set(job.company or "")
+    self.text.delete("1.0", "end")
+    self.text.insert("1.0", job.description)
+    self.skills_label.configure(text="Skills found: " + (", ".join(job.required_skills) or "none"))
 ```
 
-`JobsView.save`
+`JobsView.save` — paste inside class `JobsView`:
 
 ```python
 def save(self) -> None:
-        try:
-            job_id, skills = self.controller.add_job(self.title_var.get(), self.text.get("1.0", "end"),
-                                                     self.company_var.get())
-        except ResumeMatchError as err:
-            self.winfo_toplevel().show_error(err.args[0])
-            return
-        self.skills_label.configure(text=f"Saved job #{job_id}. Skills found: " + (", ".join(skills) or
-                                    "none - check the wording, or add the skill to data/skills.csv"))
-        self.refresh()
-        self.winfo_toplevel().jobs_changed()
+    try:
+        job_id, skills = self.controller.add_job(self.title_var.get(), self.text.get("1.0", "end"),
+                                                 self.company_var.get())
+    except ResumeMatchError as err:
+        self.winfo_toplevel().show_error(err.args[0])
+        return
+    self.skills_label.configure(text=f"Saved job #{job_id}. Skills found: " + (", ".join(skills) or
+                                "none - check the wording, or add the skill to data/skills.csv"))
+    self.refresh()
+    self.winfo_toplevel().jobs_changed()
 ```
 
 #### `JobsView.__init__(parent, controller)`
 
 **Problem.** The jobs tab: title, company and description fields, a Save button, the list of saved jobs, and after saving the skills found in the advert.
 
-**Solution.**
+**Solution.** Paste in `resumematch/views/jobs_view.py`, inside class `JobsView` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, parent, controller):
@@ -2077,44 +2267,56 @@ def __init__(self, parent, controller):
 
 ### `resumematch/views/main_window.py`
 
+Open `ResumeMatch/resumematch/views/main_window.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from tkinter import messagebox, ttk
+from resumematch.views.candidates_view import CandidatesView
+from resumematch.views.comparison_view import ComparisonView
+from resumematch.views.jobs_view import JobsView
+from resumematch.views.ranking_view import RankingView
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`MainWindow._tab_changed`
+`MainWindow._tab_changed` — paste inside class `MainWindow`:
 
 ```python
 def _tab_changed(self, _event=None) -> None:
-        current = self.nametowidget(self.notebook.select())
-        if hasattr(current, "refresh"):
-            current.refresh()
+    current = self.nametowidget(self.notebook.select())
+    if hasattr(current, "refresh"):
+        current.refresh()
 ```
 
-`MainWindow.jobs_changed`
+`MainWindow.jobs_changed` — paste inside class `MainWindow`:
 
 ```python
 def jobs_changed(self) -> None:
-        for view in (self.ranking, self.comparison):
-            view.refresh()
+    for view in (self.ranking, self.comparison):
+        view.refresh()
 ```
 
-`MainWindow.set_status`
+`MainWindow.set_status` — paste inside class `MainWindow`:
 
 ```python
 def set_status(self, text: str, warning: bool = False) -> None:
-        self.status.configure(text=text, foreground="#b03a2e" if warning else "black")
+    self.status.configure(text=text, foreground="#b03a2e" if warning else "black")
 ```
 
-`MainWindow.show_info`
+`MainWindow.show_info` — paste inside class `MainWindow`:
 
 ```python
 def show_info(self, message: str) -> None:
-        messagebox.showinfo("ResumeMatch", message, parent=self)
+    messagebox.showinfo("ResumeMatch", message, parent=self)
 ```
 
 #### `MainWindow.__init__(controller)`
 
 **Problem.** The window: four tabs (Jobs, Candidates, Ranking, Comparison) and a status bar at the bottom.
 
-**Solution.**
+**Solution.** Paste in `resumematch/views/main_window.py`, inside class `MainWindow` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, controller):
@@ -2145,7 +2347,7 @@ def __init__(self, controller):
 
 **Problem.** Show an error message box and put the message in the status bar. Every ResumeMatchError ends here - never a traceback.
 
-**Solution.**
+**Solution.** Paste in `resumematch/views/main_window.py`, inside class `MainWindow` (indented 4 spaces), in place of the skeleton's `def show_error`:
 
 ```python
 def show_error(self, message: str) -> None:
@@ -2157,72 +2359,80 @@ def show_error(self, message: str) -> None:
 
 ### `resumematch/views/ranking_view.py`
 
+Open `ResumeMatch/resumematch/views/ranking_view.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from resumematch.models.entities import ResumeMatchError
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`RankingView.refresh`
+`RankingView.refresh` — paste inside class `RankingView`:
 
 ```python
 def refresh(self) -> None:
-        self.job_ids = {f"#{j.id} {j.title}": j.id for j in self.controller.list_jobs()}
-        self.job_combo.configure(values=list(self.job_ids))
-        if self.job_ids and self.job_var.get() not in self.job_ids:
-            self.job_var.set(next(iter(self.job_ids)))
+    self.job_ids = {f"#{j.id} {j.title}": j.id for j in self.controller.list_jobs()}
+    self.job_combo.configure(values=list(self.job_ids))
+    if self.job_ids and self.job_var.get() not in self.job_ids:
+        self.job_var.set(next(iter(self.job_ids)))
 ```
 
-`RankingView.rank`
+`RankingView.rank` — paste inside class `RankingView`:
 
 ```python
 def rank(self) -> None:
-        job_id = self.job_ids.get(self.job_var.get())
-        if job_id is None:
-            self.winfo_toplevel().show_error("Add a job first (Jobs tab)")
-            return
-        try:
-            results = self.controller.rank_job(job_id, self.method_var.get())
-            explained = {r.candidate_ref: self.controller.explain(r, job_id) for r in results}
-        except ResumeMatchError as err:
-            self.winfo_toplevel().show_error(err.args[0])
-            return
-        self.current_job = job_id
-        self.results = {r.candidate_ref: (r, *explained[r.candidate_ref]) for r in results}
-        self.tree.delete(*self.tree.get_children())
-        for r in results:
-            required = len(r.skills_matched) + len(r.skills_missing)
-            coverage = len(r.skills_matched) / required if required else 0.0
-            warning = explained[r.candidate_ref][1]
-            self.tree.insert("", "end", iid=r.candidate_ref, tags=("warn",) if warning else (),
-                             values=(r.rank_position, r.candidate_ref, f"{r.score:.3f}",
-                                     ", ".join(r.skills_matched), f"{coverage:.0%}"))
-        if results:
-            self.tree.selection_set(results[0].candidate_ref)
-        self.winfo_toplevel().set_status(f"Ranked {len(results)} candidates with {self.method_var.get()}")
+    job_id = self.job_ids.get(self.job_var.get())
+    if job_id is None:
+        self.winfo_toplevel().show_error("Add a job first (Jobs tab)")
+        return
+    try:
+        results = self.controller.rank_job(job_id, self.method_var.get())
+        explained = {r.candidate_ref: self.controller.explain(r, job_id) for r in results}
+    except ResumeMatchError as err:
+        self.winfo_toplevel().show_error(err.args[0])
+        return
+    self.current_job = job_id
+    self.results = {r.candidate_ref: (r, *explained[r.candidate_ref]) for r in results}
+    self.tree.delete(*self.tree.get_children())
+    for r in results:
+        required = len(r.skills_matched) + len(r.skills_missing)
+        coverage = len(r.skills_matched) / required if required else 0.0
+        warning = explained[r.candidate_ref][1]
+        self.tree.insert("", "end", iid=r.candidate_ref, tags=("warn",) if warning else (),
+                         values=(r.rank_position, r.candidate_ref, f"{r.score:.3f}",
+                                 ", ".join(r.skills_matched), f"{coverage:.0%}"))
+    if results:
+        self.tree.selection_set(results[0].candidate_ref)
+    self.winfo_toplevel().set_status(f"Ranked {len(results)} candidates with {self.method_var.get()}")
 ```
 
-`RankingView._on_select`
+`RankingView._on_select` — paste inside class `RankingView`:
 
 ```python
 def _on_select(self, _event=None) -> None:
-        selection = self.tree.selection()
-        if not selection or selection[0] not in self.results:
-            return
-        result, lines, warning = self.results[selection[0]]
-        self.detail.configure(state="normal")
-        self.detail.delete("1.0", "end")
-        self.detail.insert("end", f"{result.candidate_ref} - position {result.rank_position}, "
-                                  f"score {result.score:.3f} (raw {result.raw_score:.3f}), "
-                                  f"{result.shared_terms} shared terms\n")
-        for line in lines:
-            self.detail.insert("end", line + "\n")
-        if warning:
-            self.detail.insert("end", "WARNING: " + warning + "\n", "warning")
-        self.detail.configure(state="disabled")
+    selection = self.tree.selection()
+    if not selection or selection[0] not in self.results:
+        return
+    result, lines, warning = self.results[selection[0]]
+    self.detail.configure(state="normal")
+    self.detail.delete("1.0", "end")
+    self.detail.insert("end", f"{result.candidate_ref} - position {result.rank_position}, "
+                              f"score {result.score:.3f} (raw {result.raw_score:.3f}), "
+                              f"{result.shared_terms} shared terms\n")
+    for line in lines:
+        self.detail.insert("end", line + "\n")
+    if warning:
+        self.detail.insert("end", "WARNING: " + warning + "\n", "warning")
+    self.detail.configure(state="disabled")
 ```
 
 #### `RankingView.__init__(parent, controller)`
 
 **Problem.** The ranking tab: choose a job and a method, press Rank, see the table (position, candidate, score, skills, coverage). Selecting a row shows its explanation and the copied-advert warning right below.
 
-**Solution.**
+**Solution.** Paste in `resumematch/views/ranking_view.py`, inside class `RankingView` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, parent, controller):
@@ -2264,11 +2474,13 @@ def __init__(self, parent, controller):
 
 ### `run.py`
 
+Open `ResumeMatch/run.py`.
+
 #### `main()`
 
 **Problem.** Machine B: load the index; if the contract check fails, print why and how to rebuild, and exit with 1. Otherwise open the window.
 
-**Solution.**
+**Solution.** Paste in `run.py`, at the top level of the file, in place of the skeleton's `def main`:
 
 ```python
 def main():
@@ -2290,15 +2502,33 @@ def main():
 
 ### `tune.py`
 
+Open `ResumeMatch/tune.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import csv
+import os
+import config
+from resumematch.controllers.app_controller import AppController
+from resumematch.database.db import Database
+from resumematch.eval.metrics import evaluate
+from resumematch.models.entities import ProcessedDoc, ResumeMatchError
+from resumematch.nlp.preprocessor import TextPreprocessor
+from resumematch.nlp.vocabulary import VocabularyBuilder
+from resumematch.rank.bm25 import Bm25Ranker
+from resumematch.rank.tfidf import TfidfRanker
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`REPORTS_DIR`
+`REPORTS_DIR` — paste in the file, below the imports:
 
 ```python
 REPORTS_DIR = os.path.join(config.BASE_DIR, "reports")
 ```
 
-`_docs_for`
+`_docs_for` — paste in the file, below the imports:
 
 ```python
 def _docs_for(controller, preprocessor):
@@ -2310,7 +2540,7 @@ def _docs_for(controller, preprocessor):
     return docs
 ```
 
-`_run`
+`_run` — paste in the file, below the imports:
 
 ```python
 def _run(controller, ranker, preprocessor, jobs, relevant, vocab_size, min_df, max_df, rows):
@@ -2330,7 +2560,7 @@ def _run(controller, ranker, preprocessor, jobs, relevant, vocab_size, min_df, m
 
 **Problem.** The experiments: sweep BM25's k1 and b (keeping the best), then min_df/max_df, stemming and n-grams. Save every run, write a CSV and plot MRR against b - the answer to the research question.
 
-**Solution.**
+**Solution.** Paste in `tune.py`, at the top level of the file, in place of the skeleton's `def main`:
 
 ```python
 def main():
@@ -2423,9 +2653,11 @@ def main():
 
 ## Files the solution adds
 
-These files are not in your skeleton; the finished project needs them.
+These files are not in your skeleton; the finished project needs them. Create each one at the path shown and paste the whole code.
 
 ### `import_jobs.py`
+
+Create `ResumeMatch/import_jobs.py`:
 
 ```python
 import os

@@ -8,6 +8,36 @@ Every function you write in this project (97 of them), in the order of `TASKS.md
 
 Try each function yourself first, then compare. Run the check after every function, not at the end.
 
+## Where the code goes
+
+Every path below starts in your project folder `FaceEmotion/` (the folder with `TASKS.md`). For each file:
+
+1. **Imports** — if the file section lists imports, add the lines that are missing to the top of the file, next to the other `import` lines.
+2. **Helper code** — paste it once, where the section says: *in the file* means below the imports and above the first class; *inside class X* means inside that class, next to its other methods (indented like them).
+3. **Each function** — in your skeleton, find the `def` with the same name. Delete the whole function — the `def` line, the TODO text and `raise NotImplementedError` — and paste the solution in its place. Inside a class, every line moves 4 spaces to the right, so the `def` lines up with the other methods.
+4. **New files** — at the end, under *Files the solution adds*: create the file at that path and paste the whole code.
+
+Before and after, for a method inside a class:
+
+```python
+class Example:
+
+    def total(self, items):          # BEFORE - the skeleton
+        """
+        TODO stage 3: add up the prices.
+        """
+        raise NotImplementedError
+```
+
+```python
+class Example:
+
+    def total(self, items):          # AFTER - the solution pasted in its place
+        return sum(item.price for item in items)
+```
+
+Then run the **Check** command from the project folder.
+
 ## Contents
 
 - [Stage 1 — Environment and camera](#stage-1--environment-and-camera) (5 functions)
@@ -23,11 +53,20 @@ Try each function yourself first, then compare. Run the check after every functi
 
 ### `app/vision/camera.py`
 
+Open `FaceEmotion/app/vision/camera.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import time
+import cv2
+```
+
 #### `CameraService.start()`
 
 **Problem.** Open the camera (or a video file), set the frame size and start a background thread that keeps reading frames. If the camera cannot be opened, raise RuntimeError with a clear message.
 
-**Solution.**
+**Solution.** Paste in `app/vision/camera.py`, inside class `CameraService` (indented 4 spaces), in place of the skeleton's `def start`:
 
 ```python
 def start(self) -> None:
@@ -51,7 +90,7 @@ def start(self) -> None:
 
 **Problem.** Keep reading frames while running and store only the newest one (under the lock). A failed read is never stored. Reading here, not in the Tk callback, stops the window from freezing.
 
-**Solution.**
+**Solution.** Paste in `app/vision/camera.py`, inside class `CameraService` (indented 4 spaces), in place of the skeleton's `def _reader_loop`:
 
 ```python
 def _reader_loop(self) -> None:
@@ -77,7 +116,7 @@ def _reader_loop(self) -> None:
 
 **Problem.** Return a copy of the newest frame, or None if there is none yet. A copy, because the reader thread keeps overwriting the buffer.
 
-**Solution.**
+**Solution.** Paste in `app/vision/camera.py`, inside class `CameraService` (indented 4 spaces), in place of the skeleton's `def read`:
 
 ```python
 def read(self) -> Optional[np.ndarray]:
@@ -91,7 +130,7 @@ def read(self) -> Optional[np.ndarray]:
 
 **Problem.** Stop the thread, wait for it, release the camera and drop the stored frame.
 
-**Solution.**
+**Solution.** Paste in `app/vision/camera.py`, inside class `CameraService` (indented 4 spaces), in place of the skeleton's `def stop`:
 
 ```python
 def stop(self) -> None:
@@ -110,11 +149,22 @@ def stop(self) -> None:
 
 ### `train.py`
 
+Open `FaceEmotion/train.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from app.ml.dataset import build_dataloaders, compute_class_weights
+from app.ml.network import EmotionNet
+from app.ml.trainer import ModelTrainer
+from app.models.emotion import Emotion
+```
+
 #### `print_device_banner()`
 
 **Problem.** Print which device will train the model: for a GPU its name and memory, otherwise a loud warning that CPU training takes hours.
 
-**Solution.**
+**Solution.** Paste in `train.py`, at the top level of the file, in place of the skeleton's `def print_device_banner`:
 
 ```python
 def print_device_banner():
@@ -137,11 +187,13 @@ def print_device_banner():
 
 ### `app/models/detection.py`
 
+Open `FaceEmotion/app/models/detection.py`.
+
 #### `FaceDetection.area`
 
 **Problem.** The box's width x height - used to pick the biggest face.
 
-**Solution.**
+**Solution.** Paste in `app/models/detection.py`, inside class `FaceDetection` (indented 4 spaces), in place of the skeleton's `def area`:
 
 ```python
 @property
@@ -155,7 +207,7 @@ def area(self) -> int:
 
 **Problem.** Return a new box grown by `margin` (0.10 = 10%) on every side, but never outside the frame. frame_shape is (height, width).
 
-**Solution.**
+**Solution.** Paste in `app/models/detection.py`, inside class `FaceDetection` (indented 4 spaces), in place of the skeleton's `def with_margin`:
 
 ```python
 def with_margin(self, margin: float, frame_shape: Tuple[int, int]) -> "FaceDetection":
@@ -173,7 +225,7 @@ def with_margin(self, margin: float, frame_shape: Tuple[int, int]) -> "FaceDetec
 
 **Problem.** Cut the box out of the frame: rows y..y+h, columns x..x+w (numpy indexes rows first).
 
-**Solution.**
+**Solution.** Paste in `app/models/detection.py`, inside class `FaceDetection` (indented 4 spaces), in place of the skeleton's `def crop`:
 
 ```python
 def crop(self, frame: np.ndarray) -> np.ndarray:
@@ -184,11 +236,13 @@ def crop(self, frame: np.ndarray) -> np.ndarray:
 
 ### `app/vision/face_detector.py`
 
+Open `FaceEmotion/app/vision/face_detector.py`.
+
 #### `FaceDetector.detect_largest(frame)`
 
 **Problem.** Find all faces and return a list with only the biggest one, or an empty list.
 
-**Solution.**
+**Solution.** Paste in `app/vision/face_detector.py`, inside class `FaceDetector` (indented 4 spaces), in place of the skeleton's `def detect_largest`:
 
 ```python
 def detect_largest(self, frame: np.ndarray) -> List[FaceDetection]:
@@ -202,7 +256,7 @@ def detect_largest(self, frame: np.ndarray) -> List[FaceDetection]:
 
 **Problem.** Turn a name into a detector object: "haar" or "dnn"; anything else raises ValueError.
 
-**Solution.**
+**Solution.** Paste in `app/vision/face_detector.py`, at the top level of the file, in place of the skeleton's `def create_detector`:
 
 ```python
 def create_detector(name: str) -> FaceDetector:
@@ -219,11 +273,19 @@ def create_detector(name: str) -> FaceDetector:
 
 ### `app/vision/haar_detector.py`
 
+Open `FaceEmotion/app/vision/haar_detector.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import cv2
+```
+
 #### `HaarCascadeDetector.__init__(cascade_path)`
 
 **Problem.** Load the Haar cascade file. A wrong path does not raise by itself - it just finds nothing - so check that the cascade loaded and raise if it is empty.
 
-**Solution.**
+**Solution.** Paste in `app/vision/haar_detector.py`, inside class `HaarCascadeDetector` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, cascade_path: str = None):
@@ -239,7 +301,7 @@ def __init__(self, cascade_path: str = None):
 
 **Problem.** Find faces: convert to grey, equalise the lighting, run detectMultiScale with the config settings and return a FaceDetection per box.
 
-**Solution.**
+**Solution.** Paste in `app/vision/haar_detector.py`, inside class `HaarCascadeDetector` (indented 4 spaces), in place of the skeleton's `def detect`:
 
 ```python
 def detect(self, frame: np.ndarray) -> List[FaceDetection]:
@@ -254,11 +316,13 @@ def detect(self, frame: np.ndarray) -> List[FaceDetection]:
 
 ### `app/vision/preprocessor.py`
 
+Open `FaceEmotion/app/vision/preprocessor.py`.
+
 #### `FacePreprocessor.crop_face(frame, detection)`
 
 **Problem.** Cut the face out of the frame with the margin added, so it includes forehead and chin like the training images.
 
-**Solution.**
+**Solution.** Paste in `app/vision/preprocessor.py`, inside class `FacePreprocessor` (indented 4 spaces), in place of the skeleton's `def crop_face`:
 
 ```python
 def crop_face(self, frame: np.ndarray, detection: FaceDetection) -> np.ndarray:
@@ -273,9 +337,20 @@ def crop_face(self, frame: np.ndarray, detection: FaceDetection) -> np.ndarray:
 
 ### `app/ml/dataset.py`
 
+Open `FaceEmotion/app/ml/dataset.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import torchvision
+from torch.utils.data import DataLoader, Dataset, random_split
+from torchvision import transforms as T
+from app.models.emotion import NUM_CLASSES, Emotion
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`_Subset`
+`_Subset` — paste in the file, below the imports:
 
 ```python
 class _Subset(Dataset):
@@ -302,7 +377,7 @@ class _Subset(Dataset):
 
 **Problem.** A transform that equalises the lighting of a grey image (cv2.equalizeHist) - the camera path does the same, so training and real time see the same kind of picture.
 
-**Solution.**
+**Solution.** Paste in `app/ml/dataset.py`, inside class `EqualizeHist` (indented 4 spaces), in place of the skeleton's `def __call__`:
 
 ```python
 def __call__(self, image):
@@ -317,7 +392,7 @@ def __call__(self, image):
 
 **Problem.** The training transforms: grey, equalise, random flip, small rotation and crop, to tensor, normalise, and random erasing. The randomness makes the model robust; it is used for training only.
 
-**Solution.**
+**Solution.** Paste in `app/ml/dataset.py`, at the top level of the file, in place of the skeleton's `def build_train_transform`:
 
 ```python
 def build_train_transform():
@@ -339,7 +414,7 @@ def build_train_transform():
 
 **Problem.** The evaluation transforms: grey, resize to 48x48, equalise, to tensor, normalise - no randomness, and the same steps as the camera path.
 
-**Solution.**
+**Solution.** Paste in `app/ml/dataset.py`, at the top level of the file, in place of the skeleton's `def build_eval_transform`:
 
 ```python
 def build_eval_transform():
@@ -358,7 +433,7 @@ def build_eval_transform():
 
 **Problem.** Load the image folders with ImageFolder and build a lookup that turns its alphabetical label numbers into the Emotion numbers. Without it the model learns fine but calls every sad face "neutral".
 
-**Solution.**
+**Solution.** Paste in `app/ml/dataset.py`, inside class `FER2013Dataset` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, root: str, transform=None):
@@ -375,7 +450,7 @@ def __init__(self, root: str, transform=None):
 
 **Problem.** The number of images.
 
-**Solution.**
+**Solution.** Paste in `app/ml/dataset.py`, inside class `FER2013Dataset` (indented 4 spaces), in place of the skeleton's `def __len__`:
 
 ```python
 def __len__(self) -> int:
@@ -388,7 +463,7 @@ def __len__(self) -> int:
 
 **Problem.** Return one (image, label) pair with the label translated to the Emotion order.
 
-**Solution.**
+**Solution.** Paste in `app/ml/dataset.py`, inside class `FER2013Dataset` (indented 4 spaces), in place of the skeleton's `def __getitem__`:
 
 ```python
 def __getitem__(self, index: int) -> Tuple[torch.Tensor, int]:
@@ -402,7 +477,7 @@ def __getitem__(self, index: int) -> Tuple[torch.Tensor, int]:
 
 **Problem.** How many images each of the seven emotions has, counted from the file list (not by loading images). Disgust has far fewer than happy.
 
-**Solution.**
+**Solution.** Paste in `app/ml/dataset.py`, inside class `FER2013Dataset` (indented 4 spaces), in place of the skeleton's `def class_counts`:
 
 ```python
 def class_counts(self) -> np.ndarray:
@@ -418,7 +493,7 @@ def class_counts(self) -> np.ndarray:
 
 **Problem.** Return train, validation and test loaders: split 10% of the training images off for validation (fixed seed), augment only the training part, shuffle only the training loader.
 
-**Solution.**
+**Solution.** Paste in `app/ml/dataset.py`, at the top level of the file, in place of the skeleton's `def build_dataloaders`:
 
 ```python
 def build_dataloaders(batch_size: int = config.BATCH_SIZE) -> Tuple[DataLoader, DataLoader, DataLoader]:
@@ -445,11 +520,13 @@ def build_dataloaders(batch_size: int = config.BATCH_SIZE) -> Tuple[DataLoader, 
 
 ### `app/ml/network.py`
 
+Open `FaceEmotion/app/ml/network.py`.
+
 #### `ResidualBlock.__init__(in_channels, out_channels, stride)`
 
 **Problem.** Create the two 3x3 convolutions with batch norm and ReLU, and the shortcut: the identity when the shape stays the same, otherwise a 1x1 convolution with batch norm.
 
-**Solution.**
+**Solution.** Paste in `app/ml/network.py`, inside class `ResidualBlock` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, in_channels: int, out_channels: int, stride: int = 1):
@@ -471,7 +548,7 @@ def __init__(self, in_channels: int, out_channels: int, stride: int = 1):
 
 **Problem.** conv-bn-relu, conv-bn, add the shortcut, then ReLU. Adding the shortcut before the last ReLU is what lets the gradient flow back through deep networks.
 
-**Solution.**
+**Solution.** Paste in `app/ml/network.py`, inside class `ResidualBlock` (indented 4 spaces), in place of the skeleton's `def forward`:
 
 ```python
 def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -488,7 +565,7 @@ def forward(self, x: torch.Tensor) -> torch.Tensor:
 
 **Problem.** Build the network: a stem (1 to 64 channels), four residual blocks (64, 128, 256, 512 channels, halving the size from block 2 on), and a head (average pool, dropout, linear to 7). About 4.9 million parameters.
 
-**Solution.**
+**Solution.** Paste in `app/ml/network.py`, inside class `EmotionNet` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, num_classes: int = NUM_CLASSES, dropout: float = 0.3):
@@ -507,7 +584,7 @@ def __init__(self, num_classes: int = NUM_CLASSES, dropout: float = 0.3):
 
 **Problem.** Pass the batch through stem, the four blocks and the head. Return raw logits - no softmax here, CrossEntropyLoss applies it.
 
-**Solution.**
+**Solution.** Paste in `app/ml/network.py`, inside class `EmotionNet` (indented 4 spaces), in place of the skeleton's `def forward`:
 
 ```python
 def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -523,11 +600,13 @@ def forward(self, x: torch.Tensor) -> torch.Tensor:
 
 ### `app/vision/preprocessor.py`
 
+Open `FaceEmotion/app/vision/preprocessor.py`.
+
 #### `FacePreprocessor.to_model_input(face_bgr)`
 
 **Problem.** Turn a face crop into what the network expects: grey, resized to 48x48, equalised, scaled to 0-1, normalised with the training mean and std, shaped (1, 1, 48, 48). The steps must match the evaluation transform exactly.
 
-**Solution.**
+**Solution.** Paste in `app/vision/preprocessor.py`, inside class `FacePreprocessor` (indented 4 spaces), in place of the skeleton's `def to_model_input`:
 
 ```python
 def to_model_input(self, face_bgr: np.ndarray) -> np.ndarray:
@@ -545,7 +624,7 @@ def to_model_input(self, face_bgr: np.ndarray) -> np.ndarray:
 
 **Problem.** Crop the face, then turn it into the model input.
 
-**Solution.**
+**Solution.** Paste in `app/vision/preprocessor.py`, inside class `FacePreprocessor` (indented 4 spaces), in place of the skeleton's `def process`:
 
 ```python
 def process(self, frame: np.ndarray, detection: FaceDetection) -> np.ndarray:
@@ -559,11 +638,13 @@ def process(self, frame: np.ndarray, detection: FaceDetection) -> np.ndarray:
 
 ### `app/ml/dataset.py`
 
+Open `FaceEmotion/app/ml/dataset.py`.
+
 #### `compute_class_weights(counts)`
 
 **Problem.** Give rare emotions a bigger weight in the loss: total / (7 x count) for each class, scaled so the average weight is 1. Return a tensor on the training device.
 
-**Solution.**
+**Solution.** Paste in `app/ml/dataset.py`, at the top level of the file, in place of the skeleton's `def compute_class_weights`:
 
 ```python
 def compute_class_weights(counts: np.ndarray) -> torch.Tensor:
@@ -577,11 +658,21 @@ def compute_class_weights(counts: np.ndarray) -> torch.Tensor:
 
 ### `app/ml/evaluator.py`
 
+Open `FaceEmotion/app/ml/evaluator.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import json
+import numpy as np
+from app.models.emotion import Emotion
+```
+
 #### `ModelEvaluator.evaluate()`
 
 **Problem.** Run the whole test set once and compute the accuracy, precision/recall/F1 per emotion and the confusion matrix.
 
-**Solution.**
+**Solution.** Paste in `app/ml/evaluator.py`, inside class `ModelEvaluator` (indented 4 spaces), in place of the skeleton's `def evaluate`:
 
 ```python
 @torch.no_grad()
@@ -612,7 +703,7 @@ def evaluate(self) -> Dict:
 
 **Problem.** Draw the confusion matrix as a heat-map with the emotion names, each row scaled to sum to 1, so you can see which emotions get mixed up.
 
-**Solution.**
+**Solution.** Paste in `app/ml/evaluator.py`, inside class `ModelEvaluator` (indented 4 spaces), in place of the skeleton's `def plot_confusion_matrix`:
 
 ```python
 def plot_confusion_matrix(self, path: str, normalize: bool = True) -> None:
@@ -646,7 +737,7 @@ def plot_confusion_matrix(self, path: str, normalize: bool = True) -> None:
 
 **Problem.** Write the metrics to a JSON file.
 
-**Solution.**
+**Solution.** Paste in `app/ml/evaluator.py`, inside class `ModelEvaluator` (indented 4 spaces), in place of the skeleton's `def save_report`:
 
 ```python
 def save_report(self, path: str) -> None:
@@ -658,23 +749,34 @@ def save_report(self, path: str) -> None:
 
 ### `app/ml/trainer.py`
 
+Open `FaceEmotion/app/ml/trainer.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import json
+import time
+import torch.nn as nn
+from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`ModelTrainer._build_scheduler`
+`ModelTrainer._build_scheduler` — paste inside class `ModelTrainer`:
 
 ```python
 def _build_scheduler(self, epochs: int) -> None:
-        warmup_epochs = min(config.WARMUP_EPOCHS, max(1, epochs - 1))
-        warmup = LinearLR(self.optimizer, start_factor=0.1, total_iters=warmup_epochs)
-        cosine = CosineAnnealingLR(self.optimizer, T_max=max(1, epochs - warmup_epochs))
-        self.scheduler = SequentialLR(self.optimizer, [warmup, cosine], milestones=[warmup_epochs])
+    warmup_epochs = min(config.WARMUP_EPOCHS, max(1, epochs - 1))
+    warmup = LinearLR(self.optimizer, start_factor=0.1, total_iters=warmup_epochs)
+    cosine = CosineAnnealingLR(self.optimizer, T_max=max(1, epochs - warmup_epochs))
+    self.scheduler = SequentialLR(self.optimizer, [warmup, cosine], milestones=[warmup_epochs])
 ```
 
 #### `ModelTrainer.__init__(model, train_loader, val_loader, class_weights)`
 
 **Problem.** Create the loss (with the class weights and label smoothing), the AdamW optimiser, a learning-rate schedule (warm-up then cosine) and the gradient scaler for mixed precision on a GPU.
 
-**Solution.**
+**Solution.** Paste in `app/ml/trainer.py`, inside class `ModelTrainer` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, model, train_loader, val_loader, class_weights=None):
@@ -700,7 +802,7 @@ def __init__(self, model, train_loader, val_loader, class_weights=None):
 
 **Problem.** One pass over the training data: move each batch to the device, compute the loss, back-propagate and step the optimiser. Return the average loss and accuracy.
 
-**Solution.**
+**Solution.** Paste in `app/ml/trainer.py`, inside class `ModelTrainer` (indented 4 spaces), in place of the skeleton's `def train_one_epoch`:
 
 ```python
 def train_one_epoch(self) -> Dict[str, float]:
@@ -728,7 +830,7 @@ def train_one_epoch(self) -> Dict[str, float]:
 
 **Problem.** The same loop over the validation data, in eval mode and without gradients or optimiser steps.
 
-**Solution.**
+**Solution.** Paste in `app/ml/trainer.py`, inside class `ModelTrainer` (indented 4 spaces), in place of the skeleton's `def validate`:
 
 ```python
 @torch.no_grad()
@@ -753,7 +855,7 @@ def validate(self) -> Dict[str, float]:
 
 **Problem.** Train for the given epochs: train, validate, step the schedule and print a line per epoch. Save the best model whenever validation accuracy improves and the last model every epoch, and stop early after 8 epochs without improvement.
 
-**Solution.**
+**Solution.** Paste in `app/ml/trainer.py`, inside class `ModelTrainer` (indented 4 spaces), in place of the skeleton's `def fit`:
 
 ```python
 def fit(self, epochs: int = config.EPOCHS) -> TrainingHistory:
@@ -793,7 +895,7 @@ def fit(self, epochs: int = config.EPOCHS) -> TrainingHistory:
 
 **Problem.** Save the weights, the optimiser state, the epoch, the validation accuracy and the pre-processing constants together, so a model file can never be used with the wrong normalisation.
 
-**Solution.**
+**Solution.** Paste in `app/ml/trainer.py`, inside class `ModelTrainer` (indented 4 spaces), in place of the skeleton's `def save_checkpoint`:
 
 ```python
 def save_checkpoint(self, path: str, epoch: int, val_acc: float) -> None:
@@ -810,7 +912,7 @@ def save_checkpoint(self, path: str, epoch: int, val_acc: float) -> None:
 
 **Problem.** Plot loss and accuracy per epoch (train and validation) and save the picture.
 
-**Solution.**
+**Solution.** Paste in `app/ml/trainer.py`, inside class `ModelTrainer` (indented 4 spaces), in place of the skeleton's `def plot_history`:
 
 ```python
 def plot_history(self, path: str) -> None:
@@ -835,11 +937,24 @@ def plot_history(self, path: str) -> None:
 
 ### `evaluate.py`
 
+Open `FaceEmotion/evaluate.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import os
+import torch
+from app.ml.dataset import build_dataloaders
+from app.ml.evaluator import ModelEvaluator
+from app.ml.network import EmotionNet
+from app.models.emotion import Emotion
+```
+
 #### `main()`
 
 **Problem.** Load a checkpoint, evaluate it on the test set, save the confusion matrix and the metrics, and print the accuracy and the F1 per emotion.
 
-**Solution.**
+**Solution.** Paste in `evaluate.py`, at the top level of the file, in place of the skeleton's `def main`:
 
 ```python
 def main():
@@ -869,11 +984,13 @@ def main():
 
 ### `train.py`
 
+Open `FaceEmotion/train.py`.
+
 #### `main()`
 
 **Problem.** Build the loaders, the class weights, the model and the trainer, train, save the training curves and print the best validation accuracy.
 
-**Solution.**
+**Solution.** Paste in `train.py`, at the top level of the file, in place of the skeleton's `def main`:
 
 ```python
 def main():
@@ -918,11 +1035,30 @@ def main():
 
 ### `app/controllers/app_controller.py`
 
+Open `FaceEmotion/app/controllers/app_controller.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import os
+import time
+from app.controllers.session_controller import SessionController
+from app.database.repositories import SampleRepository, SessionRepository
+from app.ml.predictor import EmotionPredictor
+from app.ml.smoothing import TemporalSmoother
+from app.utils.fps import FpsCounter
+from app.views.main_window import MainWindow
+from app.vision.annotator import FrameAnnotator
+from app.vision.camera import CameraService
+from app.vision.face_detector import create_detector
+from app.vision.preprocessor import FacePreprocessor
+```
+
 #### `AppController.__init__(root)`
 
 **Problem.** Create the camera, detector, preprocessor, predictor, smoother, annotator, FPS counter and session controller, and the window with its four callbacks.
 
-**Solution.**
+**Solution.** Paste in `app/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, root: tk.Tk, camera_source=None):
@@ -950,7 +1086,7 @@ def __init__(self, root: tk.Tk, camera_source=None):
 
 **Problem.** Show the window and warn when there is no trained model.
 
-**Solution.**
+**Solution.** Paste in `app/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def start`:
 
 ```python
 def start(self) -> None:
@@ -969,7 +1105,7 @@ def start(self) -> None:
 
 **Problem.** Start the camera, open a session, reset the counters and schedule the first frame. A second click while running does nothing; a camera error is shown.
 
-**Solution.**
+**Solution.** Paste in `app/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def start_capture`:
 
 ```python
 def start_capture(self) -> None:
@@ -996,7 +1132,7 @@ def start_capture(self) -> None:
 
 **Problem.** One frame: read it, find the biggest face, classify and smooth it, draw the result, record the sample, update the panel and chart, show the frame - then schedule the next call. Never sleep or loop here; Tk would freeze.
 
-**Solution.**
+**Solution.** Paste in `app/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def _on_frame`:
 
 ```python
 def _on_frame(self) -> None:
@@ -1041,7 +1177,7 @@ def _on_frame(self) -> None:
 
 **Problem.** Cancel the scheduled frame, stop the camera, close the session (saving the remaining samples) and show the summary.
 
-**Solution.**
+**Solution.** Paste in `app/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def stop_capture`:
 
 ```python
 def stop_capture(self) -> None:
@@ -1066,7 +1202,7 @@ def stop_capture(self) -> None:
 
 **Problem.** Stop everything cleanly, then close the window.
 
-**Solution.**
+**Solution.** Paste in `app/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def on_close`:
 
 ```python
 def on_close(self) -> None:
@@ -1080,11 +1216,20 @@ def on_close(self) -> None:
 
 ### `app/ml/predictor.py`
 
+Open `FaceEmotion/app/ml/predictor.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import os
+from app.ml.network import EmotionNet
+```
+
 #### `EmotionPredictor.load_model()`
 
 **Problem.** Load the trained model once. If the file is missing, print how to train and stay "not ready" - the app must still open and show the camera.
 
-**Solution.**
+**Solution.** Paste in `app/ml/predictor.py`, inside class `EmotionPredictor` (indented 4 spaces), in place of the skeleton's `def load_model`:
 
 ```python
 def load_model(self) -> None:
@@ -1110,7 +1255,7 @@ def load_model(self) -> None:
 
 **Problem.** Classify one face: run the network, apply softmax, and return the top emotion, its probability and all seven probabilities.
 
-**Solution.**
+**Solution.** Paste in `app/ml/predictor.py`, inside class `EmotionPredictor` (indented 4 spaces), in place of the skeleton's `def predict`:
 
 ```python
 @torch.no_grad()
@@ -1128,11 +1273,13 @@ def predict(self, model_input: np.ndarray) -> Tuple[Emotion, float, np.ndarray]:
 
 ### `app/ml/smoothing.py`
 
+Open `FaceEmotion/app/ml/smoothing.py`.
+
 #### `TemporalSmoother.update(probabilities)`
 
 **Problem.** Add the newest probability vector, average the last N vectors and return the top emotion of the average. Averaging probabilities (not labels) stops the label from flickering between two close emotions.
 
-**Solution.**
+**Solution.** Paste in `app/ml/smoothing.py`, inside class `TemporalSmoother` (indented 4 spaces), in place of the skeleton's `def update`:
 
 ```python
 def update(self, probabilities: np.ndarray) -> Tuple[Emotion, float]:
@@ -1147,7 +1294,7 @@ def update(self, probabilities: np.ndarray) -> Tuple[Emotion, float]:
 
 **Problem.** Forget the stored frames (when the face is lost).
 
-**Solution.**
+**Solution.** Paste in `app/ml/smoothing.py`, inside class `TemporalSmoother` (indented 4 spaces), in place of the skeleton's `def reset`:
 
 ```python
 def reset(self) -> None:
@@ -1160,7 +1307,7 @@ def reset(self) -> None:
 
 **Problem.** The smoothed emotion now, or None when nothing is stored.
 
-**Solution.**
+**Solution.** Paste in `app/ml/smoothing.py`, inside class `TemporalSmoother` (indented 4 spaces), in place of the skeleton's `def current`:
 
 ```python
 @property
@@ -1175,11 +1322,13 @@ def current(self) -> Optional[Emotion]:
 
 ### `app/utils/fps.py`
 
+Open `FaceEmotion/app/utils/fps.py`.
+
 #### `FpsCounter.tick()`
 
 **Problem.** Record the time of a new frame.
 
-**Solution.**
+**Solution.** Paste in `app/utils/fps.py`, inside class `FpsCounter` (indented 4 spaces), in place of the skeleton's `def tick`:
 
 ```python
 def tick(self) -> None:
@@ -1192,7 +1341,7 @@ def tick(self) -> None:
 
 **Problem.** Frames per second over the last frames: (count - 1) / (last time - first time), 0 with fewer than two frames.
 
-**Solution.**
+**Solution.** Paste in `app/utils/fps.py`, inside class `FpsCounter` (indented 4 spaces), in place of the skeleton's `def value`:
 
 ```python
 @property
@@ -1209,7 +1358,7 @@ def value(self) -> float:
 
 **Problem.** Forget the stored times.
 
-**Solution.**
+**Solution.** Paste in `app/utils/fps.py`, inside class `FpsCounter` (indented 4 spaces), in place of the skeleton's `def reset`:
 
 ```python
 def reset(self) -> None:
@@ -1220,9 +1369,17 @@ def reset(self) -> None:
 
 ### `app/vision/annotator.py`
 
+Open `FaceEmotion/app/vision/annotator.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import cv2
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`FONT`
+`FONT` — paste in the file, below the imports:
 
 ```python
 FONT = cv2.FONT_HERSHEY_SIMPLEX
@@ -1232,7 +1389,7 @@ FONT = cv2.FONT_HERSHEY_SIMPLEX
 
 **Problem.** On a copy of the frame, draw the face box in the emotion's colour and a label "HAPPY 87%" on a filled bar above it. The English name, because OpenCV cannot draw Hebrew.
 
-**Solution.**
+**Solution.** Paste in `app/vision/annotator.py`, inside class `FrameAnnotator` (indented 4 spaces), in place of the skeleton's `def draw_detection`:
 
 ```python
 def draw_detection(self, frame: np.ndarray, detection: FaceDetection,
@@ -1255,7 +1412,7 @@ def draw_detection(self, frame: np.ndarray, detection: FaceDetection,
 
 **Problem.** Write "FPS: 24.3" in the top-left corner.
 
-**Solution.**
+**Solution.** Paste in `app/vision/annotator.py`, inside class `FrameAnnotator` (indented 4 spaces), in place of the skeleton's `def draw_fps`:
 
 ```python
 def draw_fps(self, frame: np.ndarray, fps: float) -> np.ndarray:
@@ -1271,7 +1428,7 @@ def draw_fps(self, frame: np.ndarray, fps: float) -> np.ndarray:
 
 **Problem.** Write "No face detected" on the frame.
 
-**Solution.**
+**Solution.** Paste in `app/vision/annotator.py`, inside class `FrameAnnotator` (indented 4 spaces), in place of the skeleton's `def draw_no_face`:
 
 ```python
 def draw_no_face(self, frame: np.ndarray) -> np.ndarray:
@@ -1287,11 +1444,13 @@ def draw_no_face(self, frame: np.ndarray) -> np.ndarray:
 
 ### `app/controllers/app_controller.py`
 
+Open `FaceEmotion/app/controllers/app_controller.py`.
+
 #### `AppController.export_session()`
 
 **Problem.** Export the last finished session and tell the user where the file is (or why there is nothing to export yet).
 
-**Solution.**
+**Solution.** Paste in `app/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def export_session`:
 
 ```python
 def export_session(self) -> None:
@@ -1310,11 +1469,19 @@ def export_session(self) -> None:
 
 ### `app/controllers/session_controller.py`
 
+Open `FaceEmotion/app/controllers/session_controller.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from app.utils.exporter import SessionExporter
+```
+
 #### `SessionController.start_session(detector_name, model_name)`
 
 **Problem.** Create a session with the current time, save it, keep it as the current session and return it.
 
-**Solution.**
+**Solution.** Paste in `app/controllers/session_controller.py`, inside class `SessionController` (indented 4 spaces), in place of the skeleton's `def start_session`:
 
 ```python
 def start_session(self, detector_name: str, model_name: str) -> Session:
@@ -1331,7 +1498,7 @@ def start_session(self, detector_name: str, model_name: str) -> Session:
 
 **Problem.** Buffer a sample, skipping those below the confidence floor; save the buffer every 60 samples.
 
-**Solution.**
+**Solution.** Paste in `app/controllers/session_controller.py`, inside class `SessionController` (indented 4 spaces), in place of the skeleton's `def record`:
 
 ```python
 def record(self, emotion: Emotion, confidence: float, box: tuple, probabilities) -> None:
@@ -1350,7 +1517,7 @@ def record(self, emotion: Emotion, confidence: float, box: tuple, probabilities)
 
 **Problem.** Save the buffered samples at once and empty the buffer.
 
-**Solution.**
+**Solution.** Paste in `app/controllers/session_controller.py`, inside class `SessionController` (indented 4 spaces), in place of the skeleton's `def flush`:
 
 ```python
 def flush(self) -> None:
@@ -1366,7 +1533,7 @@ def flush(self) -> None:
 
 **Problem.** Save the remaining samples, store the end time, frames and FPS, load the samples back for the summary and return the finished session.
 
-**Solution.**
+**Solution.** Paste in `app/controllers/session_controller.py`, inside class `SessionController` (indented 4 spaces), in place of the skeleton's `def end_session`:
 
 ```python
 def end_session(self, frames_processed: int, average_fps: float) -> Optional[Session]:
@@ -1390,7 +1557,7 @@ def end_session(self, frames_processed: int, average_fps: float) -> Optional[Ses
 
 **Problem.** Write the session to CSV and return the path.
 
-**Solution.**
+**Solution.** Paste in `app/controllers/session_controller.py`, inside class `SessionController` (indented 4 spaces), in place of the skeleton's `def export_csv`:
 
 ```python
 def export_csv(self, session_id: int) -> str:
@@ -1401,11 +1568,13 @@ def export_csv(self, session_id: int) -> str:
 
 ### `app/database/db.py`
 
+Open `FaceEmotion/app/database/db.py`.
+
 #### `Database.get_connection()`
 
 **Problem.** Open the SQLite file with dict-like rows and foreign keys switched on.
 
-**Solution.**
+**Solution.** Paste in `app/database/db.py`, inside class `Database` (indented 4 spaces), in place of the skeleton's `def get_connection`:
 
 ```python
 def get_connection(self) -> sqlite3.Connection:
@@ -1421,7 +1590,7 @@ def get_connection(self) -> sqlite3.Connection:
 
 **Problem.** A context manager: commit on success, roll back on an error, always close.
 
-**Solution.**
+**Solution.** Paste in `app/database/db.py`, inside class `Database` (indented 4 spaces), in place of the skeleton's `def connection`:
 
 ```python
 @contextmanager
@@ -1443,7 +1612,7 @@ def connection(self):
 
 **Problem.** Create the tables by running the SCHEMA script.
 
-**Solution.**
+**Solution.** Paste in `app/database/db.py`, inside class `Database` (indented 4 spaces), in place of the skeleton's `def initialize_schema`:
 
 ```python
 def initialize_schema(self) -> None:
@@ -1455,9 +1624,11 @@ def initialize_schema(self) -> None:
 
 ### `app/database/repositories.py`
 
+Open `FaceEmotion/app/database/repositories.py`.
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`_row_to_session`
+`_row_to_session` — paste in the file, below the imports:
 
 ```python
 def _row_to_session(r):
@@ -1467,7 +1638,7 @@ def _row_to_session(r):
                    detector_name=r["detector_name"], model_name=r["model_name"])
 ```
 
-`_row_to_sample`
+`_row_to_sample` — paste in the file, below the imports:
 
 ```python
 def _row_to_sample(r):
@@ -1477,7 +1648,7 @@ def _row_to_sample(r):
                          probabilities=json.loads(r["probabilities"]), id=r["id"])
 ```
 
-`_sample_row`
+`_sample_row` — paste in the file, below the imports:
 
 ```python
 def _sample_row(s):
@@ -1486,7 +1657,7 @@ def _sample_row(s):
             json.dumps([float(p) for p in s.probabilities]))
 ```
 
-`_SAMPLE_INSERT`
+`_SAMPLE_INSERT` — paste in the file, below the imports:
 
 ```python
 _SAMPLE_INSERT = ("INSERT INTO emotion_samples (session_id, timestamp, emotion, confidence, box_x, box_y, box_w, box_h, "
@@ -1497,7 +1668,7 @@ _SAMPLE_INSERT = ("INSERT INTO emotion_samples (session_id, timestamp, emotion, 
 
 **Problem.** Insert a new session (start time, detector, model) and return its id.
 
-**Solution.**
+**Solution.** Paste in `app/database/repositories.py`, inside class `SessionRepository` (indented 4 spaces), in place of the skeleton's `def create`:
 
 ```python
 def create(self, session: Session) -> int:
@@ -1513,7 +1684,7 @@ def create(self, session: Session) -> int:
 
 **Problem.** Save the end time, frames processed and average FPS of a session.
 
-**Solution.**
+**Solution.** Paste in `app/database/repositories.py`, inside class `SessionRepository` (indented 4 spaces), in place of the skeleton's `def finish`:
 
 ```python
 def finish(self, session_id: int, ended_at: datetime,
@@ -1529,7 +1700,7 @@ def finish(self, session_id: int, ended_at: datetime,
 
 **Problem.** Read one session by id, or None.
 
-**Solution.**
+**Solution.** Paste in `app/database/repositories.py`, inside class `SessionRepository` (indented 4 spaces), in place of the skeleton's `def get`:
 
 ```python
 def get(self, session_id: int) -> Optional[Session]:
@@ -1544,7 +1715,7 @@ def get(self, session_id: int) -> Optional[Session]:
 
 **Problem.** The newest sessions first.
 
-**Solution.**
+**Solution.** Paste in `app/database/repositories.py`, inside class `SessionRepository` (indented 4 spaces), in place of the skeleton's `def list_recent`:
 
 ```python
 def list_recent(self, limit: int = 20) -> List[Session]:
@@ -1559,7 +1730,7 @@ def list_recent(self, limit: int = 20) -> List[Session]:
 
 **Problem.** Delete a session; its samples go with it (cascade).
 
-**Solution.**
+**Solution.** Paste in `app/database/repositories.py`, inside class `SessionRepository` (indented 4 spaces), in place of the skeleton's `def delete`:
 
 ```python
 def delete(self, session_id: int) -> None:
@@ -1573,7 +1744,7 @@ def delete(self, session_id: int) -> None:
 
 **Problem.** Insert one sample, with its seven probabilities stored as JSON.
 
-**Solution.**
+**Solution.** Paste in `app/database/repositories.py`, inside class `SampleRepository` (indented 4 spaces), in place of the skeleton's `def add`:
 
 ```python
 def add(self, sample: EmotionSample) -> int:
@@ -1587,7 +1758,7 @@ def add(self, sample: EmotionSample) -> int:
 
 **Problem.** Insert a whole buffer of samples in one executemany - one disk write per batch, not per frame.
 
-**Solution.**
+**Solution.** Paste in `app/database/repositories.py`, inside class `SampleRepository` (indented 4 spaces), in place of the skeleton's `def add_many`:
 
 ```python
 def add_many(self, samples: List[EmotionSample]) -> None:
@@ -1601,7 +1772,7 @@ def add_many(self, samples: List[EmotionSample]) -> None:
 
 **Problem.** All samples of a session in time order.
 
-**Solution.**
+**Solution.** Paste in `app/database/repositories.py`, inside class `SampleRepository` (indented 4 spaces), in place of the skeleton's `def list_for_session`:
 
 ```python
 def list_for_session(self, session_id: int) -> List[EmotionSample]:
@@ -1616,7 +1787,7 @@ def list_for_session(self, session_id: int) -> List[EmotionSample]:
 
 **Problem.** Count the samples per emotion with GROUP BY: {Emotion: count}.
 
-**Solution.**
+**Solution.** Paste in `app/database/repositories.py`, inside class `SampleRepository` (indented 4 spaces), in place of the skeleton's `def emotion_counts`:
 
 ```python
 def emotion_counts(self, session_id: int) -> dict:
@@ -1629,11 +1800,13 @@ def emotion_counts(self, session_id: int) -> dict:
 
 ### `app/models/session.py`
 
+Open `FaceEmotion/app/models/session.py`.
+
 #### `Session.duration_seconds`
 
 **Problem.** Seconds from start to end, or 0 while the session is still running.
 
-**Solution.**
+**Solution.** Paste in `app/models/session.py`, inside class `Session` (indented 4 spaces), in place of the skeleton's `def duration_seconds`:
 
 ```python
 @property
@@ -1647,7 +1820,7 @@ def duration_seconds(self) -> float:
 
 **Problem.** The percentage of samples for each emotion; an empty dict when there are no samples.
 
-**Solution.**
+**Solution.** Paste in `app/models/session.py`, inside class `Session` (indented 4 spaces), in place of the skeleton's `def emotion_distribution`:
 
 ```python
 def emotion_distribution(self) -> dict:
@@ -1664,7 +1837,7 @@ def emotion_distribution(self) -> dict:
 
 **Problem.** The emotion with the highest percentage, or None.
 
-**Solution.**
+**Solution.** Paste in `app/models/session.py`, inside class `Session` (indented 4 spaces), in place of the skeleton's `def dominant_emotion`:
 
 ```python
 def dominant_emotion(self) -> Optional[Emotion]:
@@ -1676,11 +1849,21 @@ def dominant_emotion(self) -> Optional[Emotion]:
 
 ### `app/utils/exporter.py`
 
+Open `FaceEmotion/app/utils/exporter.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import csv
+from datetime import datetime
+from app.models.emotion import Emotion
+```
+
 #### `SessionExporter.export(session_id, directory)`
 
 **Problem.** Write exports/session_<id>_<time>.csv: one row per sample, then a summary (duration, frames, FPS, percentage per emotion). Use "utf-8-sig" so the Hebrew names open correctly in Excel.
 
-**Solution.**
+**Solution.** Paste in `app/utils/exporter.py`, inside class `SessionExporter` (indented 4 spaces), in place of the skeleton's `def export`:
 
 ```python
 def export(self, session_id: int, directory: str = config.EXPORTS_DIR) -> str:
@@ -1713,11 +1896,20 @@ def export(self, session_id: int, directory: str = config.EXPORTS_DIR) -> str:
 
 ### `app/views/chart_frame.py`
 
+Open `FaceEmotion/app/views/chart_frame.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+```
+
 #### `ChartFrame.__init__(parent, history_size)`
 
 **Problem.** A matplotlib figure inside Tk with seven lines, one per emotion in its colour, y from 0 to 1. Create the lines once.
 
-**Solution.**
+**Solution.** Paste in `app/views/chart_frame.py`, inside class `ChartFrame` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, parent, history_size: int = config.HISTORY_SIZE):
@@ -1746,7 +1938,7 @@ def __init__(self, parent, history_size: int = config.HISTORY_SIZE):
 
 **Problem.** Add the seven new values to their histories, update the lines' data and redraw (without rebuilding the figure).
 
-**Solution.**
+**Solution.** Paste in `app/views/chart_frame.py`, inside class `ChartFrame` (indented 4 spaces), in place of the skeleton's `def push`:
 
 ```python
 def push(self, probabilities) -> None:
@@ -1764,7 +1956,7 @@ def push(self, probabilities) -> None:
 
 **Problem.** Empty all histories and redraw an empty chart.
 
-**Solution.**
+**Solution.** Paste in `app/views/chart_frame.py`, inside class `ChartFrame` (indented 4 spaces), in place of the skeleton's `def clear`:
 
 ```python
 def clear(self) -> None:
@@ -1778,9 +1970,11 @@ def clear(self) -> None:
 
 ### `app/views/emotion_panel.py`
 
+Open `FaceEmotion/app/views/emotion_panel.py`.
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`EmotionPanel._hex`
+`EmotionPanel._hex` — paste inside class `EmotionPanel`:
 
 ```python
 @staticmethod
@@ -1793,7 +1987,7 @@ def _hex(emotion) -> str:
 
 **Problem.** Three widgets: the emotion name in large letters, the percentage and a progress bar.
 
-**Solution.**
+**Solution.** Paste in `app/views/emotion_panel.py`, inside class `EmotionPanel` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, parent):
@@ -1814,7 +2008,7 @@ def __init__(self, parent):
 
 **Problem.** Show the Hebrew name in the emotion's colour, the percentage and the bar. The colours are stored as BGR for OpenCV; Tk wants #RRGGBB, so swap the order.
 
-**Solution.**
+**Solution.** Paste in `app/views/emotion_panel.py`, inside class `EmotionPanel` (indented 4 spaces), in place of the skeleton's `def show`:
 
 ```python
 def show(self, emotion, confidence: float) -> None:
@@ -1830,7 +2024,7 @@ def show(self, emotion, confidence: float) -> None:
 
 **Problem.** No face: show "-" in grey and empty the percentage and bar.
 
-**Solution.**
+**Solution.** Paste in `app/views/emotion_panel.py`, inside class `EmotionPanel` (indented 4 spaces), in place of the skeleton's `def clear`:
 
 ```python
 def clear(self) -> None:
@@ -1844,20 +2038,32 @@ def clear(self) -> None:
 
 ### `app/views/main_window.py`
 
+Open `FaceEmotion/app/views/main_window.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from tkinter import messagebox, ttk
+from app.views.chart_frame import ChartFrame
+from app.views.emotion_panel import EmotionPanel
+from app.views.stats_frame import StatsFrame
+from app.views.video_frame import VideoFrame
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`MainWindow.set_detector`
+`MainWindow.set_detector` — paste inside class `MainWindow`:
 
 ```python
 def set_detector(self, name: str) -> None:
-        self.detector_var.set(name)
+    self.detector_var.set(name)
 ```
 
 #### `MainWindow.__init__(root, on_start, on_stop, on_export, on_detector_change)`
 
 **Problem.** Build the window: a toolbar (Start, Stop, Export, detector choice), the video on the left, the emotion panel and live chart on the right, the stats bar at the bottom. The video grows with the window.
 
-**Solution.**
+**Solution.** Paste in `app/views/main_window.py`, inside class `MainWindow` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, root: tk.Tk, on_start, on_stop, on_export, on_detector_change):
@@ -1901,7 +2107,7 @@ def __init__(self, root: tk.Tk, on_start, on_stop, on_export, on_detector_change
 
 **Problem.** Enable and disable the buttons so Start cannot be pressed twice.
 
-**Solution.**
+**Solution.** Paste in `app/views/main_window.py`, inside class `MainWindow` (indented 4 spaces), in place of the skeleton's `def set_running`:
 
 ```python
 def set_running(self, running: bool) -> None:
@@ -1916,7 +2122,7 @@ def set_running(self, running: bool) -> None:
 
 **Problem.** Show an information message box.
 
-**Solution.**
+**Solution.** Paste in `app/views/main_window.py`, inside class `MainWindow` (indented 4 spaces), in place of the skeleton's `def show_message`:
 
 ```python
 def show_message(self, title: str, message: str) -> None:
@@ -1927,11 +2133,13 @@ def show_message(self, title: str, message: str) -> None:
 
 ### `app/views/stats_frame.py`
 
+Open `FaceEmotion/app/views/stats_frame.py`.
+
 #### `StatsFrame.__init__(parent)`
 
 **Problem.** Labels for the elapsed time, frames, FPS and the session summary.
 
-**Solution.**
+**Solution.** Paste in `app/views/stats_frame.py`, inside class `StatsFrame` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, parent):
@@ -1952,7 +2160,7 @@ def __init__(self, parent):
 
 **Problem.** Refresh the time, frames and FPS labels.
 
-**Solution.**
+**Solution.** Paste in `app/views/stats_frame.py`, inside class `StatsFrame` (indented 4 spaces), in place of the skeleton's `def update_live`:
 
 ```python
 def update_live(self, elapsed_seconds: float, frames: int, fps: float) -> None:
@@ -1968,7 +2176,7 @@ def update_live(self, elapsed_seconds: float, frames: int, fps: float) -> None:
 
 **Problem.** After a session, show its duration, frames, FPS and the share of each emotion ("happy 42% | neutral 31% | ...").
 
-**Solution.**
+**Solution.** Paste in `app/views/stats_frame.py`, inside class `StatsFrame` (indented 4 spaces), in place of the skeleton's `def show_summary`:
 
 ```python
 def show_summary(self, session) -> None:
@@ -1985,11 +2193,20 @@ def show_summary(self, session) -> None:
 
 ### `app/views/video_frame.py`
 
+Open `FaceEmotion/app/views/video_frame.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import cv2
+from PIL import Image, ImageTk
+```
+
 #### `VideoFrame.__init__(parent)`
 
 **Problem.** A label that will show the video frames, and a place to keep the current image.
 
-**Solution.**
+**Solution.** Paste in `app/views/video_frame.py`, inside class `VideoFrame` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, parent):
@@ -2005,7 +2222,7 @@ def __init__(self, parent):
 
 **Problem.** Show a camera frame: BGR to RGB, to a PIL image, to a PhotoImage, into the label - and keep a reference to it, or Python frees it and the label goes grey.
 
-**Solution.**
+**Solution.** Paste in `app/views/video_frame.py`, inside class `VideoFrame` (indented 4 spaces), in place of the skeleton's `def show`:
 
 ```python
 def show(self, frame_bgr: np.ndarray) -> None:
@@ -2022,7 +2239,7 @@ def show(self, frame_bgr: np.ndarray) -> None:
 
 **Problem.** Remove the last frame from the label.
 
-**Solution.**
+**Solution.** Paste in `app/views/video_frame.py`, inside class `VideoFrame` (indented 4 spaces), in place of the skeleton's `def clear`:
 
 ```python
 def clear(self) -> None:
@@ -2037,11 +2254,13 @@ def clear(self) -> None:
 
 ### `app/controllers/app_controller.py`
 
+Open `FaceEmotion/app/controllers/app_controller.py`.
+
 #### `AppController.change_detector(name)`
 
 **Problem.** Switch between the Haar and DNN detectors while running. If the new one cannot load, keep the old one and show why.
 
-**Solution.**
+**Solution.** Paste in `app/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def change_detector`:
 
 ```python
 def change_detector(self, name: str) -> None:
@@ -2058,11 +2277,13 @@ def change_detector(self, name: str) -> None:
 
 ### `app/ml/predictor.py`
 
+Open `FaceEmotion/app/ml/predictor.py`.
+
 #### `EmotionPredictor.predict_batch(model_inputs)`
 
 **Problem.** Classify several faces in one network call by stacking them into one batch.
 
-**Solution.**
+**Solution.** Paste in `app/ml/predictor.py`, inside class `EmotionPredictor` (indented 4 spaces), in place of the skeleton's `def predict_batch`:
 
 ```python
 @torch.no_grad()
@@ -2078,11 +2299,20 @@ def predict_batch(self, model_inputs: List[np.ndarray]) -> List[Tuple[Emotion, f
 
 ### `app/vision/dnn_detector.py`
 
+Open `FaceEmotion/app/vision/dnn_detector.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import os
+import cv2
+```
+
 #### `DnnFaceDetector.__init__(proto_path, weights_path)`
 
 **Problem.** Load the DNN face detector from its two model files; if one is missing, raise an error that says where to download it.
 
-**Solution.**
+**Solution.** Paste in `app/vision/dnn_detector.py`, inside class `DnnFaceDetector` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, proto_path: str = None, weights_path: str = None):
@@ -2101,7 +2331,7 @@ def __init__(self, proto_path: str = None, weights_path: str = None):
 
 **Problem.** Resize the frame to 300x300, run the network, keep the boxes above the confidence limit, and scale them back from 0-1 to frame pixels.
 
-**Solution.**
+**Solution.** Paste in `app/vision/dnn_detector.py`, inside class `DnnFaceDetector` (indented 4 spaces), in place of the skeleton's `def detect`:
 
 ```python
 def detect(self, frame: np.ndarray) -> List[FaceDetection]:

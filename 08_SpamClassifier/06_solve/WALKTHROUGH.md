@@ -8,6 +8,36 @@ Every function you write in this project (99 of them), in the order of `TASKS.md
 
 Try each function yourself first, then compare. Run the check after every function, not at the end.
 
+## Where the code goes
+
+Every path below starts in your project folder `SpamClassifier/` (the folder with `TASKS.md`). For each file:
+
+1. **Imports** — if the file section lists imports, add the lines that are missing to the top of the file, next to the other `import` lines.
+2. **Helper code** — paste it once, where the section says: *in the file* means below the imports and above the first class; *inside class X* means inside that class, next to its other methods (indented like them).
+3. **Each function** — in your skeleton, find the `def` with the same name. Delete the whole function — the `def` line, the TODO text and `raise NotImplementedError` — and paste the solution in its place. Inside a class, every line moves 4 spaces to the right, so the `def` lines up with the other methods.
+4. **New files** — at the end, under *Files the solution adds*: create the file at that path and paste the whole code.
+
+Before and after, for a method inside a class:
+
+```python
+class Example:
+
+    def total(self, items):          # BEFORE - the skeleton
+        """
+        TODO stage 3: add up the prices.
+        """
+        raise NotImplementedError
+```
+
+```python
+class Example:
+
+    def total(self, items):          # AFTER - the solution pasted in its place
+        return sum(item.price for item in items)
+```
+
+Then run the **Check** command from the project folder.
+
 ## Contents
 
 - [Stage 1 — Data and splitting](#stage-1--data-and-splitting) (4 functions)
@@ -25,11 +55,19 @@ Try each function yourself first, then compare. Run the check after every functi
 
 ### `spamclassifier/ml/dataset.py`
 
+Open `SpamClassifier/spamclassifier/ml/dataset.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import csv
+```
+
 #### `load_corpus(path)`
 
 **Problem.** Read the corpus CSV (columns text and label) and return (texts, labels) with ham = 0 and spam = 1. A missing column or an unknown label is an error naming the row. Drop exact duplicate texts and say how many - the same text in train and test would be a leak.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/dataset.py`, at the top level of the file, in place of the skeleton's `def load_corpus`:
 
 ```python
 def load_corpus(path: str | None = None) -> Tuple[List[str], List[int]]:
@@ -61,7 +99,7 @@ def load_corpus(path: str | None = None) -> Tuple[List[str], List[int]]:
 
 **Problem.** Count the ham and spam labels and the spam share: {"ham": n, "spam": n, "spam_ratio": 0.13}. Print it right after loading - a strange ratio means a broken corpus.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/dataset.py`, at the top level of the file, in place of the skeleton's `def class_balance`:
 
 ```python
 def class_balance(labels: Sequence[int]) -> dict:
@@ -75,7 +113,7 @@ def class_balance(labels: Sequence[int]) -> dict:
 
 **Problem.** Split the messages 70 / 15 / 15 into train, validation and test, keeping the same spam share in each part and the same split on every run (fixed seed). Give the sizes as whole numbers of messages, not ratios, so the parts are exactly the right size.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/dataset.py`, at the top level of the file, in place of the skeleton's `def stratified_split`:
 
 ```python
 def stratified_split(texts: Sequence[str], labels: Sequence[int],
@@ -99,7 +137,7 @@ def stratified_split(texts: Sequence[str], labels: Sequence[int],
 
 **Problem.** Raise AssertionError if the same text appears in two of the three parts. Run it before every training.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/dataset.py`, at the top level of the file, in place of the skeleton's `def assert_no_leakage`:
 
 ```python
 def assert_no_leakage(split: Split) -> None:
@@ -117,11 +155,13 @@ def assert_no_leakage(split: Split) -> None:
 
 ### `spamclassifier/preprocessing/email_parser.py`
 
+Open `SpamClassifier/spamclassifier/preprocessing/email_parser.py`.
+
 #### `EmailParser.parse(raw)`
 
 **Problem.** Turn a raw message into a CleanedMessage in this order: cut it to the maximum length, split off the subject, measure the capitals, "!" and digits on the raw text, count tags and links, remove the HTML, replace links with URLTOKEN, then lower-case everything except URLTOKEN. Measuring before lower-casing is the point: "FREE!!!" and "free" must not look the same.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/preprocessing/email_parser.py`, inside class `EmailParser` (indented 4 spaces), in place of the skeleton's `def parse`:
 
 ```python
 def parse(self, raw: str) -> CleanedMessage:
@@ -150,7 +190,7 @@ def parse(self, raw: str) -> CleanedMessage:
 
 **Problem.** Return at most MAX_INPUT_CHARS characters, so a huge message cannot use up the memory.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/preprocessing/email_parser.py`, inside class `EmailParser` (indented 4 spaces), in place of the skeleton's `def truncate`:
 
 ```python
 def truncate(self, raw: str) -> str:
@@ -163,7 +203,7 @@ def truncate(self, raw: str) -> str:
 
 **Problem.** Return (subject, body). Headers are the "Name: value" lines before the first blank line; keep only the Subject. No headers: the whole text is the body. Only headers: the body is "".
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/preprocessing/email_parser.py`, inside class `EmailParser` (indented 4 spaces), in place of the skeleton's `def split_headers`:
 
 ```python
 def split_headers(self, raw: str) -> Tuple[str, str]:
@@ -186,7 +226,7 @@ def split_headers(self, raw: str) -> Tuple[str, str]:
 
 **Problem.** Remove every <...> tag and squeeze the spaces, so "<b>free</b><i>offer</i>" becomes "free offer", not "freeoffer".
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/preprocessing/email_parser.py`, inside class `EmailParser` (indented 4 spaces), in place of the skeleton's `def strip_html`:
 
 ```python
 def strip_html(self, text: str) -> str:
@@ -199,7 +239,7 @@ def strip_html(self, text: str) -> str:
 
 **Problem.** Replace every link with URLTOKEN. The model should learn "there is a link", not one particular domain.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/preprocessing/email_parser.py`, inside class `EmailParser` (indented 4 spaces), in place of the skeleton's `def replace_urls`:
 
 ```python
 def replace_urls(self, text: str) -> str:
@@ -212,7 +252,7 @@ def replace_urls(self, text: str) -> str:
 
 **Problem.** Upper-case letters divided by all letters, between 0 and 1. Digits and punctuation are not letters. No letters gives 0.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/preprocessing/email_parser.py`, inside class `EmailParser` (indented 4 spaces), in place of the skeleton's `def caps_ratio`:
 
 ```python
 @staticmethod
@@ -227,7 +267,7 @@ def caps_ratio(text: str) -> float:
 
 **Problem.** Count the "!" characters.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/preprocessing/email_parser.py`, inside class `EmailParser` (indented 4 spaces), in place of the skeleton's `def exclamation_count`:
 
 ```python
 @staticmethod
@@ -241,7 +281,7 @@ def exclamation_count(text: str) -> int:
 
 **Problem.** Digits divided by all characters, between 0 and 1. An empty string gives 0.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/preprocessing/email_parser.py`, inside class `EmailParser` (indented 4 spaces), in place of the skeleton's `def digit_ratio`:
 
 ```python
 @staticmethod
@@ -255,7 +295,7 @@ def digit_ratio(text: str) -> float:
 
 **Problem.** Count the links in the text.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/preprocessing/email_parser.py`, inside class `EmailParser` (indented 4 spaces), in place of the skeleton's `def count_urls`:
 
 ```python
 @staticmethod
@@ -269,7 +309,7 @@ def count_urls(text: str) -> int:
 
 **Problem.** Count the <...> tags, before they are removed.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/preprocessing/email_parser.py`, inside class `EmailParser` (indented 4 spaces), in place of the skeleton's `def count_html_tags`:
 
 ```python
 @staticmethod
@@ -281,11 +321,13 @@ def count_html_tags(text: str) -> int:
 
 ### `spamclassifier/preprocessing/tokenizer.py`
 
+Open `SpamClassifier/spamclassifier/preprocessing/tokenizer.py`.
+
 #### `load_stopwords()`
 
 **Problem.** Return NLTK's English stopword set, downloading it once if it is missing.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/preprocessing/tokenizer.py`, at the top level of the file, in place of the skeleton's `def load_stopwords`:
 
 ```python
 def load_stopwords() -> Set[str]:
@@ -305,7 +347,7 @@ def load_stopwords() -> Set[str]:
 
 **Problem.** Split a cleaned message's text into tokens with the filtering rules below.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/preprocessing/tokenizer.py`, inside class `Tokenizer` (indented 4 spaces), in place of the skeleton's `def tokenize`:
 
 ```python
 def tokenize(self, message: CleanedMessage) -> List[str]:
@@ -318,7 +360,7 @@ def tokenize(self, message: CleanedMessage) -> List[str]:
 
 **Problem.** Split a string into words (letters and apostrophes), drop stopwords and words shorter than 3 letters, but always keep URLTOKEN: "free URLTOKEN offer now" -> ["free", "URLTOKEN", "offer", "now"].
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/preprocessing/tokenizer.py`, inside class `Tokenizer` (indented 4 spaces), in place of the skeleton's `def tokenize_text`:
 
 ```python
 def tokenize_text(self, text: str) -> List[str]:
@@ -336,7 +378,7 @@ def tokenize_text(self, text: str) -> List[str]:
 
 **Problem.** Return True when a token stays: always for URLTOKEN, otherwise when it is long enough and not a stopword.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/preprocessing/tokenizer.py`, inside class `Tokenizer` (indented 4 spaces), in place of the skeleton's `def _keep`:
 
 ```python
 def _keep(self, token: str) -> bool:
@@ -352,30 +394,38 @@ def _keep(self, token: str) -> bool:
 
 ### `spamclassifier/features/feature_engineer.py`
 
+Open `SpamClassifier/spamclassifier/features/feature_engineer.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from collections import Counter
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`FeatureEngineer._handcrafted`
+`FeatureEngineer._handcrafted` — paste inside class `FeatureEngineer`:
 
 ```python
 def _handcrafted(self, message: CleanedMessage, tokens: List[str]) -> Dict[str, float]:
-        present = set(tokens)
-        values = {
-            "caps_ratio": float(message.caps_ratio),
-            "exclamation_count": float(message.exclamation_count),
-            "message_length": float(message.raw_length),
-            "digit_ratio": float(message.digit_ratio),
-            "url_count": float(message.url_count),
-            "trigger_word_count": float(sum(1 for w in config.TRIGGER_WORDS if w in present)),
-            "unique_word_ratio": len(present) / len(tokens) if tokens else 0.0,
-        }
-        return {name: values[name] for name in config.HANDCRAFTED_FEATURES}
+    present = set(tokens)
+    values = {
+        "caps_ratio": float(message.caps_ratio),
+        "exclamation_count": float(message.exclamation_count),
+        "message_length": float(message.raw_length),
+        "digit_ratio": float(message.digit_ratio),
+        "url_count": float(message.url_count),
+        "trigger_word_count": float(sum(1 for w in config.TRIGGER_WORDS if w in present)),
+        "unique_word_ratio": len(present) / len(tokens) if tokens else 0.0,
+    }
+    return {name: values[name] for name in config.HANDCRAFTED_FEATURES}
 ```
 
 #### `FeatureEngineer.fit(messages)`
 
 **Problem.** Build the vocabulary from the TRAINING messages only: count in how many messages each unigram and bigram appears, keep the MAX_FEATURES most common, and store each one's IDF. Fitting on all the data would let the test set shape the features.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/features/feature_engineer.py`, inside class `FeatureEngineer` (indented 4 spaces), in place of the skeleton's `def fit`:
 
 ```python
 def fit(self, messages: Sequence[CleanedMessage]) -> "FeatureEngineer":
@@ -398,7 +448,7 @@ def fit(self, messages: Sequence[CleanedMessage]) -> "FeatureEngineer":
 
 **Problem.** Turn one message into a FeatureVector: TF-IDF values for the vocabulary terms (count / length x idf, then scaled to length 1) plus the seven hand-made numbers. Terms not in the vocabulary are ignored. Calling it before fit is an error.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/features/feature_engineer.py`, inside class `FeatureEngineer` (indented 4 spaces), in place of the skeleton's `def transform`:
 
 ```python
 def transform(self, message: CleanedMessage) -> FeatureVector:
@@ -419,7 +469,7 @@ def transform(self, message: CleanedMessage) -> FeatureVector:
 
 **Problem.** The seven hand-made numbers in the fixed order: capitals share, "!" count, length, digit share and link count (all measured by the parser), plus how many trigger words appear and unique words / all words.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/features/feature_engineer.py`, inside class `FeatureEngineer` (indented 4 spaces), in place of the skeleton's `def handcrafted`:
 
 ```python
 def handcrafted(self, message: CleanedMessage) -> Dict[str, float]:
@@ -432,7 +482,7 @@ def handcrafted(self, message: CleanedMessage) -> Dict[str, float]:
 
 **Problem.** Divide every value by the vector's length (square root of the sum of squares). A zero vector stays as it is. Without this, long messages get bigger numbers and the model learns length instead of content.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/features/feature_engineer.py`, inside class `FeatureEngineer` (indented 4 spaces), in place of the skeleton's `def l2_normalise`:
 
 ```python
 @staticmethod
@@ -447,7 +497,7 @@ def l2_normalise(vector: Dict[str, float]) -> Dict[str, float]:
 
 **Problem.** log(N / (1 + df)) + 1: rare terms get a high weight, a term in every message the lowest.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/features/feature_engineer.py`, inside class `FeatureEngineer` (indented 4 spaces), in place of the skeleton's `def idf_value`:
 
 ```python
 @staticmethod
@@ -461,7 +511,7 @@ def idf_value(n_documents: int, document_frequency: int) -> float:
 
 **Problem.** Flatten a FeatureVector into one list: the vocabulary values in vocabulary order, then the seven numbers in their fixed order. This is exactly what the SVM receives.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/features/feature_engineer.py`, inside class `FeatureEngineer` (indented 4 spaces), in place of the skeleton's `def to_dense`:
 
 ```python
 def to_dense(self, vector: FeatureVector) -> List[float]:
@@ -476,11 +526,13 @@ def to_dense(self, vector: FeatureVector) -> List[float]:
 
 ### `spamclassifier/preprocessing/tokenizer.py`
 
+Open `SpamClassifier/spamclassifier/preprocessing/tokenizer.py`.
+
 #### `ngrams(tokens, n_min, n_max)`
 
 **Problem.** Return every n-gram from n_min to n_max words, joined by spaces: ["click", "here", "now"] with 1-2 gives ["click", "here", "now", "click here", "here now"].
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/preprocessing/tokenizer.py`, at the top level of the file, in place of the skeleton's `def ngrams`:
 
 ```python
 def ngrams(tokens: Iterable[str], n_min: int, n_max: int) -> List[str]:
@@ -495,11 +547,19 @@ def ngrams(tokens: Iterable[str], n_min: int, n_max: int) -> List[str]:
 
 ### `spamclassifier/ml/naive_bayes.py`
 
+Open `SpamClassifier/spamclassifier/ml/naive_bayes.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from collections import Counter
+```
+
 #### `NaiveBayesClassifier.fit(documents, labels)`
 
 **Problem.** Learn from token lists: the log share of each class (prior), and for every word in each class log((count + alpha) / (total words in the class + alpha x vocabulary size)). The +alpha (Laplace smoothing) stops an unseen word from giving probability 0; logs stop the product from becoming 0.0.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/naive_bayes.py`, inside class `NaiveBayesClassifier` (indented 4 spaces), in place of the skeleton's `def fit`:
 
 ```python
 def fit(self, documents: Sequence[Sequence[str]], labels: Sequence[int]) -> "NaiveBayesClassifier":
@@ -527,7 +587,7 @@ def fit(self, documents: Sequence[Sequence[str]], labels: Sequence[int]) -> "Nai
 
 **Problem.** The log score of each class for one message: its log prior plus the log likelihood of every known token. Unknown tokens are skipped - they would add the same to both classes.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/naive_bayes.py`, inside class `NaiveBayesClassifier` (indented 4 spaces), in place of the skeleton's `def predict_log_scores`:
 
 ```python
 def predict_log_scores(self, tokens: Sequence[str]) -> Dict[int, float]:
@@ -543,7 +603,7 @@ def predict_log_scores(self, tokens: Sequence[str]) -> Dict[int, float]:
 
 **Problem.** P(spam) = 1 / (1 + exp(ham score - spam score)), computed from the difference so it never underflows. Very large differences give exactly 0.0 or 1.0.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/naive_bayes.py`, inside class `NaiveBayesClassifier` (indented 4 spaces), in place of the skeleton's `def predict_proba`:
 
 ```python
 def predict_proba(self, tokens: Sequence[str]) -> float:
@@ -562,7 +622,7 @@ def predict_proba(self, tokens: Sequence[str]) -> float:
 
 **Problem.** 1 (spam) when P(spam) is at least the threshold, else 0.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/naive_bayes.py`, inside class `NaiveBayesClassifier` (indented 4 spaces), in place of the skeleton's `def predict`:
 
 ```python
 def predict(self, tokens: Sequence[str], threshold: float = 0.5) -> int:
@@ -575,7 +635,7 @@ def predict(self, tokens: Sequence[str], threshold: float = 0.5) -> int:
 
 **Problem.** How strongly a word points to spam: log P(word | spam) - log P(word | ham). Positive means spam, negative means ham, 0 for an unknown word.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/naive_bayes.py`, inside class `NaiveBayesClassifier` (indented 4 spaces), in place of the skeleton's `def log_odds`:
 
 ```python
 def log_odds(self, token: str) -> float:
@@ -590,7 +650,7 @@ def log_odds(self, token: str) -> float:
 
 **Problem.** The words of this message with the strongest log-odds (by absolute value), each word once - the reasons shown to the user.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/naive_bayes.py`, inside class `NaiveBayesClassifier` (indented 4 spaces), in place of the skeleton's `def explain`:
 
 ```python
 def explain(self, tokens: Sequence[str], top_n: int | None = None) -> List[Reason]:
@@ -606,7 +666,7 @@ def explain(self, tokens: Sequence[str], top_n: int | None = None) -> List[Reaso
 
 **Problem.** The vocabulary words with the strongest log-odds, strongest first - useful to spot a model that learned something silly.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/naive_bayes.py`, inside class `NaiveBayesClassifier` (indented 4 spaces), in place of the skeleton's `def most_discriminative`:
 
 ```python
 def most_discriminative(self, top_n: int = 50) -> List[Tuple[str, float]]:
@@ -620,11 +680,19 @@ def most_discriminative(self, top_n: int = 50) -> List[Tuple[str, float]]:
 
 ### `spamclassifier/ml/comparator.py`
 
+Open `SpamClassifier/spamclassifier/ml/comparator.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import statistics
+```
+
 #### `ModelComparator.cross_validate(model_factory, texts, labels)`
 
 **Problem.** Stratified 5-fold cross-validation: for every fold train a NEW model (features refitted too) on the other folds, score the held-out fold, and return mean and standard deviation of precision, recall and F1.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/comparator.py`, inside class `ModelComparator` (indented 4 spaces), in place of the skeleton's `def cross_validate`:
 
 ```python
 def cross_validate(self, model_factory, texts: Sequence[str],
@@ -654,7 +722,7 @@ def cross_validate(self, model_factory, texts: Sequence[str],
 
 **Problem.** For each metric say which model wins - or "no significant difference" when the gap between the means is smaller than the larger standard deviation.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/comparator.py`, inside class `ModelComparator` (indented 4 spaces), in place of the skeleton's `def compare`:
 
 ```python
 def compare(self, results_a: List[MetricResult],
@@ -680,7 +748,7 @@ def compare(self, results_a: List[MetricResult],
 
 **Problem.** Count true ham, false spam (real mail hidden), false ham (spam let through) and true spam from predictions and labels.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/comparator.py`, inside class `ModelComparator` (indented 4 spaces), in place of the skeleton's `def confusion_matrix`:
 
 ```python
 @staticmethod
@@ -703,21 +771,23 @@ def confusion_matrix(predictions: Sequence[int],
 
 ### `spamclassifier/ml/svm_classifier.py`
 
+Open `SpamClassifier/spamclassifier/ml/svm_classifier.py`.
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`SVMClassifier.predict_proba_many`
+`SVMClassifier.predict_proba_many` — paste inside class `SVMClassifier`:
 
 ```python
 def predict_proba_many(self, vectors) -> List[float]:
-        """All probabilities in one call - much faster than one predict_proba per row."""
-        return [float(p) for p in self._model.predict_proba(vectors)[:, 1]]
+    """All probabilities in one call - much faster than one predict_proba per row."""
+    return [float(p) for p in self._model.predict_proba(vectors)[:, 1]]
 ```
 
 #### `SVMClassifier.fit(vectors, labels)`
 
 **Problem.** Fit the comparison model: a MaxAbsScaler (every column between 0 and 1) and a LinearSVC, wrapped in CalibratedClassifierCV so it outputs probabilities like Naive Bayes.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/svm_classifier.py`, inside class `SVMClassifier` (indented 4 spaces), in place of the skeleton's `def fit`:
 
 ```python
 def fit(self, vectors: Sequence[Sequence[float]], labels: Sequence[int]) -> "SVMClassifier":
@@ -740,7 +810,7 @@ def fit(self, vectors: Sequence[Sequence[float]], labels: Sequence[int]) -> "SVM
 
 **Problem.** P(spam) for one dense vector.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/svm_classifier.py`, inside class `SVMClassifier` (indented 4 spaces), in place of the skeleton's `def predict_proba`:
 
 ```python
 def predict_proba(self, vector: Sequence[float]) -> float:
@@ -755,7 +825,7 @@ def predict_proba(self, vector: Sequence[float]) -> float:
 
 **Problem.** 1 when P(spam) is at least the threshold, else 0.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/svm_classifier.py`, inside class `SVMClassifier` (indented 4 spaces), in place of the skeleton's `def predict`:
 
 ```python
 def predict(self, vector: Sequence[float], threshold: float = 0.5) -> int:
@@ -768,7 +838,7 @@ def predict(self, vector: Sequence[float], threshold: float = 0.5) -> int:
 
 **Problem.** Approximate reasons from the linear weights: weight x scaled value for each feature present, strongest first. Only an approximation after calibration - that is why Naive Bayes is the main model.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/svm_classifier.py`, inside class `SVMClassifier` (indented 4 spaces), in place of the skeleton's `def explain`:
 
 ```python
 def explain(self, vector: Sequence[float], feature_names: List[str], top_n: int = 5):
@@ -794,16 +864,29 @@ def explain(self, vector: Sequence[float], feature_names: List[str], top_n: int 
 
 ### `spamclassifier/ml/bundle.py`
 
+Open `SpamClassifier/spamclassifier/ml/bundle.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import hashlib
+import pickle
+import shutil
+import string
+from dataclasses import asdict
+from datetime import date, datetime
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`CHECKED_FILES`
+`CHECKED_FILES` — paste in the file, below the imports:
 
 ```python
 CHECKED_FILES = ("features.json", "metrics.json", "nb_model.pkl", "svm_model.pkl",
                  "threshold.json", "vectorizer.pkl", "version.txt")
 ```
 
-`_version_key`
+`_version_key` — paste in the file, below the imports:
 
 ```python
 def _version_key(name: str):
@@ -811,7 +894,7 @@ def _version_key(name: str):
     return day, len(suffix), suffix
 ```
 
-`ModelBundle._checksum_of`
+`ModelBundle._checksum_of` — paste inside class `ModelBundle`:
 
 ```python
 @staticmethod
@@ -829,7 +912,7 @@ def _checksum_of(directory: str) -> str:
 
 **Problem.** A version name like "2026-03-11-a": today's date plus the first free letter, so two runs on one day do not collide.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/bundle.py`, inside class `ModelBundle` (indented 4 spaces), in place of the skeleton's `def new_version`:
 
 ```python
 @staticmethod
@@ -851,7 +934,7 @@ def new_version() -> str:
 
 **Problem.** Write the eight files of a bundle (vectorizer, both models, features, thresholds, metrics, version, checksum last) into a temporary folder and rename it at the end, so a crash never leaves a half-written bundle.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/bundle.py`, inside class `ModelBundle` (indented 4 spaces), in place of the skeleton's `def save`:
 
 ```python
 def save(self, vectorizer, nb_model, svm_model, threshold_choice,
@@ -897,7 +980,7 @@ def save(self, vectorizer, nb_model, svm_model, threshold_choice,
 
 **Problem.** In this order: all files present, checksum matches, feature list matches config - and only then unpickle. Unpickling first would make the checksum useless, because pickle can run code.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/bundle.py`, inside class `ModelBundle` (indented 4 spaces), in place of the skeleton's `def load`:
 
 ```python
 def load(self) -> Dict:
@@ -931,7 +1014,7 @@ def load(self) -> Dict:
 
 **Problem.** One SHA-256 over the bundle files in sorted name order.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/bundle.py`, inside class `ModelBundle` (indented 4 spaces), in place of the skeleton's `def compute_checksum`:
 
 ```python
 def compute_checksum(self) -> str:
@@ -944,7 +1027,7 @@ def compute_checksum(self) -> str:
 
 **Problem.** True when all files are there and the stored checksum matches.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/bundle.py`, inside class `ModelBundle` (indented 4 spaces), in place of the skeleton's `def verify`:
 
 ```python
 def verify(self) -> bool:
@@ -960,7 +1043,7 @@ def verify(self) -> bool:
 
 **Problem.** Raise ValueError when the bundle's hand-made feature names are not exactly config's, in the same order. Name both lists in the message.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/bundle.py`, inside class `ModelBundle` (indented 4 spaces), in place of the skeleton's `def verify_feature_contract`:
 
 ```python
 def verify_feature_contract(self, feature_names: List[str]) -> None:
@@ -976,7 +1059,7 @@ def verify_feature_contract(self, feature_names: List[str]) -> None:
 
 **Problem.** The newest bundle in models/ that passes verify, or None.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/bundle.py`, inside class `ModelBundle` (indented 4 spaces), in place of the skeleton's `def latest_version`:
 
 ```python
 @staticmethod
@@ -995,11 +1078,13 @@ def latest_version() -> str | None:
 
 ### `spamclassifier/ml/naive_bayes.py`
 
+Open `SpamClassifier/spamclassifier/ml/naive_bayes.py`.
+
 #### `NaiveBayesClassifier.to_dict()`
 
 **Problem.** Return the learned numbers (alpha, priors, likelihoods, vocabulary) as a plain dict for the bundle.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/naive_bayes.py`, inside class `NaiveBayesClassifier` (indented 4 spaces), in place of the skeleton's `def to_dict`:
 
 ```python
 def to_dict(self) -> Dict:
@@ -1013,7 +1098,7 @@ def to_dict(self) -> Dict:
 
 **Problem.** Rebuild a ready-to-use classifier from to_dict's output.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/naive_bayes.py`, inside class `NaiveBayesClassifier` (indented 4 spaces), in place of the skeleton's `def from_dict`:
 
 ```python
 @classmethod
@@ -1030,11 +1115,13 @@ def from_dict(cls, data: Dict) -> "NaiveBayesClassifier":
 
 ### `spamclassifier/ml/svm_classifier.py`
 
+Open `SpamClassifier/spamclassifier/ml/svm_classifier.py`.
+
 #### `SVMClassifier.to_dict()`
 
 **Problem.** Return what is needed to save the SVM (its C and the fitted model).
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/svm_classifier.py`, inside class `SVMClassifier` (indented 4 spaces), in place of the skeleton's `def to_dict`:
 
 ```python
 def to_dict(self) -> Dict:
@@ -1047,7 +1134,7 @@ def to_dict(self) -> Dict:
 
 **Problem.** Rebuild the SVM from to_dict's output.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/svm_classifier.py`, inside class `SVMClassifier` (indented 4 spaces), in place of the skeleton's `def from_dict`:
 
 ```python
 @classmethod
@@ -1062,9 +1149,17 @@ def from_dict(cls, data: Dict) -> "SVMClassifier":
 
 ### `spamclassifier/ml/threshold.py`
 
+Open `SpamClassifier/spamclassifier/ml/threshold.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import numpy as np
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`_search_range`
+`_search_range` — paste in the file, below the imports:
 
 ```python
 def _search_range():
@@ -1076,7 +1171,7 @@ def _search_range():
 
 **Problem.** Count the four cells when a message is spam if its probability is at least the threshold.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/threshold.py`, at the top level of the file, in place of the skeleton's `def confusion_at`:
 
 ```python
 def confusion_at(probabilities: Sequence[float], labels: Sequence[int],
@@ -1101,7 +1196,7 @@ def confusion_at(probabilities: Sequence[float], labels: Sequence[int],
 
 **Problem.** On the validation split, try thresholds from 0.50 to 0.99 and keep the one with the best recall among those whose precision is at least the floor (0.98). If none reaches the floor, raise ValueError - never fall back to 0.5 silently.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/threshold.py`, at the top level of the file, in place of the skeleton's `def choose_threshold`:
 
 ```python
 def choose_threshold(probabilities: Sequence[float], labels: Sequence[int],
@@ -1126,7 +1221,7 @@ def choose_threshold(probabilities: Sequence[float], labels: Sequence[int],
 
 **Problem.** Precision and recall at every threshold of the search range - the curve on the comparison tab.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/threshold.py`, at the top level of the file, in place of the skeleton's `def precision_recall_curve`:
 
 ```python
 def precision_recall_curve(probabilities: Sequence[float], labels: Sequence[int]):
@@ -1146,11 +1241,23 @@ def precision_recall_curve(probabilities: Sequence[float], labels: Sequence[int]
 
 ### `run.py`
 
+Open `SpamClassifier/run.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from spamclassifier.database import db
+from spamclassifier.database.repositories import FeedbackRepository, ScanRepository, TrainingRepository
+from spamclassifier.presenters.app_presenter import AppPresenter
+from spamclassifier.spam_filter import SpamFilter
+from spamclassifier.views.main_window import MainWindow
+```
+
 #### `main()`
 
 **Problem.** Open the database, load the model bundle (or print "No trained model found. Run: python3 train.py" and exit), build the presenter and open the window.
 
-**Solution.**
+**Solution.** Paste in `run.py`, at the top level of the file, in place of the skeleton's `def main`:
 
 ```python
 def main() -> int:
@@ -1173,11 +1280,13 @@ def main() -> int:
 
 ### `spamclassifier/database/db.py`
 
+Open `SpamClassifier/spamclassifier/database/db.py`.
+
 #### `connect(path)`
 
 **Problem.** Open the SQLite connection with dict-like rows and foreign keys switched on. check_same_thread=False, because the Retrain tab trains on a worker thread that uses the same connection.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/database/db.py`, at the top level of the file, in place of the skeleton's `def connect`:
 
 ```python
 def connect(path: Optional[str] = None) -> sqlite3.Connection:
@@ -1194,7 +1303,7 @@ def connect(path: Optional[str] = None) -> sqlite3.Connection:
 
 **Problem.** Create the tables (safe to run every time) and commit.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/database/db.py`, at the top level of the file, in place of the skeleton's `def initialise`:
 
 ```python
 def initialise(conn: sqlite3.Connection) -> None:
@@ -1206,9 +1315,11 @@ def initialise(conn: sqlite3.Connection) -> None:
 
 ### `spamclassifier/database/repositories.py`
 
+Open `SpamClassifier/spamclassifier/database/repositories.py`.
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`_rec`
+`_rec` — paste in the file, below the imports:
 
 ```python
 def _rec(r):
@@ -1218,30 +1329,30 @@ def _rec(r):
                       elapsed_ms=r["elapsed_ms"], scan_id=r["id"])
 ```
 
-`TrainingRepository.metrics_for_run`
+`TrainingRepository.metrics_for_run` — paste inside class `TrainingRepository`:
 
 ```python
 def metrics_for_run(self, run_id: int) -> List[MetricResult]:
-        rows = self._conn.execute("SELECT * FROM metrics WHERE training_run_id = ? ORDER BY model_name, id",
-                                  (run_id,)).fetchall()
-        return [MetricResult(r["model_name"], r["metric_name"], r["mean_value"], r["std_value"]) for r in rows]
+    rows = self._conn.execute("SELECT * FROM metrics WHERE training_run_id = ? ORDER BY model_name, id",
+                              (run_id,)).fetchall()
+    return [MetricResult(r["model_name"], r["metric_name"], r["mean_value"], r["std_value"]) for r in rows]
 ```
 
-`TrainingRepository.top_vocabulary`
+`TrainingRepository.top_vocabulary` — paste inside class `TrainingRepository`:
 
 ```python
 def top_vocabulary(self, limit: int = 50) -> List[Tuple[str, float]]:
-        rows = self._conn.execute(
-            "SELECT token, log_odds FROM vocabulary_stats WHERE training_run_id = (SELECT MAX(id) FROM training_runs) "
-            "ORDER BY ABS(log_odds) DESC LIMIT ?", (limit,)).fetchall()
-        return [(r["token"], r["log_odds"]) for r in rows]
+    rows = self._conn.execute(
+        "SELECT token, log_odds FROM vocabulary_stats WHERE training_run_id = (SELECT MAX(id) FROM training_runs) "
+        "ORDER BY ABS(log_odds) DESC LIMIT ?", (limit,)).fetchall()
+    return [(r["token"], r["log_odds"]) for r in rows]
 ```
 
 #### `ScanRepository.save(verdict, subject, body)`
 
 **Problem.** Insert one checked message and return its id. Store only the first 500 characters of the body and the reasons as JSON - never whole mails.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/database/repositories.py`, inside class `ScanRepository` (indented 4 spaces), in place of the skeleton's `def save`:
 
 ```python
 def save(self, verdict: Verdict, subject: str, body: str) -> int:
@@ -1260,7 +1371,7 @@ def save(self, verdict: Verdict, subject: str, body: str) -> int:
 
 **Problem.** The newest scans first, at most `limit`.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/database/repositories.py`, inside class `ScanRepository` (indented 4 spaces), in place of the skeleton's `def recent`:
 
 ```python
 def recent(self, limit: int = 100) -> List[ScanRecord]:
@@ -1274,7 +1385,7 @@ def recent(self, limit: int = 100) -> List[ScanRecord]:
 
 **Problem.** One scan by id, or None.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/database/repositories.py`, inside class `ScanRepository` (indented 4 spaces), in place of the skeleton's `def get`:
 
 ```python
 def get(self, scan_id: int) -> Optional[ScanRecord]:
@@ -1288,7 +1399,7 @@ def get(self, scan_id: int) -> Optional[ScanRecord]:
 
 **Problem.** Count the scans per verdict: {"ham": n, "spam": n}.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/database/repositories.py`, inside class `ScanRepository` (indented 4 spaces), in place of the skeleton's `def count_by_verdict`:
 
 ```python
 def count_by_verdict(self) -> dict:
@@ -1304,7 +1415,7 @@ def count_by_verdict(self) -> dict:
 
 **Problem.** Record that a verdict was wrong (with the right label) and return the id. Feedback waits for the next retrain - it never retrains by itself.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/database/repositories.py`, inside class `FeedbackRepository` (indented 4 spaces), in place of the skeleton's `def submit`:
 
 ```python
 def submit(self, scan_id: int, correct_label: str) -> int:
@@ -1322,7 +1433,7 @@ def submit(self, scan_id: int, correct_label: str) -> int:
 
 **Problem.** The corrections not used yet, as (text, correct label).
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/database/repositories.py`, inside class `FeedbackRepository` (indented 4 spaces), in place of the skeleton's `def pending`:
 
 ```python
 def pending(self) -> List[Tuple[str, str]]:
@@ -1339,7 +1450,7 @@ def pending(self) -> List[Tuple[str, str]]:
 
 **Problem.** Mark every waiting correction as used by a training run and return how many. Call it only after the run succeeded.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/database/repositories.py`, inside class `FeedbackRepository` (indented 4 spaces), in place of the skeleton's `def mark_used`:
 
 ```python
 def mark_used(self, training_run_id: int) -> int:
@@ -1354,7 +1465,7 @@ def mark_used(self, training_run_id: int) -> int:
 
 **Problem.** How many messages marked spam the user said were real mail - the most important number of the project.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/database/repositories.py`, inside class `FeedbackRepository` (indented 4 spaces), in place of the skeleton's `def false_positive_count`:
 
 ```python
 def false_positive_count(self) -> int:
@@ -1367,7 +1478,7 @@ def false_positive_count(self) -> int:
 
 **Problem.** Insert a training run (version, sizes, threshold, notes) and return its id.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/database/repositories.py`, inside class `TrainingRepository` (indented 4 spaces), in place of the skeleton's `def start_run`:
 
 ```python
 def start_run(self, model_version: str, n_samples: int,
@@ -1386,7 +1497,7 @@ def start_run(self, model_version: str, n_samples: int,
 
 **Problem.** Save the cross-validation results of a run, one row per metric.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/database/repositories.py`, inside class `TrainingRepository` (indented 4 spaces), in place of the skeleton's `def save_metrics`:
 
 ```python
 def save_metrics(self, run_id: int, results: Sequence[MetricResult]) -> None:
@@ -1402,7 +1513,7 @@ def save_metrics(self, run_id: int, results: Sequence[MetricResult]) -> None:
 
 **Problem.** Save the most decisive words of a run with their log-odds and counts.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/database/repositories.py`, inside class `TrainingRepository` (indented 4 spaces), in place of the skeleton's `def save_vocabulary`:
 
 ```python
 def save_vocabulary(self, run_id: int,
@@ -1419,7 +1530,7 @@ def save_vocabulary(self, run_id: int,
 
 **Problem.** Every metric of the newest run.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/database/repositories.py`, inside class `TrainingRepository` (indented 4 spaces), in place of the skeleton's `def latest_metrics`:
 
 ```python
 def latest_metrics(self) -> List[MetricResult]:
@@ -1435,7 +1546,7 @@ def latest_metrics(self) -> List[MetricResult]:
 
 **Problem.** The recent training runs, newest first, for the history table.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/database/repositories.py`, inside class `TrainingRepository` (indented 4 spaces), in place of the skeleton's `def runs`:
 
 ```python
 def runs(self, limit: int = 20) -> List[dict]:
@@ -1449,11 +1560,13 @@ def runs(self, limit: int = 20) -> List[dict]:
 
 ### `spamclassifier/ml/explainer.py`
 
+Open `SpamClassifier/spamclassifier/ml/explainer.py`.
+
 #### `Explainer.reasons_for(tokens, top_n)`
 
 **Problem.** Ask the classifier for the reasons of a token list.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/explainer.py`, inside class `Explainer` (indented 4 spaces), in place of the skeleton's `def reasons_for`:
 
 ```python
 def reasons_for(self, tokens: Sequence[str], top_n: int | None = None) -> List[Reason]:
@@ -1466,7 +1579,7 @@ def reasons_for(self, tokens: Sequence[str], top_n: int | None = None) -> List[R
 
 **Problem.** Write the reasons as one readable sentence: "Marked as spam mainly because of: winner, free, urgent." - mention the words pointing the other way too, and say so plainly when there are no reasons at all.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/explainer.py`, inside class `Explainer` (indented 4 spaces), in place of the skeleton's `def to_sentence`:
 
 ```python
 def to_sentence(self, reasons: List[Reason], verdict: str) -> str:
@@ -1491,7 +1604,7 @@ def to_sentence(self, reasons: List[Reason], verdict: str) -> str:
 
 **Problem.** Turn a log-odds weight into a word: "very strong" (2 or more), "strong" (1), "moderate" (0.5), else "weak".
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/ml/explainer.py`, inside class `Explainer` (indented 4 spaces), in place of the skeleton's `def format_weight`:
 
 ```python
 @staticmethod
@@ -1510,52 +1623,61 @@ def format_weight(weight: float) -> str:
 
 ### `spamclassifier/presenters/app_presenter.py`
 
+Open `SpamClassifier/spamclassifier/presenters/app_presenter.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from spamclassifier.ml.comparator import ModelComparator
+from spamclassifier.ml.explainer import Explainer
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`AppPresenter.last_verdict_label`
+`AppPresenter.last_verdict_label` — paste inside class `AppPresenter`:
 
 ```python
 def last_verdict_label(self) -> Optional[str]:
-        verdict = getattr(self, "_last_verdict", None)
-        return verdict.label if verdict else None
+    verdict = getattr(self, "_last_verdict", None)
+    return verdict.label if verdict else None
 ```
 
-`AppPresenter.training_runs`
+`AppPresenter.training_runs` — paste inside class `AppPresenter`:
 
 ```python
 def training_runs(self, limit: int = 20) -> List[dict]:
-        return self._training.runs(limit)
+    return self._training.runs(limit)
 ```
 
-`AppPresenter.validation_report`
+`AppPresenter.validation_report` — paste inside class `AppPresenter`:
 
 ```python
 def validation_report(self) -> Dict:
-        bundle = getattr(self._filter, "bundle", {}) or {}
-        return {"report": bundle.get("metrics", {}).get("validation", {}),
-                "thresholds": {k: v["threshold"] for k, v in bundle.get("threshold", {}).get("models", {}).items()},
-                "version": self._filter.model_version}
+    bundle = getattr(self._filter, "bundle", {}) or {}
+    return {"report": bundle.get("metrics", {}).get("validation", {}),
+            "thresholds": {k: v["threshold"] for k, v in bundle.get("threshold", {}).get("models", {}).items()},
+            "version": self._filter.model_version}
 ```
 
-`AppPresenter.false_positive_count`
+`AppPresenter.false_positive_count` — paste inside class `AppPresenter`:
 
 ```python
 def false_positive_count(self) -> int:
-        return self._feedback.false_positive_count()
+    return self._feedback.false_positive_count()
 ```
 
-`AppPresenter.model_version`
+`AppPresenter.model_version` — paste inside class `AppPresenter`:
 
 ```python
 def model_version(self) -> str:
-        return self._filter.model_version
+    return self._filter.model_version
 ```
 
 #### `AppPresenter.check_message(raw_text, model_name)`
 
 **Problem.** Classify a pasted message, save the scan, remember its id for the feedback button and return the verdict. Empty input raises ValueError with a message for the screen.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/presenters/app_presenter.py`, inside class `AppPresenter` (indented 4 spaces), in place of the skeleton's `def check_message`:
 
 ```python
 def check_message(self, raw_text: str, model_name: str = "naive_bayes") -> Verdict:
@@ -1579,7 +1701,7 @@ def check_message(self, raw_text: str, model_name: str = "naive_bayes") -> Verdi
 
 **Problem.** Record that the last verdict was wrong; raise RuntimeError if nothing was checked yet.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/presenters/app_presenter.py`, inside class `AppPresenter` (indented 4 spaces), in place of the skeleton's `def submit_feedback`:
 
 ```python
 def submit_feedback(self, correct_label: str) -> None:
@@ -1596,7 +1718,7 @@ def submit_feedback(self, correct_label: str) -> None:
 
 **Problem.** The rows for the history table.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/presenters/app_presenter.py`, inside class `AppPresenter` (indented 4 spaces), in place of the skeleton's `def recent_scans`:
 
 ```python
 def recent_scans(self, limit: int = 100) -> List[ScanRecord]:
@@ -1609,7 +1731,7 @@ def recent_scans(self, limit: int = 100) -> List[ScanRecord]:
 
 **Problem.** How many corrections are waiting.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/presenters/app_presenter.py`, inside class `AppPresenter` (indented 4 spaces), in place of the skeleton's `def pending_feedback_count`:
 
 ```python
 def pending_feedback_count(self) -> int:
@@ -1622,7 +1744,7 @@ def pending_feedback_count(self) -> int:
 
 **Problem.** Retrain on the corpus plus the corrections, reporting each step through `progress`, switch to the new model, and return a summary with the change of every metric against the previous run.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/presenters/app_presenter.py`, inside class `AppPresenter` (indented 4 spaces), in place of the skeleton's `def retrain`:
 
 ```python
 def retrain(self, progress: Optional[Callable[[str], None]] = None) -> Dict:
@@ -1647,7 +1769,7 @@ def retrain(self, progress: Optional[Callable[[str], None]] = None) -> Dict:
 
 **Problem.** Both models' cross-validation metrics (from the loaded bundle).
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/presenters/app_presenter.py`, inside class `AppPresenter` (indented 4 spaces), in place of the skeleton's `def comparison_metrics`:
 
 ```python
 def comparison_metrics(self) -> List[MetricResult]:
@@ -1664,7 +1786,7 @@ def comparison_metrics(self) -> List[MetricResult]:
 
 **Problem.** For each metric, which model won or that neither did.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/presenters/app_presenter.py`, inside class `AppPresenter` (indented 4 spaces), in place of the skeleton's `def comparison_summary`:
 
 ```python
 def comparison_summary(self) -> Dict[str, str]:
@@ -1679,7 +1801,7 @@ def comparison_summary(self) -> Dict[str, str]:
 
 **Problem.** The words the model finds most decisive, for the comparison tab.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/presenters/app_presenter.py`, inside class `AppPresenter` (indented 4 spaces), in place of the skeleton's `def most_discriminative_words`:
 
 ```python
 def most_discriminative_words(self, top_n: int = 50):
@@ -1692,7 +1814,7 @@ def most_discriminative_words(self, top_n: int = 50):
 
 **Problem.** Turn a verdict into display strings: SPAM / LEGITIMATE, red / green, the probability, the confidence word (high / moderate / borderline), the explanation sentence and the reasons.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/presenters/app_presenter.py`, inside class `AppPresenter` (indented 4 spaces), in place of the skeleton's `def format_verdict`:
 
 ```python
 @staticmethod
@@ -1720,34 +1842,46 @@ def format_verdict(verdict: Verdict) -> Dict[str, str]:
 
 ### `spamclassifier/spam_filter.py`
 
+Open `SpamClassifier/spamclassifier/spam_filter.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from spamclassifier.ml.bundle import ModelBundle
+from spamclassifier.ml.explainer import Explainer
+from spamclassifier.ml.naive_bayes import NaiveBayesClassifier
+from spamclassifier.ml.svm_classifier import SVMClassifier
+from spamclassifier.preprocessing.email_parser import EmailParser
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`SpamFilter.explain_sentence`
+`SpamFilter.explain_sentence` — paste inside class `SpamFilter`:
 
 ```python
 def explain_sentence(self, verdict: Verdict) -> str:
-        return self._explainer.to_sentence(verdict.reasons, verdict.label)
+    return self._explainer.to_sentence(verdict.reasons, verdict.label)
 ```
 
-`SpamFilter.split_headers`
+`SpamFilter.split_headers` — paste inside class `SpamFilter`:
 
 ```python
 def split_headers(self, raw_text: str):
-        return self._parser.split_headers(self._parser.truncate(raw_text or ""))
+    return self._parser.split_headers(self._parser.truncate(raw_text or ""))
 ```
 
-`SpamFilter.most_discriminative`
+`SpamFilter.most_discriminative` — paste inside class `SpamFilter`:
 
 ```python
 def most_discriminative(self, top_n: int = 50):
-        return self._nb.most_discriminative(top_n)
+    return self._nb.most_discriminative(top_n)
 ```
 
 #### `SpamFilter.from_bundle(version)`
 
 **Problem.** Load the newest (or a given) bundle and build a ready SpamFilter. With no bundle at all, raise FileNotFoundError that says to run train.py.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/spam_filter.py`, inside class `SpamFilter` (indented 4 spaces), in place of the skeleton's `def from_bundle`:
 
 ```python
 @classmethod
@@ -1775,7 +1909,7 @@ def from_bundle(cls, version: Optional[str] = None) -> "SpamFilter":
 
 **Problem.** The full scan: parse, tokenize, compute the probability with the chosen model, add the reasons, compare with that model's threshold and return a Verdict with the time it took. It uses the same parser, tokenizer and features as training.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/spam_filter.py`, inside class `SpamFilter` (indented 4 spaces), in place of the skeleton's `def classify`:
 
 ```python
 def classify(self, raw_text: str, model_name: str = "naive_bayes") -> Verdict:
@@ -1803,9 +1937,11 @@ def classify(self, raw_text: str, model_name: str = "naive_bayes") -> Verdict:
 
 ### `spamclassifier/views/check_view.py`
 
+Open `SpamClassifier/spamclassifier/views/check_view.py`.
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`COLOURS`
+`COLOURS` — paste in the file, below the imports:
 
 ```python
 COLOURS = {"red": "#c0392b", "green": "#1e8449"}
@@ -1815,7 +1951,7 @@ COLOURS = {"red": "#c0392b", "green": "#1e8449"}
 
 **Problem.** Lay out the check tab: the message box, a Naive Bayes / SVM choice, Check and "Mark as wrong" buttons, a coloured verdict banner, the reasons table and the history table. The message is shown as plain text only.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/views/check_view.py`, inside class `CheckView` (indented 4 spaces), in place of the skeleton's `def build`:
 
 ```python
 def build(self) -> None:
@@ -1863,7 +1999,7 @@ def build(self) -> None:
 
 **Problem.** Send the text to the presenter and show the verdict; an empty box shows the error message instead of crashing.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/views/check_view.py`, inside class `CheckView` (indented 4 spaces), in place of the skeleton's `def on_check`:
 
 ```python
 def on_check(self) -> None:
@@ -1883,7 +2019,7 @@ def on_check(self) -> None:
 
 **Problem.** Send the opposite label as feedback and confirm it to the user.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/views/check_view.py`, inside class `CheckView` (indented 4 spaces), in place of the skeleton's `def on_mark_wrong`:
 
 ```python
 def on_mark_wrong(self) -> None:
@@ -1904,7 +2040,7 @@ def on_mark_wrong(self) -> None:
 
 **Problem.** Fill the banner and the reasons from the presenter's display strings - the view decides nothing itself.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/views/check_view.py`, inside class `CheckView` (indented 4 spaces), in place of the skeleton's `def display_verdict`:
 
 ```python
 def display_verdict(self, formatted: dict) -> None:
@@ -1923,7 +2059,7 @@ def display_verdict(self, formatted: dict) -> None:
 
 **Problem.** Reload the history table from the recent scans.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/views/check_view.py`, inside class `CheckView` (indented 4 spaces), in place of the skeleton's `def refresh_history`:
 
 ```python
 def refresh_history(self) -> None:
@@ -1939,9 +2075,18 @@ def refresh_history(self) -> None:
 
 ### `spamclassifier/views/compare_view.py`
 
+Open `SpamClassifier/spamclassifier/views/compare_view.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`NAMES`
+`NAMES` — paste in the file, below the imports:
 
 ```python
 NAMES = {"naive_bayes": "Naive Bayes", "svm": "SVM"}
@@ -1951,7 +2096,7 @@ NAMES = {"naive_bayes": "Naive Bayes", "svm": "SVM"}
 
 **Problem.** Lay out the comparison tab: the metrics table (mean ± spread and the winner), the most decisive words and a figure for the curves.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/views/compare_view.py`, inside class `CompareView` (indented 4 spaces), in place of the skeleton's `def build`:
 
 ```python
 def build(self) -> None:
@@ -1981,7 +2126,7 @@ def build(self) -> None:
 
 **Problem.** Draw the precision-recall curves of both models with the chosen threshold marked, a small ROC plot and both confusion matrices.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/views/compare_view.py`, inside class `CompareView` (indented 4 spaces), in place of the skeleton's `def draw_curves`:
 
 ```python
 def draw_curves(self) -> None:
@@ -2039,7 +2184,7 @@ def draw_curves(self) -> None:
 
 **Problem.** Reload the table, the words and the curves.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/views/compare_view.py`, inside class `CompareView` (indented 4 spaces), in place of the skeleton's `def refresh`:
 
 ```python
 def refresh(self) -> None:
@@ -2060,30 +2205,41 @@ def refresh(self) -> None:
 
 ### `spamclassifier/views/main_window.py`
 
+Open `SpamClassifier/spamclassifier/views/main_window.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from tkinter import messagebox, ttk
+from spamclassifier.views.check_view import CheckView
+from spamclassifier.views.compare_view import CompareView
+from spamclassifier.views.train_view import TrainView
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`MainWindow._tab_changed`
+`MainWindow._tab_changed` — paste inside class `MainWindow`:
 
 ```python
 def _tab_changed(self, _event=None) -> None:
-        current = self.nametowidget(self.notebook.select())
-        if hasattr(current, "refresh"):
-            current.refresh()
-        self.status.configure(text=f"Model {self._presenter.model_version()}")
+    current = self.nametowidget(self.notebook.select())
+    if hasattr(current, "refresh"):
+        current.refresh()
+    self.status.configure(text=f"Model {self._presenter.model_version()}")
 ```
 
-`MainWindow.show_info`
+`MainWindow.show_info` — paste inside class `MainWindow`:
 
 ```python
 def show_info(self, message: str) -> None:
-        messagebox.showinfo("SpamClassifier", message, parent=self)
+    messagebox.showinfo("SpamClassifier", message, parent=self)
 ```
 
 #### `MainWindow.build()`
 
 **Problem.** Create the notebook with the three tabs: Check message, Retrain, Compare models.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/views/main_window.py`, inside class `MainWindow` (indented 4 spaces), in place of the skeleton's `def build`:
 
 ```python
 def build(self) -> None:
@@ -2108,7 +2264,7 @@ def build(self) -> None:
 
 **Problem.** Build the window and start the main loop.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/views/main_window.py`, inside class `MainWindow` (indented 4 spaces), in place of the skeleton's `def run`:
 
 ```python
 def run(self) -> None:
@@ -2122,7 +2278,7 @@ def run(self) -> None:
 
 **Problem.** Show an error message box - the only error path of the UI.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/views/main_window.py`, inside class `MainWindow` (indented 4 spaces), in place of the skeleton's `def show_error`:
 
 ```python
 def show_error(self, message: str) -> None:
@@ -2133,54 +2289,62 @@ def show_error(self, message: str) -> None:
 
 ### `spamclassifier/views/train_view.py`
 
+Open `SpamClassifier/spamclassifier/views/train_view.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import threading
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`TrainView.refresh`
+`TrainView.refresh` — paste inside class `TrainView`:
 
 ```python
 def refresh(self) -> None:
-        n = self._presenter.pending_feedback_count()
-        self.pending_label.configure(text=f"{n} correction{'s' if n != 1 else ''} waiting")
-        busy = self._worker is not None and self._worker.is_alive()
-        self.button.configure(state="normal" if n > 0 and not busy else "disabled")
-        self.fp_label.configure(text=f"real messages hidden so far (reported): {self._presenter.false_positive_count()}")
-        self.runs.delete(*self.runs.get_children())
-        for r in self._presenter.training_runs():
-            self.runs.insert("", "end", values=(r["model_version"], r["started_at"], r["n_samples"], r["n_feedback"],
-                                                f"{r['threshold']:.2f}",
-                                                "" if r["nb_f1"] is None else f"{r['nb_f1']:.3f}"))
+    n = self._presenter.pending_feedback_count()
+    self.pending_label.configure(text=f"{n} correction{'s' if n != 1 else ''} waiting")
+    busy = self._worker is not None and self._worker.is_alive()
+    self.button.configure(state="normal" if n > 0 and not busy else "disabled")
+    self.fp_label.configure(text=f"real messages hidden so far (reported): {self._presenter.false_positive_count()}")
+    self.runs.delete(*self.runs.get_children())
+    for r in self._presenter.training_runs():
+        self.runs.insert("", "end", values=(r["model_version"], r["started_at"], r["n_samples"], r["n_feedback"],
+                                            f"{r['threshold']:.2f}",
+                                            "" if r["nb_f1"] is None else f"{r['nb_f1']:.3f}"))
 ```
 
-`TrainView._poll`
+`TrainView._poll` — paste inside class `TrainView`:
 
 ```python
 def _poll(self) -> None:
-        try:
-            while True:
-                kind, payload = self._queue.get_nowait()
-                if kind == "log":
-                    self.append_log(payload)
-                elif kind == "error":
-                    self.append_log("FAILED: " + payload)
-                    self.winfo_toplevel().show_error(f"Retraining failed:\n{payload}")
-                elif kind == "done":
-                    self.append_log(f"new model {payload['version']} is now in use")
-                    for name, delta in payload.get("deltas", {}).items():
-                        self.append_log(f"  {name}: {delta:+.3f} against the previous run")
-                    self.refresh()
-        except queue.Empty:
-            pass
-        if self._worker is not None and self._worker.is_alive():
-            self.after(100, self._poll)
-        else:
-            self.refresh()
+    try:
+        while True:
+            kind, payload = self._queue.get_nowait()
+            if kind == "log":
+                self.append_log(payload)
+            elif kind == "error":
+                self.append_log("FAILED: " + payload)
+                self.winfo_toplevel().show_error(f"Retraining failed:\n{payload}")
+            elif kind == "done":
+                self.append_log(f"new model {payload['version']} is now in use")
+                for name, delta in payload.get("deltas", {}).items():
+                    self.append_log(f"  {name}: {delta:+.3f} against the previous run")
+                self.refresh()
+    except queue.Empty:
+        pass
+    if self._worker is not None and self._worker.is_alive():
+        self.after(100, self._poll)
+    else:
+        self.refresh()
 ```
 
 #### `TrainView.build()`
 
 **Problem.** Lay out the retrain tab: "N corrections waiting", a Retrain button (disabled at 0), a scrolling log and the table of past runs.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/views/train_view.py`, inside class `TrainView` (indented 4 spaces), in place of the skeleton's `def build`:
 
 ```python
 def build(self) -> None:
@@ -2218,7 +2382,7 @@ def build(self) -> None:
 
 **Problem.** Run the retrain on a worker thread so the window does not freeze; the worker only puts progress lines in a queue, and the Tk thread reads them with after(). Never touch a widget from the worker.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/views/train_view.py`, inside class `TrainView` (indented 4 spaces), in place of the skeleton's `def on_retrain`:
 
 ```python
 def on_retrain(self) -> None:
@@ -2245,7 +2409,7 @@ def on_retrain(self) -> None:
 
 **Problem.** Add a line to the log and scroll to the bottom.
 
-**Solution.**
+**Solution.** Paste in `spamclassifier/views/train_view.py`, inside class `TrainView` (indented 4 spaces), in place of the skeleton's `def append_log`:
 
 ```python
 def append_log(self, line: str) -> None:
@@ -2262,9 +2426,22 @@ def append_log(self, line: str) -> None:
 
 ### `evaluate.py`
 
+Open `SpamClassifier/evaluate.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import os
+import time
+from spamclassifier.ml.bundle import ModelBundle
+from spamclassifier.ml.comparator import ModelComparator
+from spamclassifier.ml.training import locked_split
+from spamclassifier.spam_filter import SpamFilter
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`TARGETS`
+`TARGETS` — paste in the file, below the imports:
 
 ```python
 TARGETS = [
@@ -2284,7 +2461,7 @@ TARGETS = [
 
 **Problem.** The final measurement: load the bundle, rebuild the same locked test split, classify every test message with both models, and print PASS or FAIL against each target of the proposal. Write reports/evaluation.md.
 
-**Solution.**
+**Solution.** Paste in `evaluate.py`, at the top level of the file, in place of the skeleton's `def main`:
 
 ```python
 def main() -> int:
@@ -2345,11 +2522,21 @@ def main() -> int:
 
 ### `train.py`
 
+Open `SpamClassifier/train.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from spamclassifier.database import db
+from spamclassifier.database.repositories import FeedbackRepository, TrainingRepository
+from spamclassifier.ml.training import run_training
+```
+
 #### `main()`
 
 **Problem.** Train both models on the corpus plus waiting corrections, save a new bundle, record the run, and print the sizes, metrics with their spread, the comparison and the chosen thresholds.
 
-**Solution.**
+**Solution.** Paste in `train.py`, at the top level of the file, in place of the skeleton's `def main`:
 
 ```python
 def main() -> int:
@@ -2384,9 +2571,11 @@ def main() -> int:
 
 ## Files the solution adds
 
-These files are not in your skeleton; the finished project needs them.
+These files are not in your skeleton; the finished project needs them. Create each one at the path shown and paste the whole code.
 
 ### `spamclassifier/ml/training.py`
+
+Create `SpamClassifier/spamclassifier/ml/training.py`:
 
 ```python
 import time

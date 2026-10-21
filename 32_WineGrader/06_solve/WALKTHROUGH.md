@@ -8,6 +8,36 @@ Every function you write in this project (107 of them), in the order of `TASKS.m
 
 Try each function yourself first, then compare. Run the check after every function, not at the end.
 
+## Where the code goes
+
+Every path below starts in your project folder `WineGrader/` (the folder with `TASKS.md`). For each file:
+
+1. **Imports** — if the file section lists imports, add the lines that are missing to the top of the file, next to the other `import` lines.
+2. **Helper code** — paste it once, where the section says: *in the file* means below the imports and above the first class; *inside class X* means inside that class, next to its other methods (indented like them).
+3. **Each function** — in your skeleton, find the `def` with the same name. Delete the whole function — the `def` line, the TODO text and `raise NotImplementedError` — and paste the solution in its place. Inside a class, every line moves 4 spaces to the right, so the `def` lines up with the other methods.
+4. **New files** — at the end, under *Files the solution adds*: create the file at that path and paste the whole code.
+
+Before and after, for a method inside a class:
+
+```python
+class Example:
+
+    def total(self, items):          # BEFORE - the skeleton
+        """
+        TODO stage 3: add up the prices.
+        """
+        raise NotImplementedError
+```
+
+```python
+class Example:
+
+    def total(self, items):          # AFTER - the solution pasted in its place
+        return sum(item.price for item in items)
+```
+
+Then run the **Check** command from the project folder.
+
 ## Contents
 
 - [Stage 1 — Loading the data (2 weeks)](#stage-1--loading-the-data-2-weeks) (8 functions)
@@ -24,11 +54,13 @@ Try each function yourself first, then compare. Run the check after every functi
 
 ### `winegrader/data/loader.py`
 
+Open `WineGrader/winegrader/data/loader.py`.
+
 #### `quality_to_grade(quality)`
 
 **Problem.** Turn the 0-10 tasting score into one of three grades: 5 or less is low, 6 is medium, 7 or more is high. Seven separate scores would leave some classes with only a handful of wines.
 
-**Solution.**
+**Solution.** Paste in `winegrader/data/loader.py`, at the top level of the file, in place of the skeleton's `def quality_to_grade`:
 
 ```python
 def quality_to_grade(quality: int) -> int:
@@ -45,7 +77,7 @@ def quality_to_grade(quality: int) -> int:
 
 **Problem.** Apply quality_to_grade to every score and return an int array.
 
-**Solution.**
+**Solution.** Paste in `winegrader/data/loader.py`, at the top level of the file, in place of the skeleton's `def grades_from_quality`:
 
 ```python
 def grades_from_quality(quality: Sequence[int]) -> np.ndarray:
@@ -58,7 +90,7 @@ def grades_from_quality(quality: Sequence[int]) -> np.ndarray:
 
 **Problem.** Check one wine and return None if it is fine, otherwise a sentence a person can act on: exactly 12 values, all real numbers, each inside its valid range ("ph = 15.2 is outside the valid range 0.0..14.0"), and is_red exactly 0 or 1. The file import and the lab form use the same check.
 
-**Solution.**
+**Solution.** Paste in `winegrader/data/loader.py`, at the top level of the file, in place of the skeleton's `def validate_values`:
 
 ```python
 def validate_values(values: Sequence[float]) -> Optional[str]:
@@ -85,7 +117,7 @@ def validate_values(values: Sequence[float]) -> Optional[str]:
 
 **Problem.** Read one UCI file (";"-separated): refuse a file that is too big before opening it, check the header, and turn every line into 12 values plus the quality. A bad line is listed as rejected with its line number and reason; it does not stop the file.
 
-**Solution.**
+**Solution.** Paste in `winegrader/data/loader.py`, at the top level of the file, in place of the skeleton's `def parse_uci_csv`:
 
 ```python
 def parse_uci_csv(path: str, is_red: bool) -> LoadResult:
@@ -134,7 +166,7 @@ def parse_uci_csv(path: str, is_red: bool) -> LoadResult:
 
 **Problem.** Read the red and the white file, red first, and return all wines and their quality scores. Print how many lines were rejected from each file.
 
-**Solution.**
+**Solution.** Paste in `winegrader/data/loader.py`, at the top level of the file, in place of the skeleton's `def load_wine_quality`:
 
 ```python
 def load_wine_quality(red_path: str = None, white_path: str = None) -> Tuple[np.ndarray, np.ndarray]:
@@ -157,7 +189,7 @@ def load_wine_quality(red_path: str = None, white_path: str = None) -> Tuple[np.
 
 **Problem.** For every wine, the index of the first identical wine (all 12 values and the quality equal), or None for the first copy: [[1,2], [3,4], [1,2]] with quality [5, 6, 5] gives [None, None, 0]. For k-NN a copy in both train and test is its own nearest neighbour - the score goes up and nothing was learned.
 
-**Solution.**
+**Solution.** Paste in `winegrader/data/loader.py`, at the top level of the file, in place of the skeleton's `def duplicate_of`:
 
 ```python
 def duplicate_of(X: np.ndarray, quality: np.ndarray) -> List[Optional[int]]:
@@ -179,7 +211,7 @@ def duplicate_of(X: np.ndarray, quality: np.ndarray) -> List[Optional[int]]:
 
 **Problem.** Keep only the first copy of every wine (order unchanged) and return how many were dropped - 1,177 on the real data.
 
-**Solution.**
+**Solution.** Paste in `winegrader/data/loader.py`, at the top level of the file, in place of the skeleton's `def drop_exact_duplicates`:
 
 ```python
 def drop_exact_duplicates(X: np.ndarray, quality: np.ndarray) -> Tuple[np.ndarray, np.ndarray, int]:
@@ -194,7 +226,7 @@ def drop_exact_duplicates(X: np.ndarray, quality: np.ndarray) -> Tuple[np.ndarra
 
 **Problem.** The share of each grade, by name: {"low": 0.374, "medium": 0.437, "high": 0.190}. Every grade appears even with 0; an empty list is an error.
 
-**Solution.**
+**Solution.** Paste in `winegrader/data/loader.py`, at the top level of the file, in place of the skeleton's `def class_balance`:
 
 ```python
 def class_balance(y: Sequence[int]) -> Dict[str, float]:
@@ -212,11 +244,13 @@ def class_balance(y: Sequence[int]) -> Dict[str, float]:
 
 ### `analyse.py`
 
+Open `WineGrader/analyse.py`.
+
 #### `main(argv)`
 
 **Problem.** Load the wines, drop duplicates, and write the analysis report (statistics, correlations, group means) with the histograms.
 
-**Solution.**
+**Solution.** Paste in `analyse.py`, at the top level of the file, in place of the skeleton's `def main`:
 
 ```python
 def main(argv=None) -> int:
@@ -268,11 +302,13 @@ def main(argv=None) -> int:
 
 ### `winegrader/data/analysis.py`
 
+Open `WineGrader/winegrader/data/analysis.py`.
+
 #### `describe(X)`
 
 **Problem.** One row per feature with its mean, standard deviation, minimum and maximum.
 
-**Solution.**
+**Solution.** Paste in `winegrader/data/analysis.py`, at the top level of the file, in place of the skeleton's `def describe`:
 
 ```python
 def describe(X: np.ndarray) -> List[Dict]:
@@ -287,7 +323,7 @@ def describe(X: np.ndarray) -> List[Dict]:
 
 **Problem.** The Pearson correlation of every feature with the target (for example the quality score).
 
-**Solution.**
+**Solution.** Paste in `winegrader/data/analysis.py`, at the top level of the file, in place of the skeleton's `def correlation_with`:
 
 ```python
 def correlation_with(X: np.ndarray, target: Sequence[float]) -> Dict[str, float]:
@@ -308,7 +344,7 @@ def correlation_with(X: np.ndarray, target: Sequence[float]) -> Dict[str, float]
 
 **Problem.** The mean of each feature inside each group, for example per grade or red against white.
 
-**Solution.**
+**Solution.** Paste in `winegrader/data/analysis.py`, at the top level of the file, in place of the skeleton's `def means_by_group`:
 
 ```python
 def means_by_group(X: np.ndarray, groups: Sequence[int]) -> Dict[int, List[float]]:
@@ -322,7 +358,7 @@ def means_by_group(X: np.ndarray, groups: Sequence[int]) -> Dict[int, List[float
 
 **Problem.** Draw one histogram per feature in a 3x4 grid and save it as a PNG.
 
-**Solution.**
+**Solution.** Paste in `winegrader/data/analysis.py`, at the top level of the file, in place of the skeleton's `def plot_histograms`:
 
 ```python
 def plot_histograms(X: np.ndarray, path: str) -> None:
@@ -344,11 +380,13 @@ def plot_histograms(X: np.ndarray, path: str) -> None:
 
 ### `winegrader/ml/index.py`
 
+Open `WineGrader/winegrader/ml/index.py`.
+
 #### `LinearIndex.build(X)`
 
 **Problem.** Keep the training wines as a float array and reset the counters. Linear search needs nothing else.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/index.py`, inside class `LinearIndex` (indented 4 spaces), in place of the skeleton's `def build`:
 
 ```python
 def build(self, X: np.ndarray) -> "LinearIndex":
@@ -364,7 +402,7 @@ def build(self, X: np.ndarray) -> "LinearIndex":
 
 **Problem.** Compute the distance to every training wine and return the k nearest as (distance, row), ties by row number. Count the distance calculations.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/index.py`, inside class `LinearIndex` (indented 4 spaces), in place of the skeleton's `def query`:
 
 ```python
 def query(self, v: np.ndarray, k: int) -> List[Pair]:
@@ -381,7 +419,7 @@ def query(self, v: np.ndarray, k: int) -> List[Pair]:
 
 **Problem.** The same for many wines at once, a chunk at a time: a distance matrix, then argpartition to find the k smallest without sorting whole rows, then sort just those k.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/index.py`, inside class `LinearIndex` (indented 4 spaces), in place of the skeleton's `def query_batch`:
 
 ```python
 def query_batch(self, Q: np.ndarray, k: int, chunk: int = 512) -> Tuple[np.ndarray, np.ndarray]:
@@ -408,11 +446,13 @@ def query_batch(self, Q: np.ndarray, k: int, chunk: int = 512) -> Tuple[np.ndarr
 
 ### `winegrader/ml/metrics.py`
 
+Open `WineGrader/winegrader/ml/metrics.py`.
+
 #### `minkowski_power(a, b, w, p)`
 
 **Problem.** The weighted distance before the root: sum of w[i] x |a[i] - b[i]| ** p. Ranking by this gives the same order as the real distance and is cheaper.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/metrics.py`, at the top level of the file, in place of the skeleton's `def minkowski_power`:
 
 ```python
 def minkowski_power(a: np.ndarray, b: np.ndarray, w: np.ndarray, p: int) -> float:
@@ -425,7 +465,7 @@ def minkowski_power(a: np.ndarray, b: np.ndarray, w: np.ndarray, p: int) -> floa
 
 **Problem.** The real Minkowski distance: minkowski_power to the power 1/p (p=2 is the usual straight-line distance).
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/metrics.py`, at the top level of the file, in place of the skeleton's `def minkowski`:
 
 ```python
 def minkowski(a: np.ndarray, b: np.ndarray, w: np.ndarray, p: int) -> float:
@@ -438,7 +478,7 @@ def minkowski(a: np.ndarray, b: np.ndarray, w: np.ndarray, p: int) -> float:
 
 **Problem.** The power distance from one wine to every row of X at once, with numpy - one number per row.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/metrics.py`, at the top level of the file, in place of the skeleton's `def power_to_many`:
 
 ```python
 def power_to_many(X: np.ndarray, v: np.ndarray, w: np.ndarray, p: int) -> np.ndarray:
@@ -451,7 +491,7 @@ def power_to_many(X: np.ndarray, v: np.ndarray, w: np.ndarray, p: int) -> np.nda
 
 **Problem.** The power distances from every row of Q to every row of X, as a matrix (rows of Q x rows of X).
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/metrics.py`, at the top level of the file, in place of the skeleton's `def power_matrix`:
 
 ```python
 def power_matrix(Q: np.ndarray, X: np.ndarray, w: np.ndarray, p: int) -> np.ndarray:
@@ -475,11 +515,13 @@ def power_matrix(Q: np.ndarray, X: np.ndarray, w: np.ndarray, p: int) -> np.ndar
 
 ### `winegrader/ml/scaler.py`
 
+Open `WineGrader/winegrader/ml/scaler.py`.
+
 #### `StandardScaler.fit(X)`
 
 **Problem.** Learn each column's mean and standard deviation from the TRAINING rows; a column that never changes gets std 1 so it does not divide by zero.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/scaler.py`, inside class `StandardScaler` (indented 4 spaces), in place of the skeleton's `def fit`:
 
 ```python
 def fit(self, X: np.ndarray) -> "StandardScaler":
@@ -497,7 +539,7 @@ def fit(self, X: np.ndarray) -> "StandardScaler":
 
 **Problem.** (X - mean) / std. Using it before fit raises RuntimeError.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/scaler.py`, inside class `StandardScaler` (indented 4 spaces), in place of the skeleton's `def transform`:
 
 ```python
 def transform(self, X: np.ndarray) -> np.ndarray:
@@ -512,7 +554,7 @@ def transform(self, X: np.ndarray) -> np.ndarray:
 
 **Problem.** Back to lab units: Z x std + mean - used to show a neighbour's real values.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/scaler.py`, inside class `StandardScaler` (indented 4 spaces), in place of the skeleton's `def inverse_transform`:
 
 ```python
 def inverse_transform(self, Z: np.ndarray) -> np.ndarray:
@@ -527,7 +569,7 @@ def inverse_transform(self, Z: np.ndarray) -> np.ndarray:
 
 **Problem.** Learn each column's minimum and range (max - min); a zero range becomes 1.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/scaler.py`, inside class `MinMaxScaler` (indented 4 spaces), in place of the skeleton's `def fit`:
 
 ```python
 def fit(self, X: np.ndarray) -> "MinMaxScaler":
@@ -545,7 +587,7 @@ def fit(self, X: np.ndarray) -> "MinMaxScaler":
 
 **Problem.** (X - min) / range. Test wines may land a little outside 0..1 - that is fine.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/scaler.py`, inside class `MinMaxScaler` (indented 4 spaces), in place of the skeleton's `def transform`:
 
 ```python
 def transform(self, X: np.ndarray) -> np.ndarray:
@@ -560,7 +602,7 @@ def transform(self, X: np.ndarray) -> np.ndarray:
 
 **Problem.** Back to lab units: Z x range + min.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/scaler.py`, inside class `MinMaxScaler` (indented 4 spaces), in place of the skeleton's `def inverse_transform`:
 
 ```python
 def inverse_transform(self, Z: np.ndarray) -> np.ndarray:
@@ -575,7 +617,7 @@ def inverse_transform(self, Z: np.ndarray) -> np.ndarray:
 
 **Problem.** Rebuild a fitted scaler from its saved dict.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/scaler.py`, at the top level of the file, in place of the skeleton's `def scaler_from_dict`:
 
 ```python
 def scaler_from_dict(data: Dict) -> Scaler:
@@ -598,11 +640,13 @@ def scaler_from_dict(data: Dict) -> Scaler:
 
 ### `winegrader/ml/classifiers.py`
 
+Open `WineGrader/winegrader/ml/classifiers.py`.
+
 #### `class_priors(y, n_classes)`
 
 **Problem.** The share of each grade in the training labels. A grade that is absent gets 1.0 instead of 0, so the imbalance correction never divides by zero.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/classifiers.py`, at the top level of the file, in place of the skeleton's `def class_priors`:
 
 ```python
 def class_priors(y: Sequence[int], n_classes: int = config.N_CLASSES) -> np.ndarray:
@@ -619,7 +663,7 @@ def class_priors(y: Sequence[int], n_classes: int = config.N_CLASSES) -> np.ndar
 
 **Problem.** The vote for many wines at once from their k nearest neighbours: each neighbour votes with 1 / distance (or 1), divided by its grade's share ** alpha so a rare grade is not drowned out. The grade with the most votes wins; on a tie, the grade of the nearest neighbour among them. Confidence = winner's votes / all votes.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/classifiers.py`, at the top level of the file, in place of the skeleton's `def vote`:
 
 ```python
 def vote(dist_power: np.ndarray, labels: np.ndarray, p: int, alpha: float,
@@ -650,7 +694,7 @@ def vote(dist_power: np.ndarray, labels: np.ndarray, p: int, alpha: float,
 
 **Problem.** All that k-NN training does: keep the labels, compute the class shares and build the search index with the given weights and p.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/classifiers.py`, inside class `KNNClassifier` (indented 4 spaces), in place of the skeleton's `def fit`:
 
 ```python
 def fit(self, X: np.ndarray, y: np.ndarray) -> "KNNClassifier":
@@ -668,7 +712,7 @@ def fit(self, X: np.ndarray, y: np.ndarray) -> "KNNClassifier":
 
 **Problem.** Find the k nearest training wines, vote, and return the Prediction with its neighbours - they are the explanation the lab screen shows.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/classifiers.py`, inside class `KNNClassifier` (indented 4 spaces), in place of the skeleton's `def predict_one`:
 
 ```python
 def predict_one(self, v: np.ndarray) -> Prediction:
@@ -687,7 +731,7 @@ def predict_one(self, v: np.ndarray) -> Prediction:
 
 **Problem.** Grade many wines at once (batch search, then vote) - the same answers as predict_one in a loop.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/classifiers.py`, inside class `KNNClassifier` (indented 4 spaces), in place of the skeleton's `def predict`:
 
 ```python
 def predict(self, X: np.ndarray) -> np.ndarray:
@@ -702,7 +746,7 @@ def predict(self, X: np.ndarray) -> np.ndarray:
 
 **Problem.** Remember the most common grade.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/classifiers.py`, inside class `MajorityClassifier` (indented 4 spaces), in place of the skeleton's `def fit`:
 
 ```python
 def fit(self, X: np.ndarray, y: np.ndarray) -> "MajorityClassifier":
@@ -716,7 +760,7 @@ def fit(self, X: np.ndarray, y: np.ndarray) -> "MajorityClassifier":
 
 **Problem.** Always answer the most common grade with confidence 1 - the baseline every real model must beat.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/classifiers.py`, inside class `MajorityClassifier` (indented 4 spaces), in place of the skeleton's `def predict_one`:
 
 ```python
 def predict_one(self, v: np.ndarray) -> Prediction:
@@ -730,7 +774,7 @@ def predict_one(self, v: np.ndarray) -> Prediction:
 
 **Problem.** Compute the average wine of each grade.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/classifiers.py`, inside class `CentroidClassifier` (indented 4 spaces), in place of the skeleton's `def fit`:
 
 ```python
 def fit(self, X: np.ndarray, y: np.ndarray) -> "CentroidClassifier":
@@ -747,7 +791,7 @@ def fit(self, X: np.ndarray, y: np.ndarray) -> "CentroidClassifier":
 
 **Problem.** Answer the grade whose average wine is nearest; confidence from 1 / distance to each average, normalised.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/classifiers.py`, inside class `CentroidClassifier` (indented 4 spaces), in place of the skeleton's `def predict_one`:
 
 ```python
 def predict_one(self, v: np.ndarray) -> Prediction:
@@ -761,11 +805,13 @@ def predict_one(self, v: np.ndarray) -> Prediction:
 
 ### `winegrader/ml/evaluation.py`
 
+Open `WineGrader/winegrader/ml/evaluation.py`.
+
 #### `evaluate_split(factory, X, y, train, test, scaling, time_single)`
 
 **Problem.** Fit the scaler and the model on the training rows only, grade the test rows, and return the scores, the median time to grade one wine and the distance calculations per query.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/evaluation.py`, at the top level of the file, in place of the skeleton's `def evaluate_split`:
 
 ```python
 def evaluate_split(factory: ModelFactory, X: np.ndarray, y: np.ndarray,
@@ -805,7 +851,7 @@ def evaluate_split(factory: ModelFactory, X: np.ndarray, y: np.ndarray,
 
 **Problem.** Run evaluate_split on every fold. All models use the same splits, so the differences are differences between models.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/evaluation.py`, at the top level of the file, in place of the skeleton's `def cross_validate`:
 
 ```python
 def cross_validate(factory: ModelFactory, X: np.ndarray, y: np.ndarray,
@@ -821,7 +867,7 @@ def cross_validate(factory: ModelFactory, X: np.ndarray, y: np.ndarray,
 
 **Problem.** The mean and standard deviation of every score across the folds. Always report the spread - 0.61 against 0.60 means nothing when the folds differ by 0.02.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/evaluation.py`, at the top level of the file, in place of the skeleton's `def summarise`:
 
 ```python
 def summarise(results: Sequence[FoldResult]) -> Dict[str, float]:
@@ -839,11 +885,13 @@ def summarise(results: Sequence[FoldResult]) -> Dict[str, float]:
 
 ### `winegrader/ml/folds.py`
 
+Open `WineGrader/winegrader/ml/folds.py`.
+
 #### `stratified_kfold(y, folds, seed)`
 
 **Problem.** Split the rows into `folds` (train, test) pairs with the same grade shares in each, using a fixed seed. Every row is in exactly one test set.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/folds.py`, at the top level of the file, in place of the skeleton's `def stratified_kfold`:
 
 ```python
 def stratified_kfold(y: Sequence[int], folds: int, seed: int = config.RANDOM_SEED) -> List[Split]:
@@ -868,11 +916,13 @@ def stratified_kfold(y: Sequence[int], folds: int, seed: int = config.RANDOM_SEE
 
 ### `winegrader/ml/scoring.py`
 
+Open `WineGrader/winegrader/ml/scoring.py`.
+
 #### `confusion_matrix(y_true, y_pred, n_classes)`
 
 **Problem.** cm[true][pred] = how many wines of grade `true` were called `pred`.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/scoring.py`, at the top level of the file, in place of the skeleton's `def confusion_matrix`:
 
 ```python
 def confusion_matrix(y_true: Sequence[int], y_pred: Sequence[int],
@@ -888,7 +938,7 @@ def confusion_matrix(y_true: Sequence[int], y_pred: Sequence[int],
 
 **Problem.** Per grade: precision (of those called this grade, how many were right), recall (of the real ones, how many were found) and F1, from the confusion matrix. Divide-by-zero gives 0.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/scoring.py`, at the top level of the file, in place of the skeleton's `def precision_recall_f1`:
 
 ```python
 def precision_recall_f1(cm: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -909,7 +959,7 @@ def precision_recall_f1(cm: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndar
 
 **Problem.** The plain average of the three F1 values, so the small "high" class counts as much as the others.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/scoring.py`, at the top level of the file, in place of the skeleton's `def macro_f1`:
 
 ```python
 def macro_f1(y_true: Sequence[int], y_pred: Sequence[int]) -> float:
@@ -923,7 +973,7 @@ def macro_f1(y_true: Sequence[int], y_pred: Sequence[int]) -> float:
 
 **Problem.** The share of exact matches; 0 for empty input.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/scoring.py`, at the top level of the file, in place of the skeleton's `def accuracy`:
 
 ```python
 def accuracy(y_true: Sequence[int], y_pred: Sequence[int]) -> float:
@@ -940,11 +990,13 @@ def accuracy(y_true: Sequence[int], y_pred: Sequence[int]) -> float:
 
 ### `winegrader/ml/index.py`
 
+Open `WineGrader/winegrader/ml/index.py`.
+
 #### `KDTreeIndex.build(X)`
 
 **Problem.** Keep the wines, reset the counters and build the tree from all rows.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/index.py`, inside class `KDTreeIndex` (indented 4 spaces), in place of the skeleton's `def build`:
 
 ```python
 def build(self, X: np.ndarray) -> "KDTreeIndex":
@@ -961,7 +1013,7 @@ def build(self, X: np.ndarray) -> "KDTreeIndex":
 
 **Problem.** Split the rows recursively: stop at a small leaf; otherwise pick the column with the widest (weighted) spread, sort by it and split at the middle position. Splitting by position, not by "< median", keeps both halves non-empty even with many equal values.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/index.py`, inside class `KDTreeIndex` (indented 4 spaces), in place of the skeleton's `def _build`:
 
 ```python
 def _build(self, rows: np.ndarray):
@@ -984,7 +1036,7 @@ def _build(self, rows: np.ndarray):
 
 **Problem.** Search the tree depth-first, keeping the k best in a heap, and skip a whole branch when it cannot contain anything closer than the current k-th best. The answers must equal the linear search.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/index.py`, inside class `KDTreeIndex` (indented 4 spaces), in place of the skeleton's `def query`:
 
 ```python
 def query(self, v: np.ndarray, k: int) -> List[Pair]:
@@ -1026,11 +1078,13 @@ def query(self, v: np.ndarray, k: int) -> List[Pair]:
 
 ### `winegrader/ml/callbacks.py`
 
+Open `WineGrader/winegrader/ml/callbacks.py`.
+
 #### `EarlyStopping.update(score)`
 
 **Problem.** Record a score and return True when it is time to stop: an improvement smaller than min_delta counts as none, and after `patience` steps without improvement it stops.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/callbacks.py`, inside class `EarlyStopping` (indented 4 spaces), in place of the skeleton's `def update`:
 
 ```python
 def update(self, score: float) -> bool:
@@ -1048,7 +1102,7 @@ def update(self, score: float) -> bool:
 
 **Problem.** Keep the round number, the score and the weights of every round.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/callbacks.py`, inside class `HistoryLogger` (indented 4 spaces), in place of the skeleton's `def on_round_end`:
 
 ```python
 def on_round_end(self, round_no: int, score: float, weights: Sequence[float]) -> None:
@@ -1061,7 +1115,7 @@ def on_round_end(self, round_no: int, score: float, weights: Sequence[float]) ->
 
 **Problem.** When the score is the best so far, save the round, score and weights - write a temporary file and rename it, so a crash never leaves half a file.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/callbacks.py`, inside class `Checkpoint` (indented 4 spaces), in place of the skeleton's `def on_round_end`:
 
 ```python
 def on_round_end(self, round_no: int, score: float, weights: Sequence[float]) -> None:
@@ -1078,11 +1132,13 @@ def on_round_end(self, round_no: int, score: float, weights: Sequence[float]) ->
 
 ### `winegrader/ml/evaluation.py`
 
+Open `WineGrader/winegrader/ml/evaluation.py`.
+
 #### `nested_cv(X, y, outer_splits, learn, index, grid, weight_kwargs, callbacks, progress)`
 
 **Problem.** The honest estimate: for every outer fold, tune (and learn weights) on its training part only, with inner folds, then measure once on the untouched outer test part.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/evaluation.py`, at the top level of the file, in place of the skeleton's `def nested_cv`:
 
 ```python
 def nested_cv(X: np.ndarray, y: np.ndarray, outer_splits: Optional[Sequence[Split]] = None,
@@ -1119,11 +1175,13 @@ def nested_cv(X: np.ndarray, y: np.ndarray, outer_splits: Optional[Sequence[Spli
 
 ### `winegrader/ml/tuning.py`
 
+Open `WineGrader/winegrader/ml/tuning.py`.
+
 #### `prepare_folds(X, y, splits, scaling)`
 
 **Problem.** Scale every fold once, fitting the scaler on that fold's training rows only, and return the scaled folds.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/tuning.py`, at the top level of the file, in place of the skeleton's `def prepare_folds`:
 
 ```python
 def prepare_folds(X: np.ndarray, y: np.ndarray, splits: Sequence[Split], scaling: str) -> List[PreparedFold]:
@@ -1140,7 +1198,7 @@ def prepare_folds(X: np.ndarray, y: np.ndarray, splits: Sequence[Split], scaling
 
 **Problem.** For every test wine of a fold, the distances and grades of its k nearest training wines.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/tuning.py`, at the top level of the file, in place of the skeleton's `def fold_neighbours`:
 
 ```python
 def fold_neighbours(fold: PreparedFold, weights: np.ndarray, p: int, k: int) -> Tuple[np.ndarray, np.ndarray]:
@@ -1156,7 +1214,7 @@ def fold_neighbours(fold: PreparedFold, weights: np.ndarray, p: int, k: int) -> 
 
 **Problem.** Vote with the first k neighbours and return (macro-F1, recall of high) for one fold.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/tuning.py`, at the top level of the file, in place of the skeleton's `def score_votes`:
 
 ```python
 def score_votes(fold: PreparedFold, dist_power: np.ndarray, labels: np.ndarray,
@@ -1174,7 +1232,7 @@ def score_votes(fold: PreparedFold, dist_power: np.ndarray, labels: np.ndarray,
 
 **Problem.** The selection rule: among the configurations whose macro-F1 is within the tolerance of the best, take the one with the highest recall of "high" (the first on a tie).
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/tuning.py`, at the top level of the file, in place of the skeleton's `def choose_configuration`:
 
 ```python
 def choose_configuration(rows: Sequence[Dict], tolerance: float = None) -> Dict:
@@ -1190,7 +1248,7 @@ def choose_configuration(rows: Sequence[Dict], tolerance: float = None) -> Dict:
 
 **Problem.** Try every scaling x p x alpha x k on the inner folds, stop the k sweep early when it stops improving, and return the best configuration and all result rows.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/tuning.py`, at the top level of the file, in place of the skeleton's `def grid_search`:
 
 ```python
 def grid_search(X: np.ndarray, y: np.ndarray, splits: Optional[Sequence[Split]] = None,
@@ -1229,11 +1287,13 @@ def grid_search(X: np.ndarray, y: np.ndarray, splits: Optional[Sequence[Split]] 
 
 ### `winegrader/ml/weights.py`
 
+Open `WineGrader/winegrader/ml/weights.py`.
+
 #### `cv_score(folds, weights, params)`
 
 **Problem.** The mean macro-F1 over the folds with given feature weights - the simple, slow reference the fast version must agree with.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/weights.py`, at the top level of the file, in place of the skeleton's `def cv_score`:
 
 ```python
 def cv_score(folds: Sequence[PreparedFold], weights: np.ndarray, params: Params) -> float:
@@ -1250,7 +1310,7 @@ def cv_score(folds: Sequence[PreparedFold], weights: np.ndarray, params: Params)
 
 **Problem.** The k smallest of every row of a distance matrix, nearest first - exactly like LinearIndex.query_batch.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/weights.py`, at the top level of the file, in place of the skeleton's `def neighbours_from_matrix`:
 
 ```python
 def neighbours_from_matrix(D: np.ndarray, k: int) -> Tuple[np.ndarray, np.ndarray]:
@@ -1270,7 +1330,7 @@ def neighbours_from_matrix(D: np.ndarray, k: int) -> Tuple[np.ndarray, np.ndarra
 
 **Problem.** Keep a fold and p, and compute its full distance matrix with the current weights.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/weights.py`, inside class `FoldDistances` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, fold: PreparedFold, weights: np.ndarray, p: int) -> None:
@@ -1285,7 +1345,7 @@ def __init__(self, fold: PreparedFold, weights: np.ndarray, p: int) -> None:
 
 **Problem.** One feature's part of the distance matrix, without its weight: |test value - train value| ** p.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/weights.py`, inside class `FoldDistances` (indented 4 spaces), in place of the skeleton's `def term`:
 
 ```python
 def term(self, i: int) -> np.ndarray:
@@ -1299,7 +1359,7 @@ def term(self, i: int) -> np.ndarray:
 
 **Problem.** The fold's macro-F1 for a given distance matrix.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/weights.py`, inside class `FoldDistances` (indented 4 spaces), in place of the skeleton's `def score`:
 
 ```python
 def score(self, D: np.ndarray, params: Params) -> float:
@@ -1314,7 +1374,7 @@ def score(self, D: np.ndarray, params: Params) -> float:
 
 **Problem.** Learn a weight per feature by coordinate search: for each feature try a few factors (including 0 = remove it), keep a change only when the cross-validated macro-F1 improves by more than the tolerance, and repeat rounds until nothing improves. Update the distance matrices by changing one feature's term instead of recomputing everything.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/weights.py`, at the top level of the file, in place of the skeleton's `def learn_weights`:
 
 ```python
 def learn_weights(X: np.ndarray, y: np.ndarray, params: Params,
@@ -1371,11 +1431,13 @@ def learn_weights(X: np.ndarray, y: np.ndarray, params: Params,
 
 ### `run.py`
 
+Open `WineGrader/run.py`.
+
 #### `main(argv)`
 
 **Problem.** Load the newest bundle (or say "run train.py first"), build the controller and open the window.
 
-**Solution.**
+**Solution.** Paste in `run.py`, at the top level of the file, in place of the skeleton's `def main`:
 
 ```python
 def main(argv=None) -> int:
@@ -1407,11 +1469,13 @@ def main(argv=None) -> int:
 
 ### `train.py`
 
+Open `WineGrader/train.py`.
+
 #### `main(argv)`
 
 **Problem.** The training pipeline: import the wines into the database on the first run, read the training set, tune k-NN, learn the feature weights (unless --no-weights) and save a model bundle, printing every step.
 
-**Solution.**
+**Solution.** Paste in `train.py`, at the top level of the file, in place of the skeleton's `def main`:
 
 ```python
 def main(argv=None) -> int:
@@ -1488,11 +1552,13 @@ def main(argv=None) -> int:
 
 ### `winegrader/controllers/app_controller.py`
 
+Open `WineGrader/winegrader/controllers/app_controller.py`.
+
 #### `AppController.parse_form(fields)`
 
 **Problem.** Turn the form's 12 strings into numbers in feature order. An empty field or text that is not a number raises DataError naming the field ("Alcohol (% vol): 'twelve' is not a number"). Accept "9,5" as 9.5.
 
-**Solution.**
+**Solution.** Paste in `winegrader/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def parse_form`:
 
 ```python
 def parse_form(self, fields: Dict[str, str]) -> List[float]:
@@ -1514,7 +1580,7 @@ def parse_form(self, fields: Dict[str, str]) -> List[float]:
 
 **Problem.** Parse the form, grade the wine, save the grading and return what the screen shows: the grade, its colour, the confidence, a sentence, and the five nearest neighbours.
 
-**Solution.**
+**Solution.** Paste in `winegrader/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def classify`:
 
 ```python
 def classify(self, fields: Dict[str, str]) -> Dict:
@@ -1530,7 +1596,7 @@ def classify(self, fields: Dict[str, str]) -> Dict:
 
 **Problem.** Build the display dict from a prediction, including each shown neighbour's main difference (the feature that keeps it furthest away).
 
-**Solution.**
+**Solution.** Paste in `winegrader/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def format`:
 
 ```python
 def format(self, values: Sequence[float], prediction: Prediction) -> Dict:
@@ -1564,7 +1630,7 @@ def format(self, values: Sequence[float], prediction: Prediction) -> Dict:
 
 **Problem.** Save a wine typed at the lab, validated like a grading and with a whole quality 0-10. It is not approved, so it does not join training yet.
 
-**Solution.**
+**Solution.** Paste in `winegrader/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def add_manual_wine`:
 
 ```python
 def add_manual_wine(self, fields: Dict[str, str], quality: str) -> int:
@@ -1587,7 +1653,7 @@ def add_manual_wine(self, fields: Dict[str, str], quality: str) -> int:
 
 **Problem.** The learned feature weights, largest first.
 
-**Solution.**
+**Solution.** Paste in `winegrader/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def weights`:
 
 ```python
 def weights(self) -> List[tuple]:
@@ -1601,7 +1667,7 @@ def weights(self) -> List[tuple]:
 
 **Problem.** The model's version, parameters, training size and stored scores for the Model tab.
 
-**Solution.**
+**Solution.** Paste in `winegrader/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def model_info`:
 
 ```python
 def model_info(self) -> Dict:
@@ -1616,7 +1682,7 @@ def model_info(self) -> Dict:
 
 **Problem.** The recent gradings as dicts for the history table.
 
-**Solution.**
+**Solution.** Paste in `winegrader/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def history`:
 
 ```python
 def history(self, limit: int = 20) -> List[Dict]:
@@ -1629,11 +1695,13 @@ def history(self, limit: int = 20) -> List[Dict]:
 
 ### `winegrader/database/db.py`
 
+Open `WineGrader/winegrader/database/db.py`.
+
 #### `connect(path)`
 
 **Problem.** Open the database with dict-like rows and foreign keys switched on.
 
-**Solution.**
+**Solution.** Paste in `winegrader/database/db.py`, at the top level of the file, in place of the skeleton's `def connect`:
 
 ```python
 def connect(path: Optional[str] = None) -> sqlite3.Connection:
@@ -1649,7 +1717,7 @@ def connect(path: Optional[str] = None) -> sqlite3.Connection:
 
 **Problem.** Create the tables (safe on every start) and commit.
 
-**Solution.**
+**Solution.** Paste in `winegrader/database/db.py`, at the top level of the file, in place of the skeleton's `def initialise`:
 
 ```python
 def initialise(conn: sqlite3.Connection) -> None:
@@ -1661,11 +1729,13 @@ def initialise(conn: sqlite3.Connection) -> None:
 
 ### `winegrader/database/repositories.py`
 
+Open `WineGrader/winegrader/database/repositories.py`.
+
 #### `WineRepository.add(values, quality, source, approved, dup_of, commit)`
 
 **Problem.** Insert one wine and return its id. A wine typed at the lab is not approved by default, so one wrong label cannot quietly change the model. commit=False lets an import insert thousands in one transaction.
 
-**Solution.**
+**Solution.** Paste in `winegrader/database/repositories.py`, inside class `WineRepository` (indented 4 spaces), in place of the skeleton's `def add`:
 
 ```python
 def add(self, values: Sequence[float], quality: int, source: str = "manual",
@@ -1689,7 +1759,7 @@ def add(self, values: Sequence[float], quality: int, source: str = "manual",
 
 **Problem.** Insert every wine in one transaction, marking each duplicate with the database id of its first copy (duplicates are kept, marked). Return (inserted, duplicates).
 
-**Solution.**
+**Solution.** Paste in `winegrader/database/repositories.py`, inside class `WineRepository` (indented 4 spaces), in place of the skeleton's `def import_arrays`:
 
 ```python
 def import_arrays(self, X: np.ndarray, quality: np.ndarray, source: str = "uci") -> Tuple[int, int]:
@@ -1708,7 +1778,7 @@ def import_arrays(self, X: np.ndarray, quality: np.ndarray, source: str = "uci")
 
 **Problem.** The ids, values and quality of every approved, non-duplicate wine. Build the SELECT from config.FEATURES so the columns come out in the right order.
 
-**Solution.**
+**Solution.** Paste in `winegrader/database/repositories.py`, inside class `WineRepository` (indented 4 spaces), in place of the skeleton's `def training_set`:
 
 ```python
 def training_set(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -1728,7 +1798,7 @@ def training_set(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 
 **Problem.** The number of training wines per grade and colour.
 
-**Solution.**
+**Solution.** Paste in `winegrader/database/repositories.py`, inside class `WineRepository` (indented 4 spaces), in place of the skeleton's `def balance`:
 
 ```python
 def balance(self) -> Dict[str, Dict[str, int]]:
@@ -1746,7 +1816,7 @@ def balance(self) -> Dict[str, Dict[str, int]]:
 
 **Problem.** Save one fold's result (scores and parameters) with its non-zero confusion cells and return the id.
 
-**Solution.**
+**Solution.** Paste in `winegrader/database/repositories.py`, inside class `EvaluationRepository` (indented 4 spaces), in place of the skeleton's `def add`:
 
 ```python
 def add(self, run: str, classifier: str, params: Optional[Params], index_type: Optional[str],
@@ -1775,7 +1845,7 @@ def add(self, run: str, classifier: str, params: Optional[Params], index_type: O
 
 **Problem.** Save the learned weight of every feature for one evaluation.
 
-**Solution.**
+**Solution.** Paste in `winegrader/database/repositories.py`, inside class `EvaluationRepository` (indented 4 spaces), in place of the skeleton's `def add_weights`:
 
 ```python
 def add_weights(self, eval_id: int, weights: Sequence[float], round_no: int) -> None:
@@ -1790,7 +1860,7 @@ def add_weights(self, eval_id: int, weights: Sequence[float], round_no: int) -> 
 
 **Problem.** For one run, the mean macro-F1, mean recall of high and fold count per configuration, best first - the tuning table.
 
-**Solution.**
+**Solution.** Paste in `winegrader/database/repositories.py`, inside class `EvaluationRepository` (indented 4 spaces), in place of the skeleton's `def summary`:
 
 ```python
 def summary(self, run: str) -> List[sqlite3.Row]:
@@ -1808,7 +1878,7 @@ def summary(self, run: str) -> List[sqlite3.Row]:
 
 **Problem.** For each feature, the mean, minimum and maximum learned weight across the folds - a weight that jumps around was chosen by chance.
 
-**Solution.**
+**Solution.** Paste in `winegrader/database/repositories.py`, inside class `EvaluationRepository` (indented 4 spaces), in place of the skeleton's `def weight_stability`:
 
 ```python
 def weight_stability(self, run: str) -> List[sqlite3.Row]:
@@ -1824,7 +1894,7 @@ def weight_stability(self, run: str) -> List[sqlite3.Row]:
 
 **Problem.** Save one grading done at the lab (the 12 values as JSON and the answer) and return its id.
 
-**Solution.**
+**Solution.** Paste in `winegrader/database/repositories.py`, inside class `GradingRepository` (indented 4 spaces), in place of the skeleton's `def add`:
 
 ```python
 def add(self, values: Sequence[float], prediction: Prediction, model_version: str) -> int:
@@ -1842,7 +1912,7 @@ def add(self, values: Sequence[float], prediction: Prediction, model_version: st
 
 **Problem.** The newest gradings first.
 
-**Solution.**
+**Solution.** Paste in `winegrader/database/repositories.py`, inside class `GradingRepository` (indented 4 spaces), in place of the skeleton's `def recent`:
 
 ```python
 def recent(self, limit: int = 20) -> List[sqlite3.Row]:
@@ -1853,11 +1923,13 @@ def recent(self, limit: int = 20) -> List[sqlite3.Row]:
 
 ### `winegrader/ml/bundle.py`
 
+Open `WineGrader/winegrader/ml/bundle.py`.
+
 #### `compute_checksum(folder)`
 
 **Problem.** One SHA-256 over the bundle files in a fixed order, including each file's name, so swapping two files changes it.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/bundle.py`, at the top level of the file, in place of the skeleton's `def compute_checksum`:
 
 ```python
 def compute_checksum(folder: str) -> str:
@@ -1875,7 +1947,7 @@ def compute_checksum(folder: str) -> str:
 
 **Problem.** Write the model folder: the training wines, the scaler, the model (features, weights, parameters) and meta.json with the version, scores and checksum - meta.json last, because its checksum covers the others.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/bundle.py`, at the top level of the file, in place of the skeleton's `def save`:
 
 ```python
 def save(folder: str, X_scaled: np.ndarray, y: np.ndarray, scaler: Scaler, params: Params,
@@ -1907,7 +1979,7 @@ def save(folder: str, X_scaled: np.ndarray, y: np.ndarray, scaler: Scaler, param
 
 **Problem.** Check before using: all files present, checksum unchanged, the feature list exactly config's, sizes consistent - every failure is a BundleError in plain words. Then rebuild the scaler, parameters and arrays.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/bundle.py`, at the top level of the file, in place of the skeleton's `def load`:
 
 ```python
 def load(folder: str, expected_features: Optional[List[str]] = None) -> Bundle:
@@ -1945,7 +2017,7 @@ def load(folder: str, expected_features: Optional[List[str]] = None) -> Bundle:
 
 **Problem.** The newest bundle folder (names start with "wg-" and a timestamp, so the newest is the largest name); FileNotFoundError when there is none.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/bundle.py`, at the top level of the file, in place of the skeleton's `def latest`:
 
 ```python
 def latest(models_dir: str = None) -> str:
@@ -1962,11 +2034,13 @@ def latest(models_dir: str = None) -> str:
 
 ### `winegrader/service.py`
 
+Open `WineGrader/winegrader/service.py`.
+
 #### `GradingService.from_bundle(folder, index)`
 
 **Problem.** Load a bundle (the newest by default) and build the grading service from it.
 
-**Solution.**
+**Solution.** Paste in `winegrader/service.py`, inside class `GradingService` (indented 4 spaces), in place of the skeleton's `def from_bundle`:
 
 ```python
 @classmethod
@@ -1981,7 +2055,7 @@ def from_bundle(cls, folder: Optional[str] = None, index: str = config.DEFAULT_I
 
 **Problem.** Grade 12 raw lab values: validate them, scale them with the scaler saved at training time (never a new one), and ask the model.
 
-**Solution.**
+**Solution.** Paste in `winegrader/service.py`, inside class `GradingService` (indented 4 spaces), in place of the skeleton's `def grade`:
 
 ```python
 def grade(self, values: Sequence[float]) -> Prediction:
@@ -1998,7 +2072,7 @@ def grade(self, values: Sequence[float]) -> Prediction:
 
 **Problem.** A neighbour's 12 values in lab units, for display.
 
-**Solution.**
+**Solution.** Paste in `winegrader/service.py`, inside class `GradingService` (indented 4 spaces), in place of the skeleton's `def neighbour_values`:
 
 ```python
 def neighbour_values(self, neighbour: Neighbour) -> List[float]:
@@ -2011,7 +2085,7 @@ def neighbour_values(self, neighbour: Neighbour) -> List[float]:
 
 **Problem.** How much each feature adds to the distance to a neighbour (weight x |difference| ** p) - they add up to the distance. The screen shows the biggest one.
 
-**Solution.**
+**Solution.** Paste in `winegrader/service.py`, inside class `GradingService` (indented 4 spaces), in place of the skeleton's `def feature_gaps`:
 
 ```python
 def feature_gaps(self, values: Sequence[float], neighbour: Neighbour) -> List[float]:
@@ -2024,11 +2098,13 @@ def feature_gaps(self, values: Sequence[float], neighbour: Neighbour) -> List[fl
 
 ### `winegrader/views/classify_view.py`
 
+Open `WineGrader/winegrader/views/classify_view.py`.
+
 #### `ClassifyView.build()`
 
 **Problem.** Lay out the grading tab: an entry for each of the 12 values, Example / Clear / Grade buttons, a coloured result banner, the confidence and sentence, and the neighbours table.
 
-**Solution.**
+**Solution.** Paste in `winegrader/views/classify_view.py`, inside class `ClassifyView` (indented 4 spaces), in place of the skeleton's `def build`:
 
 ```python
 def build(self) -> None:
@@ -2068,7 +2144,7 @@ def build(self) -> None:
 
 **Problem.** Fill the form with a real example wine, so the screen can be tried at once.
 
-**Solution.**
+**Solution.** Paste in `winegrader/views/classify_view.py`, inside class `ClassifyView` (indented 4 spaces), in place of the skeleton's `def on_example`:
 
 ```python
 def on_example(self) -> None:
@@ -2083,7 +2159,7 @@ def on_example(self) -> None:
 
 **Problem.** Empty every field and reset the result area.
 
-**Solution.**
+**Solution.** Paste in `winegrader/views/classify_view.py`, inside class `ClassifyView` (indented 4 spaces), in place of the skeleton's `def on_clear`:
 
 ```python
 def on_clear(self) -> None:
@@ -2101,7 +2177,7 @@ def on_clear(self) -> None:
 
 **Problem.** Send the field strings to the controller and show the result; a DataError is shown as a message.
 
-**Solution.**
+**Solution.** Paste in `winegrader/views/classify_view.py`, inside class `ClassifyView` (indented 4 spaces), in place of the skeleton's `def on_grade`:
 
 ```python
 def on_grade(self) -> None:
@@ -2120,7 +2196,7 @@ def on_grade(self) -> None:
 
 **Problem.** Show the result: banner text and colour, confidence, sentence and the neighbour rows.
 
-**Solution.**
+**Solution.** Paste in `winegrader/views/classify_view.py`, inside class `ClassifyView` (indented 4 spaces), in place of the skeleton's `def display`:
 
 ```python
 def display(self, result: dict) -> None:
@@ -2138,11 +2214,13 @@ def display(self, result: dict) -> None:
 
 ### `winegrader/views/main_window.py`
 
+Open `WineGrader/winegrader/views/main_window.py`.
+
 #### `MainWindow.build()`
 
 **Problem.** Set the title and size and create the notebook with the four tabs.
 
-**Solution.**
+**Solution.** Paste in `winegrader/views/main_window.py`, inside class `MainWindow` (indented 4 spaces), in place of the skeleton's `def build`:
 
 ```python
 def build(self) -> None:
@@ -2161,11 +2239,13 @@ def build(self) -> None:
 
 ### `winegrader/views/model_views.py`
 
+Open `WineGrader/winegrader/views/model_views.py`.
+
 #### `WeightsView.build()`
 
 **Problem.** A horizontal bar chart of the learned weights inside the tab.
 
-**Solution.**
+**Solution.** Paste in `winegrader/views/model_views.py`, inside class `WeightsView` (indented 4 spaces), in place of the skeleton's `def build`:
 
 ```python
 def build(self) -> None:
@@ -2189,7 +2269,7 @@ def build(self) -> None:
 
 **Problem.** Show the model information as rows of labels.
 
-**Solution.**
+**Solution.** Paste in `winegrader/views/model_views.py`, inside class `ModelView` (indented 4 spaces), in place of the skeleton's `def build`:
 
 ```python
 def build(self) -> None:
@@ -2209,7 +2289,7 @@ def build(self) -> None:
 
 **Problem.** A table of past gradings (when, grade, confidence, model) and a Refresh button.
 
-**Solution.**
+**Solution.** Paste in `winegrader/views/model_views.py`, inside class `HistoryView` (indented 4 spaces), in place of the skeleton's `def build`:
 
 ```python
 def build(self) -> None:
@@ -2229,7 +2309,7 @@ def build(self) -> None:
 
 **Problem.** Reload the history rows.
 
-**Solution.**
+**Solution.** Paste in `winegrader/views/model_views.py`, inside class `HistoryView` (indented 4 spaces), in place of the skeleton's `def refresh`:
 
 ```python
 def refresh(self) -> None:
@@ -2245,11 +2325,13 @@ def refresh(self) -> None:
 
 ### `evaluate.py`
 
+Open `WineGrader/evaluate.py`.
+
 #### `main(argv)`
 
 **Problem.** The final comparison: on the same outer folds, run the baselines, k-NN without scaling, and nested k-NN with uniform and learned weights. Store every result and write the report with the targets of the proposal.
 
-**Solution.**
+**Solution.** Paste in `evaluate.py`, at the top level of the file, in place of the skeleton's `def main`:
 
 ```python
 def main(argv=None) -> int:
@@ -2346,7 +2428,7 @@ def main(argv=None) -> int:
 
 **Problem.** Write reports/evaluation.md: the comparison table with spreads, the targets with PASS/FAIL, the weight stability and the accuracy by colour.
 
-**Solution.**
+**Solution.** Paste in `evaluate.py`, at the top level of the file, in place of the skeleton's `def write_report`:
 
 ```python
 def write_report(summaries, nested, index_rows, curve, by_colour, stability, balance, n) -> None:
@@ -2422,11 +2504,13 @@ def write_report(summaries, nested, index_rows, curve, by_colour, stability, bal
 
 ### `winegrader/database/repositories.py`
 
+Open `WineGrader/winegrader/database/repositories.py`.
+
 #### `EvaluationRepository.add_predictions(eval_id, wine_ids, predicted)`
 
 **Problem.** Save one row per graded test wine - the raw material for the error analysis.
 
-**Solution.**
+**Solution.** Paste in `winegrader/database/repositories.py`, inside class `EvaluationRepository` (indented 4 spaces), in place of the skeleton's `def add_predictions`:
 
 ```python
 def add_predictions(self, eval_id: int, wine_ids: Sequence[int], predicted: Sequence[int]) -> None:
@@ -2441,7 +2525,7 @@ def add_predictions(self, eval_id: int, wine_ids: Sequence[int], predicted: Sequ
 
 **Problem.** The number of wines and the accuracy for red and for white over one run - if the model is clearly worse on red, it learned mostly white wine.
 
-**Solution.**
+**Solution.** Paste in `winegrader/database/repositories.py`, inside class `EvaluationRepository` (indented 4 spaces), in place of the skeleton's `def accuracy_by_colour`:
 
 ```python
 def accuracy_by_colour(self, run: str) -> Dict[str, Tuple[int, float]]:
@@ -2460,7 +2544,7 @@ def accuracy_by_colour(self, run: str) -> Dict[str, Tuple[int, float]]:
 
 **Problem.** Record which outer fold each wine was tested in, so a run can be repeated exactly.
 
-**Solution.**
+**Solution.** Paste in `winegrader/database/repositories.py`, inside class `EvaluationRepository` (indented 4 spaces), in place of the skeleton's `def save_folds`:
 
 ```python
 def save_folds(self, wine_ids: Sequence[int], splits: Sequence, seed: int) -> None:
@@ -2475,11 +2559,13 @@ def save_folds(self, wine_ids: Sequence[int], splits: Sequence, seed: int) -> No
 
 ### `winegrader/ml/evaluation.py`
 
+Open `WineGrader/winegrader/ml/evaluation.py`.
+
 #### `kdtree_dimension_curve(X, y, train, test, k, dims, queries)`
 
 **Problem.** How much the k-d tree saves as the number of features grows: keep the d features most related to the grade, build a tree, and measure what share of the wines a search still looks at. It is the curse of dimensionality, measured.
 
-**Solution.**
+**Solution.** Paste in `winegrader/ml/evaluation.py`, at the top level of the file, in place of the skeleton's `def kdtree_dimension_curve`:
 
 ```python
 def kdtree_dimension_curve(X: np.ndarray, y: np.ndarray, train: np.ndarray, test: np.ndarray,

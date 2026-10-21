@@ -8,6 +8,36 @@ Every function you write in this project (86 of them), in the order of `TASKS.md
 
 Try each function yourself first, then compare. Run the check after every function, not at the end.
 
+## Where the code goes
+
+Every path below starts in your project folder `LanGame/` (the folder with `TASKS.md`). For each file:
+
+1. **Imports** — if the file section lists imports, add the lines that are missing to the top of the file, next to the other `import` lines.
+2. **Helper code** — paste it once, where the section says: *in the file* means below the imports and above the first class; *inside class X* means inside that class, next to its other methods (indented like them).
+3. **Each function** — in your skeleton, find the `def` with the same name. Delete the whole function — the `def` line, the TODO text and `raise NotImplementedError` — and paste the solution in its place. Inside a class, every line moves 4 spaces to the right, so the `def` lines up with the other methods.
+4. **New files** — at the end, under *Files the solution adds*: create the file at that path and paste the whole code.
+
+Before and after, for a method inside a class:
+
+```python
+class Example:
+
+    def total(self, items):          # BEFORE - the skeleton
+        """
+        TODO stage 3: add up the prices.
+        """
+        raise NotImplementedError
+```
+
+```python
+class Example:
+
+    def total(self, items):          # AFTER - the solution pasted in its place
+        return sum(item.price for item in items)
+```
+
+Then run the **Check** command from the project folder.
+
 ## Contents
 
 - [Stage 1 — Protocol and infrastructure](#stage-1--protocol-and-infrastructure) (3 functions)
@@ -23,11 +53,13 @@ Try each function yourself first, then compare. Run the check after every functi
 
 ### `langame/common/protocol.py`
 
+Open `LanGame/langame/common/protocol.py`.
+
 #### `Message.to_wire()`
 
 **Problem.** Turn a message into bytes ready to send: one JSON object {"type", "payload"} followed by a newline, encoded as UTF-8. Keep Hebrew readable (ensure_ascii=False).
 
-**Solution.**
+**Solution.** Paste in `langame/common/protocol.py`, inside class `Message` (indented 4 spaces), in place of the skeleton's `def to_wire`:
 
 ```python
 def to_wire(self) -> bytes:
@@ -41,7 +73,7 @@ def to_wire(self) -> bytes:
 
 **Problem.** Turn one received line back into a Message. Invalid JSON, a missing or unknown type, or a payload that is not a dict raises ProtocolError - never a raw json or KeyError. The server must survive garbage from any client.
 
-**Solution.**
+**Solution.** Paste in `langame/common/protocol.py`, inside class `Message` (indented 4 spaces), in place of the skeleton's `def from_wire`:
 
 ```python
 @classmethod
@@ -67,7 +99,7 @@ def from_wire(cls, line: str) -> "Message":
 
 **Problem.** TCP is a stream: two messages can arrive glued together, or one can arrive in two pieces. Add the new bytes to what is pending, cut at every newline, return the complete messages and keep the unfinished end for next time. Anything longer than the size limit raises ProtocolError.
 
-**Solution.**
+**Solution.** Paste in `langame/common/protocol.py`, inside class `MessageBuffer` (indented 4 spaces), in place of the skeleton's `def feed`:
 
 ```python
 def feed(self, chunk: bytes) -> List[Message]:
@@ -97,11 +129,13 @@ def feed(self, chunk: bytes) -> List[Message]:
 
 ### `langame/server/client_handler.py`
 
+Open `LanGame/langame/server/client_handler.py`.
+
 #### `ClientHandler.run()`
 
 **Problem.** The thread of one client: receive bytes, cut them into messages and dispatch each one. A garbage message gets an ERROR reply and the thread keeps serving; a closed connection ends the loop and always closes the handler.
 
-**Solution.**
+**Solution.** Paste in `langame/server/client_handler.py`, inside class `ClientHandler` (indented 4 spaces), in place of the skeleton's `def run`:
 
 ```python
 def run(self) -> None:
@@ -132,7 +166,7 @@ def run(self) -> None:
 
 **Problem.** Turn a message into a Command and let the engine execute it. A bad payload gets an ERROR reply. The handler never decides game rules itself.
 
-**Solution.**
+**Solution.** Paste in `langame/server/client_handler.py`, inside class `ClientHandler` (indented 4 spaces), in place of the skeleton's `def _dispatch`:
 
 ```python
 def _dispatch(self, message: Message) -> None:
@@ -150,7 +184,7 @@ def _dispatch(self, message: Message) -> None:
 
 **Problem.** Send a message to this client under its send lock (two threads may send at once). On a network error return False instead of raising - the caller may be broadcasting to everyone.
 
-**Solution.**
+**Solution.** Paste in `langame/server/client_handler.py`, inside class `ClientHandler` (indented 4 spaces), in place of the skeleton's `def send`:
 
 ```python
 def send(self, message: Message) -> bool:
@@ -171,7 +205,7 @@ def send(self, message: Message) -> bool:
 
 **Problem.** Close the handler once (calling it again does nothing): tell the engine the player left, close the socket and remove the handler from the server.
 
-**Solution.**
+**Solution.** Paste in `langame/server/client_handler.py`, inside class `ClientHandler` (indented 4 spaces), in place of the skeleton's `def close`:
 
 ```python
 def close(self) -> None:
@@ -201,11 +235,21 @@ def close(self) -> None:
 
 ### `langame/server/commands.py`
 
+Open `LanGame/langame/server/commands.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import config
+from langame.common.models import GameState
+from langame.common.protocol import Message, MessageType, ProtocolError, error
+```
+
 #### `JoinCommand.execute(engine)`
 
 **Problem.** Accept a new player only in the lobby, with a name of 1-16 characters that is not taken, while there is room. Otherwise return an ERROR with a code like "name_taken", "game_started" or "full".
 
-**Solution.**
+**Solution.** Paste in `langame/server/commands.py`, inside class `JoinCommand` (indented 4 spaces), in place of the skeleton's `def execute`:
 
 ```python
 def execute(self, engine) -> Optional[Message]:
@@ -230,7 +274,7 @@ def execute(self, engine) -> Optional[Message]:
 
 **Problem.** Tell the engine this player left.
 
-**Solution.**
+**Solution.** Paste in `langame/server/commands.py`, inside class `LeaveCommand` (indented 4 spaces), in place of the skeleton's `def execute`:
 
 ```python
 def execute(self, engine) -> Optional[Message]:
@@ -244,7 +288,7 @@ def execute(self, engine) -> Optional[Message]:
 
 **Problem.** Turn a message into the matching Command (JOIN, ANSWER, LEAVE, START_GAME). Missing or wrongly typed fields raise ProtocolError("bad_payload"); any other type raises ProtocolError("unexpected_type").
 
-**Solution.**
+**Solution.** Paste in `langame/server/commands.py`, at the top level of the file, in place of the skeleton's `def build_command`:
 
 ```python
 def build_command(message: Message, handler) -> Command:
@@ -271,81 +315,90 @@ def build_command(message: Message, handler) -> Command:
 
 ### `langame/server/game_engine.py`
 
+Open `LanGame/langame/server/game_engine.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from dataclasses import asdict
+from datetime import datetime
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`GameEngine._schedule`
+`GameEngine._schedule` — paste inside class `GameEngine`:
 
 ```python
 def _schedule(self, seconds: float, action) -> threading.Timer:
-        timer = threading.Timer(seconds, action)
-        timer.daemon = True
-        timer.start()
-        return timer
+    timer = threading.Timer(seconds, action)
+    timer.daemon = True
+    timer.start()
+    return timer
 ```
 
-`GameEngine._pick_new_host`
+`GameEngine._pick_new_host` — paste inside class `GameEngine`:
 
 ```python
 def _pick_new_host(self) -> None:
-        connected = self.connected_players()
-        self.host_name = connected[0].name if connected else None
-        if self.host_name and self.host_name in self.handlers:
-            self.handlers[self.host_name].send(Message(MessageType.WELCOME, {"name": self.host_name, "is_host": True}))
+    connected = self.connected_players()
+    self.host_name = connected[0].name if connected else None
+    if self.host_name and self.host_name in self.handlers:
+        self.handlers[self.host_name].send(Message(MessageType.WELCOME, {"name": self.host_name, "is_host": True}))
 ```
 
-`GameEngine._reset_to_lobby`
+`GameEngine._reset_to_lobby` — paste inside class `GameEngine`:
 
 ```python
 def _reset_to_lobby(self) -> None:
-        """After a game: forget who left, keep who is still here, ready for a new game."""
-        self.players = {n: p for n, p in self.players.items() if p.connected}
-        for player in self.players.values():
-            player.score = 0
-        if self.host_name not in self.players:
-            self._pick_new_host()
-        self.current_question = None
-        self.question_number = 0
-        self.answers = {}
-        self.history = []
-        self.started_at = None
-        self.state = GameState.LOBBY
-        self.server.broadcast(Message(MessageType.LOBBY_UPDATE, self.lobby_payload()))
+    """After a game: forget who left, keep who is still here, ready for a new game."""
+    self.players = {n: p for n, p in self.players.items() if p.connected}
+    for player in self.players.values():
+        player.score = 0
+    if self.host_name not in self.players:
+        self._pick_new_host()
+    self.current_question = None
+    self.question_number = 0
+    self.answers = {}
+    self.history = []
+    self.started_at = None
+    self.state = GameState.LOBBY
+    self.server.broadcast(Message(MessageType.LOBBY_UPDATE, self.lobby_payload()))
 ```
 
-`GameEngine._abandon_game`
+`GameEngine._abandon_game` — paste inside class `GameEngine`:
 
 ```python
 def _abandon_game(self) -> None:
-        if self._question_timer is not None:
-            self._question_timer.cancel()
-            self._question_timer = None
-        self.state = GameState.LOBBY                             # pending timers see LOBBY and do nothing
-        self._reset_to_lobby()
+    if self._question_timer is not None:
+        self._question_timer.cancel()
+        self._question_timer = None
+    self.state = GameState.LOBBY                             # pending timers see LOBBY and do nothing
+    self._reset_to_lobby()
 ```
 
-`GameEngine.save_in_progress`
+`GameEngine.save_in_progress` — paste inside class `GameEngine`:
 
 ```python
 def save_in_progress(self) -> None:
-        with self._lock:
-            if self.state in (GameState.QUESTION, GameState.SCORING) and self.history:
-                if self._question_timer is not None:
-                    self._question_timer.cancel()
-                board = build_leaderboard(self.players)
-                try:
-                    GameRepository().save_game(datetime.fromtimestamp(self.started_at or time.time()), datetime.now(),
-                                               self.question_number, self.time_limit, self.category,
-                                               board[0].name if board else None, self.players, self.history)
-                except Exception:
-                    log.exception("could not save the interrupted game")
-            self.state = GameState.GAME_OVER
+    with self._lock:
+        if self.state in (GameState.QUESTION, GameState.SCORING) and self.history:
+            if self._question_timer is not None:
+                self._question_timer.cancel()
+            board = build_leaderboard(self.players)
+            try:
+                GameRepository().save_game(datetime.fromtimestamp(self.started_at or time.time()), datetime.now(),
+                                           self.question_number, self.time_limit, self.category,
+                                           board[0].name if board else None, self.players, self.history)
+            except Exception:
+                log.exception("could not save the interrupted game")
+        self.state = GameState.GAME_OVER
 ```
 
 #### `GameEngine.execute(command)`
 
 **Problem.** Run a command under the engine lock and send its ERROR reply (if any) back to that client. Log every command.
 
-**Solution.**
+**Solution.** Paste in `langame/server/game_engine.py`, inside class `GameEngine` (indented 4 spaces), in place of the skeleton's `def execute`:
 
 ```python
 def execute(self, command) -> None:
@@ -363,7 +416,7 @@ def execute(self, command) -> None:
 
 **Problem.** Add the player, remember its handler, make the first player the host, send it WELCOME and send everyone the updated lobby.
 
-**Solution.**
+**Solution.** Paste in `langame/server/game_engine.py`, inside class `GameEngine` (indented 4 spaces), in place of the skeleton's `def add_player`:
 
 ```python
 def add_player(self, name: str, handler) -> None:
@@ -382,7 +435,7 @@ def add_player(self, name: str, handler) -> None:
 
 **Problem.** A player disconnected: in the lobby remove them (and choose a new host if needed) and update the lobby; during a game keep their score, and close the question early if everyone still here has answered. Never crash.
 
-**Solution.**
+**Solution.** Paste in `langame/server/game_engine.py`, inside class `GameEngine` (indented 4 spaces), in place of the skeleton's `def player_left`:
 
 ```python
 def player_left(self, name: Optional[str]) -> None:
@@ -414,7 +467,7 @@ def player_left(self, name: Optional[str]) -> None:
 
 **Problem.** The lobby message: the names of the connected players and the minimum needed.
 
-**Solution.**
+**Solution.** Paste in `langame/server/game_engine.py`, inside class `GameEngine` (indented 4 spaces), in place of the skeleton's `def lobby_payload`:
 
 ```python
 def lobby_payload(self) -> dict:
@@ -427,7 +480,7 @@ def lobby_payload(self) -> dict:
 
 **Problem.** The players who are still connected.
 
-**Solution.**
+**Solution.** Paste in `langame/server/game_engine.py`, inside class `GameEngine` (indented 4 spaces), in place of the skeleton's `def connected_players`:
 
 ```python
 def connected_players(self) -> List[Player]:
@@ -438,9 +491,11 @@ def connected_players(self) -> List[Player]:
 
 ### `langame/server/game_server.py`
 
+Open `LanGame/langame/server/game_server.py`.
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`GameServer.running`
+`GameServer.running` — paste inside class `GameServer`:
 
 ```python
 @property
@@ -452,7 +507,7 @@ def running(self) -> bool:
 
 **Problem.** Open a TCP socket on the port (reusable after a restart), listen, and accept connections in a loop. Give each new connection its own ClientHandler thread and keep it in the handler list. A one-second timeout lets the loop notice a shutdown.
 
-**Solution.**
+**Solution.** Paste in `langame/server/game_server.py`, inside class `GameServer` (indented 4 spaces), in place of the skeleton's `def serve_forever`:
 
 ```python
 def serve_forever(self) -> None:
@@ -494,7 +549,7 @@ def serve_forever(self) -> None:
 
 **Problem.** Send a message to every player who joined. Copy the handler list under the lock, then send outside it, so one slow client cannot block the others. A handler whose send fails is reported to the engine as left.
 
-**Solution.**
+**Solution.** Paste in `langame/server/game_server.py`, inside class `GameServer` (indented 4 spaces), in place of the skeleton's `def broadcast`:
 
 ```python
 def broadcast(self, message, exclude_name: Optional[str] = None) -> None:
@@ -511,7 +566,7 @@ def broadcast(self, message, exclude_name: Optional[str] = None) -> None:
 
 **Problem.** Remove a finished handler from the list (under the lock).
 
-**Solution.**
+**Solution.** Paste in `langame/server/game_server.py`, inside class `GameServer` (indented 4 spaces), in place of the skeleton's `def remove_handler`:
 
 ```python
 def remove_handler(self, handler) -> None:
@@ -526,7 +581,7 @@ def remove_handler(self, handler) -> None:
 
 **Problem.** Stop the accept loop, save a game that is in progress, close every client and the listening socket.
 
-**Solution.**
+**Solution.** Paste in `langame/server/game_server.py`, inside class `GameServer` (indented 4 spaces), in place of the skeleton's `def shutdown`:
 
 ```python
 def shutdown(self) -> None:
@@ -547,11 +602,13 @@ def shutdown(self) -> None:
 
 ### `run_server.py`
 
+Open `LanGame/run_server.py`.
+
 #### `print_local_addresses(port)`
 
 **Problem.** Print every IPv4 address of this computer (and 127.0.0.1) so players know what to type in their client.
 
-**Solution.**
+**Solution.** Paste in `run_server.py`, at the top level of the file, in place of the skeleton's `def print_local_addresses`:
 
 ```python
 def print_local_addresses(port: int):
@@ -581,11 +638,13 @@ def print_local_addresses(port: int):
 
 ### `langame/common/models.py`
 
+Open `LanGame/langame/common/models.py`.
+
 #### `Question.public_payload()`
 
 **Problem.** What goes into a QUESTION message: id, text and options - never the correct index, or a modified client could cheat.
 
-**Solution.**
+**Solution.** Paste in `langame/common/models.py`, inside class `Question` (indented 4 spaces), in place of the skeleton's `def public_payload`:
 
 ```python
 def public_payload(self) -> dict:
@@ -596,11 +655,13 @@ def public_payload(self) -> dict:
 
 ### `langame/database/db.py`
 
+Open `LanGame/langame/database/db.py`.
+
 #### `Database.get_connection()`
 
 **Problem.** Open an SQLite connection usable from any thread, with dict-like rows and foreign keys switched on. Each call opens its own short connection.
 
-**Solution.**
+**Solution.** Paste in `langame/database/db.py`, inside class `Database` (indented 4 spaces), in place of the skeleton's `def get_connection`:
 
 ```python
 def get_connection(self) -> sqlite3.Connection:
@@ -616,7 +677,7 @@ def get_connection(self) -> sqlite3.Connection:
 
 **Problem.** A context manager: commit on success, roll back on an error, always close.
 
-**Solution.**
+**Solution.** Paste in `langame/database/db.py`, inside class `Database` (indented 4 spaces), in place of the skeleton's `def connection`:
 
 ```python
 @contextmanager
@@ -638,7 +699,7 @@ def connection(self):
 
 **Problem.** Create the tables by running the SCHEMA script.
 
-**Solution.**
+**Solution.** Paste in `langame/database/db.py`, inside class `Database` (indented 4 spaces), in place of the skeleton's `def initialize_schema`:
 
 ```python
 def initialize_schema(self) -> None:
@@ -650,9 +711,11 @@ def initialize_schema(self) -> None:
 
 ### `langame/database/repositories.py`
 
+Open `LanGame/langame/database/repositories.py`.
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`_row_to_question`
+`_row_to_question` — paste in the file, below the imports:
 
 ```python
 def _row_to_question(r):
@@ -664,7 +727,7 @@ def _row_to_question(r):
 
 **Problem.** Insert a question (text, four options, the correct index, category, difficulty) and return its id.
 
-**Solution.**
+**Solution.** Paste in `langame/database/repositories.py`, inside class `QuestionRepository` (indented 4 spaces), in place of the skeleton's `def add`:
 
 ```python
 def add(self, question: Question) -> int:
@@ -680,7 +743,7 @@ def add(self, question: Question) -> int:
 
 **Problem.** Read one question by id with its four options as a list, or None.
 
-**Solution.**
+**Solution.** Paste in `langame/database/repositories.py`, inside class `QuestionRepository` (indented 4 spaces), in place of the skeleton's `def get`:
 
 ```python
 def get(self, question_id: int) -> Optional[Question]:
@@ -695,7 +758,7 @@ def get(self, question_id: int) -> Optional[Question]:
 
 **Problem.** Return only the question ids, optionally of one category - the game shuffles these.
 
-**Solution.**
+**Solution.** Paste in `langame/database/repositories.py`, inside class `QuestionRepository` (indented 4 spaces), in place of the skeleton's `def list_ids`:
 
 ```python
 def list_ids(self, category: Optional[str] = None) -> List[int]:
@@ -710,7 +773,7 @@ def list_ids(self, category: Optional[str] = None) -> List[int]:
 
 **Problem.** How many questions there are, optionally in one category.
 
-**Solution.**
+**Solution.** Paste in `langame/database/repositories.py`, inside class `QuestionRepository` (indented 4 spaces), in place of the skeleton's `def count`:
 
 ```python
 def count(self, category: Optional[str] = None) -> int:
@@ -725,7 +788,7 @@ def count(self, category: Optional[str] = None) -> int:
 
 **Problem.** Import questions from a CSV in one transaction and return how many were added. Rows with a correct index outside 0-3 (or other broken values) are skipped and reported.
 
-**Solution.**
+**Solution.** Paste in `langame/database/repositories.py`, inside class `QuestionRepository` (indented 4 spaces), in place of the skeleton's `def import_csv`:
 
 ```python
 def import_csv(self, path: str) -> int:
@@ -759,11 +822,13 @@ def import_csv(self, path: str) -> int:
 
 ### `langame/server/question_manager.py`
 
+Open `LanGame/langame/server/question_manager.py`.
+
 #### `QuestionManager.prepare(count)`
 
 **Problem.** Take all matching question ids, shuffle them and keep `count` for this game. Too few questions raises a clear ValueError before the game starts.
 
-**Solution.**
+**Solution.** Paste in `langame/server/question_manager.py`, inside class `QuestionManager` (indented 4 spaces), in place of the skeleton's `def prepare`:
 
 ```python
 def prepare(self, count: int) -> None:
@@ -782,7 +847,7 @@ def prepare(self, count: int) -> None:
 
 **Problem.** Take the next prepared id and return its question.
 
-**Solution.**
+**Solution.** Paste in `langame/server/question_manager.py`, inside class `QuestionManager` (indented 4 spaces), in place of the skeleton's `def next`:
 
 ```python
 def next(self) -> Question:
@@ -801,11 +866,13 @@ def next(self) -> Question:
 
 ### `langame/common/models.py`
 
+Open `LanGame/langame/common/models.py`.
+
 #### `build_leaderboard(players)`
 
 **Problem.** Sort the players by score (highest first, then by name) and number them from 1. Players who left stay on the board.
 
-**Solution.**
+**Solution.** Paste in `langame/common/models.py`, at the top level of the file, in place of the skeleton's `def build_leaderboard`:
 
 ```python
 def build_leaderboard(players: Dict[str, Player]) -> List[LeaderboardEntry]:
@@ -817,11 +884,13 @@ def build_leaderboard(players: Dict[str, Player]) -> List[LeaderboardEntry]:
 
 ### `langame/server/commands.py`
 
+Open `LanGame/langame/server/commands.py`.
+
 #### `StartGameCommand.execute(engine)`
 
 **Problem.** Only the host may start, only in the lobby, and only with enough players. Not enough questions becomes an ERROR too.
 
-**Solution.**
+**Solution.** Paste in `langame/server/commands.py`, inside class `StartGameCommand` (indented 4 spaces), in place of the skeleton's `def execute`:
 
 ```python
 def execute(self, engine) -> Optional[Message]:
@@ -846,7 +915,7 @@ def execute(self, engine) -> Optional[Message]:
 
 **Problem.** Pass the answer to the engine, which checks it.
 
-**Solution.**
+**Solution.** Paste in `langame/server/commands.py`, inside class `AnswerCommand` (indented 4 spaces), in place of the skeleton's `def execute`:
 
 ```python
 def execute(self, engine) -> Optional[Message]:
@@ -859,11 +928,13 @@ def execute(self, engine) -> Optional[Message]:
 
 ### `langame/server/game_engine.py`
 
+Open `LanGame/langame/server/game_engine.py`.
+
 #### `GameEngine.start_game()`
 
 **Problem.** Prepare the questions, reset the scores, leave the lobby (no more joining), tell everyone the countdown and schedule the first question.
 
-**Solution.**
+**Solution.** Paste in `langame/server/game_engine.py`, inside class `GameEngine` (indented 4 spaces), in place of the skeleton's `def start_game`:
 
 ```python
 def start_game(self) -> None:
@@ -888,7 +959,7 @@ def start_game(self) -> None:
 
 **Problem.** After the last question end the game. Otherwise take the next question, clear the answers, broadcast it (without the answer, with the time limit and number) and start the timer that closes it.
 
-**Solution.**
+**Solution.** Paste in `langame/server/game_engine.py`, inside class `GameEngine` (indented 4 spaces), in place of the skeleton's `def next_question`:
 
 ```python
 def next_question(self) -> None:
@@ -926,7 +997,7 @@ def next_question(self) -> None:
 
 **Problem.** The key check of the game. Refuse an answer when no question is open, for an old question, with a choice outside 0-3, or a second time from the same player. Otherwise store it with the server's own timing; when everyone has answered, close the question early.
 
-**Solution.**
+**Solution.** Paste in `langame/server/game_engine.py`, inside class `GameEngine` (indented 4 spaces), in place of the skeleton's `def record_answer`:
 
 ```python
 def record_answer(self, name: str, question_id: int, choice: int) -> Optional[Message]:
@@ -950,7 +1021,7 @@ def record_answer(self, name: str, question_id: int, choice: int) -> Optional[Me
 
 **Problem.** Close the question once (the timer and the last answer may both call it): score the answers, keep them for the database, broadcast the result and the leaderboard, and schedule the next question.
 
-**Solution.**
+**Solution.** Paste in `langame/server/game_engine.py`, inside class `GameEngine` (indented 4 spaces), in place of the skeleton's `def close_question`:
 
 ```python
 def close_question(self) -> None:
@@ -974,7 +1045,7 @@ def close_question(self) -> None:
 
 **Problem.** The result message: the question id, the correct index and each player's answer {choice, is_correct, points}, keyed by name.
 
-**Solution.**
+**Solution.** Paste in `langame/server/game_engine.py`, inside class `GameEngine` (indented 4 spaces), in place of the skeleton's `def result_payload`:
 
 ```python
 def result_payload(self) -> dict:
@@ -990,7 +1061,7 @@ def result_payload(self) -> dict:
 
 **Problem.** The leaderboard message: the ranked entries as dicts.
 
-**Solution.**
+**Solution.** Paste in `langame/server/game_engine.py`, inside class `GameEngine` (indented 4 spaces), in place of the skeleton's `def leaderboard_payload`:
 
 ```python
 def leaderboard_payload(self) -> dict:
@@ -1001,11 +1072,13 @@ def leaderboard_payload(self) -> dict:
 
 ### `langame/server/score_engine.py`
 
+Open `LanGame/langame/server/score_engine.py`.
+
 #### `ScoreEngine.points_for(is_correct, response_time)`
 
 **Problem.** Points for one answer: a wrong answer gets 0; a correct one gets 1000 x (time left / time limit), at least 100. Answering in 3 of 15 seconds gives 800. Keep the time between 0 and the limit.
 
-**Solution.**
+**Solution.** Paste in `langame/server/score_engine.py`, inside class `ScoreEngine` (indented 4 spaces), in place of the skeleton's `def points_for`:
 
 ```python
 def points_for(self, is_correct: bool, response_time: float) -> int:
@@ -1021,7 +1094,7 @@ def points_for(self, is_correct: bool, response_time: float) -> int:
 
 **Problem.** Mark every answer correct or not, give it its points and add them to the player's score. Players who did not answer get nothing.
 
-**Solution.**
+**Solution.** Paste in `langame/server/score_engine.py`, inside class `ScoreEngine` (indented 4 spaces), in place of the skeleton's `def score_round`:
 
 ```python
 def score_round(self, question: Question, answers: Dict[str, AnswerRecord],
@@ -1040,97 +1113,105 @@ def score_round(self, question: Question, answers: Dict[str, AnswerRecord],
 
 ### `langame/client/controllers/client_controller.py`
 
+Open `LanGame/langame/client/controllers/client_controller.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from langame.client.views.main_window import MainWindow
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`LEAVE_CODES`
+`LEAVE_CODES` — paste in the file, below the imports:
 
 ```python
 LEAVE_CODES = {"name_taken", "game_started", "full", "bad_name", "disconnected"}
 ```
 
-`ClientController.on_back`
+`ClientController.on_back` — paste inside class `ClientController`:
 
 ```python
 def on_back(self) -> None:
-        self.view.show("lobby" if self.net.connected else "connect")
+    self.view.show("lobby" if self.net.connected else "connect")
 ```
 
-`ClientController._on_welcome`
+`ClientController._on_welcome` — paste inside class `ClientController`:
 
 ```python
 def _on_welcome(self, payload: dict) -> None:
-        self.player_name = payload.get("name", self.player_name)
-        self.is_host = bool(payload.get("is_host"))
-        self.view.lobby.set_host_controls(self.is_host)
+    self.player_name = payload.get("name", self.player_name)
+    self.is_host = bool(payload.get("is_host"))
+    self.view.lobby.set_host_controls(self.is_host)
 ```
 
-`ClientController._on_lobby`
+`ClientController._on_lobby` — paste inside class `ClientController`:
 
 ```python
 def _on_lobby(self, payload: dict) -> None:
-        self.view.lobby.set_players(payload.get("players", []), payload.get("min_players", config.MIN_PLAYERS))
+    self.view.lobby.set_players(payload.get("players", []), payload.get("min_players", config.MIN_PLAYERS))
 ```
 
-`ClientController._on_countdown`
+`ClientController._on_countdown` — paste inside class `ClientController`:
 
 ```python
 def _on_countdown(self, payload: dict) -> None:
-        self.view.leaderboard.update([])
-        self.view.show("lobby")
-        self.view.lobby.show_countdown(int(payload.get("seconds", 0)))
+    self.view.leaderboard.update([])
+    self.view.show("lobby")
+    self.view.lobby.show_countdown(int(payload.get("seconds", 0)))
 ```
 
-`ClientController._on_question`
+`ClientController._on_question` — paste inside class `ClientController`:
 
 ```python
 def _on_question(self, payload: dict) -> None:
-        self.current_question_id = payload["question_id"]
-        self.has_answered = False
-        self.view.question.show(payload)
-        self.view.show("game")
+    self.current_question_id = payload["question_id"]
+    self.has_answered = False
+    self.view.question.show(payload)
+    self.view.show("game")
 ```
 
-`ClientController._on_result`
+`ClientController._on_result` — paste inside class `ClientController`:
 
 ```python
 def _on_result(self, payload: dict) -> None:
-        self.view.question.show_result(payload, self.player_name)
+    self.view.question.show_result(payload, self.player_name)
 ```
 
-`ClientController._on_leaderboard`
+`ClientController._on_leaderboard` — paste inside class `ClientController`:
 
 ```python
 def _on_leaderboard(self, payload: dict) -> None:
-        self.view.leaderboard.update(payload.get("entries", []))
-        self.view.leaderboard.highlight(self.player_name)
+    self.view.leaderboard.update(payload.get("entries", []))
+    self.view.leaderboard.highlight(self.player_name)
 ```
 
-`ClientController._on_game_over`
+`ClientController._on_game_over` — paste inside class `ClientController`:
 
 ```python
 def _on_game_over(self, payload: dict) -> None:
-        self.current_question_id = None
-        self.view.game_over.show(payload.get("winner"), payload.get("entries", []))
-        self.view.show("game_over")
+    self.current_question_id = None
+    self.view.game_over.show(payload.get("winner"), payload.get("entries", []))
+    self.view.show("game_over")
 ```
 
-`ClientController._on_error`
+`ClientController._on_error` — paste inside class `ClientController`:
 
 ```python
 def _on_error(self, payload: dict) -> None:
-        code = payload.get("code", "")
-        self.view.show_error(payload.get("message", code))
-        if code in LEAVE_CODES:
-            self.net.close()
-            self.current_question_id = None
-            self.view.show_connect()
+    code = payload.get("code", "")
+    self.view.show_error(payload.get("message", code))
+    if code in LEAVE_CODES:
+        self.net.close()
+        self.current_question_id = None
+        self.view.show_connect()
 ```
 
 #### `ClientController.__init__(root, default_host, default_port)`
 
 **Problem.** Create the network client and the main window, give the window the callbacks, and close tidily when the window is closed.
 
-**Solution.**
+**Solution.** Paste in `langame/client/controllers/client_controller.py`, inside class `ClientController` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, root: tk.Tk, default_host: str, default_port: int):
@@ -1161,7 +1242,7 @@ def __init__(self, root: tk.Tk, default_host: str, default_port: int):
 
 **Problem.** Show the connect screen and start the polling loop that reads messages from the server.
 
-**Solution.**
+**Solution.** Paste in `langame/client/controllers/client_controller.py`, inside class `ClientController` (indented 4 spaces), in place of the skeleton's `def start`:
 
 ```python
 def start(self) -> None:
@@ -1175,7 +1256,7 @@ def start(self) -> None:
 
 **Problem.** Check the name, connect to the server and send JOIN, then show the lobby. A connection error is shown to the user.
 
-**Solution.**
+**Solution.** Paste in `langame/client/controllers/client_controller.py`, inside class `ClientController` (indented 4 spaces), in place of the skeleton's `def on_connect`:
 
 ```python
 def on_connect(self, host: str, port: int, name: str) -> None:
@@ -1206,7 +1287,7 @@ def on_connect(self, host: str, port: int, name: str) -> None:
 
 **Problem.** Host only: send START_GAME.
 
-**Solution.**
+**Solution.** Paste in `langame/client/controllers/client_controller.py`, inside class `ClientController` (indented 4 spaces), in place of the skeleton's `def on_start`:
 
 ```python
 def on_start(self) -> None:
@@ -1225,7 +1306,7 @@ def on_start(self) -> None:
 
 **Problem.** Send the chosen answer once per question and lock the buttons.
 
-**Solution.**
+**Solution.** Paste in `langame/client/controllers/client_controller.py`, inside class `ClientController` (indented 4 spaces), in place of the skeleton's `def on_answer`:
 
 ```python
 def on_answer(self, choice: int) -> None:
@@ -1246,7 +1327,7 @@ def on_answer(self, choice: int) -> None:
 
 **Problem.** Send LEAVE if possible (ignore errors - the server may be gone), close the connection and the window.
 
-**Solution.**
+**Solution.** Paste in `langame/client/controllers/client_controller.py`, inside class `ClientController` (indented 4 spaces), in place of the skeleton's `def on_close`:
 
 ```python
 def on_close(self) -> None:
@@ -1267,7 +1348,7 @@ def on_close(self) -> None:
 
 **Problem.** The bridge between the network thread and the screen: every 50 ms take all waiting messages out of the queue (without blocking) and handle them, then schedule itself again. Only this method, on the Tk thread, may update the widgets.
 
-**Solution.**
+**Solution.** Paste in `langame/client/controllers/client_controller.py`, inside class `ClientController` (indented 4 spaces), in place of the skeleton's `def _poll_inbox`:
 
 ```python
 def _poll_inbox(self) -> None:
@@ -1289,7 +1370,7 @@ def _poll_inbox(self) -> None:
 
 **Problem.** Call the handler for each message type: WELCOME, LOBBY_UPDATE, COUNTDOWN, QUESTION, RESULT, LEADERBOARD, GAME_OVER and ERROR (a disconnect goes back to the connect screen).
 
-**Solution.**
+**Solution.** Paste in `langame/client/controllers/client_controller.py`, inside class `ClientController` (indented 4 spaces), in place of the skeleton's `def handle_message`:
 
 ```python
 def handle_message(self, message: Message) -> None:
@@ -1302,11 +1383,19 @@ def handle_message(self, message: Message) -> None:
 
 ### `langame/client/network_client.py`
 
+Open `LanGame/langame/client/network_client.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from langame.common.protocol import Message, MessageBuffer, MessageType, ProtocolError
+```
+
 #### `NetworkClient.connect(host, port)`
 
 **Problem.** Connect to the server (give up after a few seconds) and start a background thread that reads from the socket. Connection errors go to the caller.
 
-**Solution.**
+**Solution.** Paste in `langame/client/network_client.py`, inside class `NetworkClient` (indented 4 spaces), in place of the skeleton's `def connect`:
 
 ```python
 def connect(self, host: str, port: int) -> None:
@@ -1326,7 +1415,7 @@ def connect(self, host: str, port: int) -> None:
 
 **Problem.** Receive bytes, cut them into messages and put each one in the inbox queue - never touch the screen from this thread. When the connection drops, put a "disconnected" ERROR in the queue.
 
-**Solution.**
+**Solution.** Paste in `langame/client/network_client.py`, inside class `NetworkClient` (indented 4 spaces), in place of the skeleton's `def _reader_loop`:
 
 ```python
 def _reader_loop(self) -> None:
@@ -1358,7 +1447,7 @@ def _reader_loop(self) -> None:
 
 **Problem.** Send a message; if the connection is gone raise ConnectionError so the controller can show it.
 
-**Solution.**
+**Solution.** Paste in `langame/client/network_client.py`, inside class `NetworkClient` (indented 4 spaces), in place of the skeleton's `def send`:
 
 ```python
 def send(self, message: Message) -> None:
@@ -1377,7 +1466,7 @@ def send(self, message: Message) -> None:
 
 **Problem.** Close the socket; calling it twice does nothing.
 
-**Solution.**
+**Solution.** Paste in `langame/client/network_client.py`, inside class `NetworkClient` (indented 4 spaces), in place of the skeleton's `def close`:
 
 ```python
 def close(self) -> None:
@@ -1398,24 +1487,32 @@ def close(self) -> None:
 
 ### `langame/client/views/connect_view.py`
 
+Open `LanGame/langame/client/views/connect_view.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import tkinter as tk
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`ConnectView.submit`
+`ConnectView.submit` — paste inside class `ConnectView`:
 
 ```python
 def submit(self) -> None:
-        try:
-            port = int(self.port_var.get())
-        except ValueError:
-            port = -1
-        self.on_connect(self.host_var.get().strip(), port, self.name_var.get().strip())
+    try:
+        port = int(self.port_var.get())
+    except ValueError:
+        port = -1
+    self.on_connect(self.host_var.get().strip(), port, self.name_var.get().strip())
 ```
 
 #### `ConnectView.__init__(parent, on_connect, default_host, default_port)`
 
 **Problem.** Three fields (server, port, name) and a Connect button; Enter also connects.
 
-**Solution.**
+**Solution.** Paste in `langame/client/views/connect_view.py`, inside class `ConnectView` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, parent, on_connect, default_host: str, default_port: int):
@@ -1442,11 +1539,13 @@ def __init__(self, parent, on_connect, default_host: str, default_port: int):
 
 ### `langame/client/views/game_over_view.py`
 
+Open `LanGame/langame/client/views/game_over_view.py`.
+
 #### `GameOverView.__init__(parent, on_back)`
 
 **Problem.** The winner, the final table and a "Back to lobby" button.
 
-**Solution.**
+**Solution.** Paste in `langame/client/views/game_over_view.py`, inside class `GameOverView` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, parent, on_back):
@@ -1469,7 +1568,7 @@ def __init__(self, parent, on_back):
 
 **Problem.** Show the winner and fill the final table.
 
-**Solution.**
+**Solution.** Paste in `langame/client/views/game_over_view.py`, inside class `GameOverView` (indented 4 spaces), in place of the skeleton's `def show`:
 
 ```python
 def show(self, winner: str, entries) -> None:
@@ -1483,11 +1582,13 @@ def show(self, winner: str, entries) -> None:
 
 ### `langame/client/views/leaderboard_view.py`
 
+Open `LanGame/langame/client/views/leaderboard_view.py`.
+
 #### `LeaderboardView.__init__(parent)`
 
 **Problem.** A small table of rank, name and score.
 
-**Solution.**
+**Solution.** Paste in `langame/client/views/leaderboard_view.py`, inside class `LeaderboardView` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, parent):
@@ -1507,7 +1608,7 @@ def __init__(self, parent):
 
 **Problem.** Clear and refill the table from the entries.
 
-**Solution.**
+**Solution.** Paste in `langame/client/views/leaderboard_view.py`, inside class `LeaderboardView` (indented 4 spaces), in place of the skeleton's `def update`:
 
 ```python
 def update(self, entries) -> None:
@@ -1522,7 +1623,7 @@ def update(self, entries) -> None:
 
 **Problem.** Colour this player's row.
 
-**Solution.**
+**Solution.** Paste in `langame/client/views/leaderboard_view.py`, inside class `LeaderboardView` (indented 4 spaces), in place of the skeleton's `def highlight`:
 
 ```python
 def highlight(self, my_name: str) -> None:
@@ -1534,26 +1635,34 @@ def highlight(self, my_name: str) -> None:
 
 ### `langame/client/views/lobby_view.py`
 
+Open `LanGame/langame/client/views/lobby_view.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import tkinter as tk
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`LobbyView._tick`
+`LobbyView._tick` — paste inside class `LobbyView`:
 
 ```python
 def _tick(self) -> None:
-        if self._count <= 0:
-            self.countdown.configure(text="Go!")
-            self._job = None
-            return
-        self.countdown.configure(text=f"Game starts in {self._count}...")
-        self._count -= 1
-        self._job = self.after(1000, self._tick)
+    if self._count <= 0:
+        self.countdown.configure(text="Go!")
+        self._job = None
+        return
+    self.countdown.configure(text=f"Game starts in {self._count}...")
+    self._count -= 1
+    self._job = self.after(1000, self._tick)
 ```
 
 #### `LobbyView.__init__(parent, on_start)`
 
 **Problem.** The player list, a status line, the Start button (for the host only) and a big countdown label.
 
-**Solution.**
+**Solution.** Paste in `langame/client/views/lobby_view.py`, inside class `LobbyView` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, parent, on_start):
@@ -1580,7 +1689,7 @@ def __init__(self, parent, on_start):
 
 **Problem.** Refresh the player list and the status line ("3 players - waiting for the host").
 
-**Solution.**
+**Solution.** Paste in `langame/client/views/lobby_view.py`, inside class `LobbyView` (indented 4 spaces), in place of the skeleton's `def set_players`:
 
 ```python
 def set_players(self, names, min_players: int) -> None:
@@ -1601,7 +1710,7 @@ def set_players(self, names, min_players: int) -> None:
 
 **Problem.** Show the Start button only to the host.
 
-**Solution.**
+**Solution.** Paste in `langame/client/views/lobby_view.py`, inside class `LobbyView` (indented 4 spaces), in place of the skeleton's `def set_host_controls`:
 
 ```python
 def set_host_controls(self, is_host: bool) -> None:
@@ -1619,7 +1728,7 @@ def set_host_controls(self, is_host: bool) -> None:
 
 **Problem.** Count down "Game starts in 5..." once per second with after().
 
-**Solution.**
+**Solution.** Paste in `langame/client/views/lobby_view.py`, inside class `LobbyView` (indented 4 spaces), in place of the skeleton's `def show_countdown`:
 
 ```python
 def show_countdown(self, seconds: int) -> None:
@@ -1635,20 +1744,33 @@ def show_countdown(self, seconds: int) -> None:
 
 ### `langame/client/views/main_window.py`
 
+Open `LanGame/langame/client/views/main_window.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from tkinter import messagebox, ttk
+from langame.client.views.connect_view import ConnectView
+from langame.client.views.game_over_view import GameOverView
+from langame.client.views.leaderboard_view import LeaderboardView
+from langame.client.views.lobby_view import LobbyView
+from langame.client.views.question_view import QuestionView
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`MainWindow.show_connect`
+`MainWindow.show_connect` — paste inside class `MainWindow`:
 
 ```python
 def show_connect(self) -> None:
-        self.show("connect")
+    self.show("connect")
 ```
 
 #### `MainWindow.__init__(root, on_connect, on_answer, on_start, default_host, default_port)`
 
 **Problem.** Create all screens (connect, lobby, game with the leaderboard on the side, game over) on top of each other in one container.
 
-**Solution.**
+**Solution.** Paste in `langame/client/views/main_window.py`, inside class `MainWindow` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, root: tk.Tk, on_connect, on_answer, on_start, default_host: str, default_port: int,
@@ -1678,7 +1800,7 @@ def __init__(self, root: tk.Tk, on_connect, on_answer, on_start, default_host: s
 
 **Problem.** Bring the named screen to the front with tkraise().
 
-**Solution.**
+**Solution.** Paste in `langame/client/views/main_window.py`, inside class `MainWindow` (indented 4 spaces), in place of the skeleton's `def show`:
 
 ```python
 def show(self, name: str) -> None:
@@ -1692,7 +1814,7 @@ def show(self, name: str) -> None:
 
 **Problem.** Show an error message box.
 
-**Solution.**
+**Solution.** Paste in `langame/client/views/main_window.py`, inside class `MainWindow` (indented 4 spaces), in place of the skeleton's `def show_error`:
 
 ```python
 def show_error(self, text: str) -> None:
@@ -1703,33 +1825,42 @@ def show_error(self, text: str) -> None:
 
 ### `langame/client/views/question_view.py`
 
+Open `LanGame/langame/client/views/question_view.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import time
+import tkinter as tk
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`QuestionView._start_countdown`
+`QuestionView._start_countdown` — paste inside class `QuestionView`:
 
 ```python
 def _start_countdown(self, seconds: float) -> None:
-        if self._countdown_job:
-            self.after_cancel(self._countdown_job)
-        self._deadline = time.time() + seconds
-        self._limit = seconds or 1.0
-        self._tick()
+    if self._countdown_job:
+        self.after_cancel(self._countdown_job)
+    self._deadline = time.time() + seconds
+    self._limit = seconds or 1.0
+    self._tick()
 ```
 
-`QuestionView._tick`
+`QuestionView._tick` — paste inside class `QuestionView`:
 
 ```python
 def _tick(self) -> None:
-        left = max(0.0, self._deadline - time.time())
-        self.timer["value"] = 100 * left / self._limit
-        self._countdown_job = self.after(100, self._tick) if left > 0 else None
+    left = max(0.0, self._deadline - time.time())
+    self.timer["value"] = 100 * left / self._limit
+    self._countdown_job = self.after(100, self._tick) if left > 0 else None
 ```
 
 #### `QuestionView.__init__(parent, on_answer)`
 
 **Problem.** The question screen: a counter, the question text, four answer buttons in a 2x2 grid, a time bar and a result line. Use lambda idx=i so each button answers its own number.
 
-**Solution.**
+**Solution.** Paste in `langame/client/views/question_view.py`, inside class `QuestionView` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, parent, on_answer):
@@ -1763,7 +1894,7 @@ def __init__(self, parent, on_answer):
 
 **Problem.** Show a new question: the counter, the text, the four options with the buttons enabled again, and start the time bar. The bar is only a display - the server decides the time.
 
-**Solution.**
+**Solution.** Paste in `langame/client/views/question_view.py`, inside class `QuestionView` (indented 4 spaces), in place of the skeleton's `def show`:
 
 ```python
 def show(self, payload: dict) -> None:
@@ -1781,7 +1912,7 @@ def show(self, payload: dict) -> None:
 
 **Problem.** Disable the buttons after answering and mark the chosen one. The server also refuses a second answer.
 
-**Solution.**
+**Solution.** Paste in `langame/client/views/question_view.py`, inside class `QuestionView` (indented 4 spaces), in place of the skeleton's `def lock_buttons`:
 
 ```python
 def lock_buttons(self, chosen: int) -> None:
@@ -1797,7 +1928,7 @@ def lock_buttons(self, chosen: int) -> None:
 
 **Problem.** Stop the time bar, mark the correct answer and show this player's result (correct with points, wrong, or no answer).
 
-**Solution.**
+**Solution.** Paste in `langame/client/views/question_view.py`, inside class `QuestionView` (indented 4 spaces), in place of the skeleton's `def show_result`:
 
 ```python
 def show_result(self, payload: dict, my_name: str) -> None:
@@ -1827,86 +1958,96 @@ def show_result(self, payload: dict, my_name: str) -> None:
 
 ### `langame/admin/admin_app.py`
 
+Open `LanGame/langame/admin/admin_app.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from tkinter import filedialog, messagebox, ttk
+import config
+from langame.common.models import Question
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`AdminApp._selected_id`
+`AdminApp._selected_id` — paste inside class `AdminApp`:
 
 ```python
 def _selected_id(self):
-        selection = self.tree.selection()
-        return int(selection[0]) if selection else None
+    selection = self.tree.selection()
+    return int(selection[0]) if selection else None
 ```
 
-`AdminApp._on_select`
+`AdminApp._on_select` — paste inside class `AdminApp`:
 
 ```python
 def _on_select(self, _event=None) -> None:
-        qid = self._selected_id()
-        if qid is None:
-            return
-        q = self.questions.get(qid)
-        if q is None:
-            return
-        self.text.delete("1.0", "end")
-        self.text.insert("1.0", q.text)
-        for var, option in zip(self.option_vars, q.options):
-            var.set(option)
-        self.correct_var.set(q.correct_index)
-        self.category_var.set(q.category)
-        self.difficulty_var.set(str(q.difficulty))
+    qid = self._selected_id()
+    if qid is None:
+        return
+    q = self.questions.get(qid)
+    if q is None:
+        return
+    self.text.delete("1.0", "end")
+    self.text.insert("1.0", q.text)
+    for var, option in zip(self.option_vars, q.options):
+        var.set(option)
+    self.correct_var.set(q.correct_index)
+    self.category_var.set(q.category)
+    self.difficulty_var.set(str(q.difficulty))
 ```
 
-`AdminApp._form_question`
+`AdminApp._form_question` — paste inside class `AdminApp`:
 
 ```python
 def _form_question(self, question_id=None):
-        text = self.text.get("1.0", "end").strip()
-        options = [v.get().strip() for v in self.option_vars]
-        category = self.category_var.get().strip() or config.DEFAULT_CATEGORY
-        if not text:
-            messagebox.showerror("Admin", "Write the question.", parent=self)
-            return None
-        if any(not o for o in options):
-            messagebox.showerror("Admin", "All four answers must be filled in.", parent=self)
-            return None
-        if len(set(options)) < 4:
-            messagebox.showerror("Admin", "The four answers must be different.", parent=self)
-            return None
-        return Question(id=question_id, text=text, options=options, correct_index=self.correct_var.get(),
-                        category=category, difficulty=int(self.difficulty_var.get() or 1))
+    text = self.text.get("1.0", "end").strip()
+    options = [v.get().strip() for v in self.option_vars]
+    category = self.category_var.get().strip() or config.DEFAULT_CATEGORY
+    if not text:
+        messagebox.showerror("Admin", "Write the question.", parent=self)
+        return None
+    if any(not o for o in options):
+        messagebox.showerror("Admin", "All four answers must be filled in.", parent=self)
+        return None
+    if len(set(options)) < 4:
+        messagebox.showerror("Admin", "The four answers must be different.", parent=self)
+        return None
+    return Question(id=question_id, text=text, options=options, correct_index=self.correct_var.get(),
+                    category=category, difficulty=int(self.difficulty_var.get() or 1))
 ```
 
-`AdminApp.clear_form`
+`AdminApp.clear_form` — paste inside class `AdminApp`:
 
 ```python
 def clear_form(self) -> None:
-        self.text.delete("1.0", "end")
-        for var in self.option_vars:
-            var.set("")
-        self.correct_var.set(0)
+    self.text.delete("1.0", "end")
+    for var in self.option_vars:
+        var.set("")
+    self.correct_var.set(0)
 ```
 
-`AdminApp.import_file`
+`AdminApp.import_file` — paste inside class `AdminApp`:
 
 ```python
 def import_file(self, path: str) -> int:
-        try:
-            count = self.questions.import_csv(path)
-        except (OSError, KeyError) as exc:
-            messagebox.showerror("Admin", f"Could not import {path}:\n{exc}", parent=self)
-            return 0
-        skipped = getattr(self.questions, "last_skipped", [])
-        messagebox.showinfo("Admin", f"Imported {count} questions."
-                            + (f"\nSkipped {len(skipped)} bad rows (lines {skipped})." if skipped else ""), parent=self)
-        self.refresh_questions()
-        return count
+    try:
+        count = self.questions.import_csv(path)
+    except (OSError, KeyError) as exc:
+        messagebox.showerror("Admin", f"Could not import {path}:\n{exc}", parent=self)
+        return 0
+    skipped = getattr(self.questions, "last_skipped", [])
+    messagebox.showinfo("Admin", f"Imported {count} questions."
+                        + (f"\nSkipped {len(skipped)} bad rows (lines {skipped})." if skipped else ""), parent=self)
+    self.refresh_questions()
+    return count
 ```
 
 #### `AdminApp.__init__(root)`
 
 **Problem.** The admin window: a Questions tab (table plus a form with the text, four options, the correct one, category and difficulty, and Add / Update / Delete / Import CSV / Refresh) and a Games tab.
 
-**Solution.**
+**Solution.** Paste in `langame/admin/admin_app.py`, inside class `AdminApp` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, root: tk.Tk):
@@ -1982,7 +2123,7 @@ def __init__(self, root: tk.Tk):
 
 **Problem.** Clear and refill the questions table from the database. Call it after every change so the table always matches the database.
 
-**Solution.**
+**Solution.** Paste in `langame/admin/admin_app.py`, inside class `AdminApp` (indented 4 spaces), in place of the skeleton's `def refresh_questions`:
 
 ```python
 def refresh_questions(self) -> None:
@@ -2001,7 +2142,7 @@ def refresh_questions(self) -> None:
 
 **Problem.** Read the form, check that the text and all four options are filled in and different, and add the question.
 
-**Solution.**
+**Solution.** Paste in `langame/admin/admin_app.py`, inside class `AdminApp` (indented 4 spaces), in place of the skeleton's `def on_add`:
 
 ```python
 def on_add(self) -> None:
@@ -2019,7 +2160,7 @@ def on_add(self) -> None:
 
 **Problem.** Save the form over the selected question.
 
-**Solution.**
+**Solution.** Paste in `langame/admin/admin_app.py`, inside class `AdminApp` (indented 4 spaces), in place of the skeleton's `def on_update`:
 
 ```python
 def on_update(self) -> None:
@@ -2041,7 +2182,7 @@ def on_update(self) -> None:
 
 **Problem.** Ask for confirmation and delete the selected question; a question used in a saved game cannot be deleted.
 
-**Solution.**
+**Solution.** Paste in `langame/admin/admin_app.py`, inside class `AdminApp` (indented 4 spaces), in place of the skeleton's `def on_delete`:
 
 ```python
 def on_delete(self) -> None:
@@ -2067,7 +2208,7 @@ def on_delete(self) -> None:
 
 **Problem.** Choose a CSV file, import it and show how many questions were added.
 
-**Solution.**
+**Solution.** Paste in `langame/admin/admin_app.py`, inside class `AdminApp` (indented 4 spaces), in place of the skeleton's `def on_import_csv`:
 
 ```python
 def on_import_csv(self) -> None:
@@ -2084,7 +2225,7 @@ def on_import_csv(self) -> None:
 
 **Problem.** Reload the games table.
 
-**Solution.**
+**Solution.** Paste in `langame/admin/admin_app.py`, inside class `AdminApp` (indented 4 spaces), in place of the skeleton's `def refresh_games`:
 
 ```python
 def refresh_games(self) -> None:
@@ -2099,11 +2240,13 @@ def refresh_games(self) -> None:
 
 ### `langame/database/repositories.py`
 
+Open `LanGame/langame/database/repositories.py`.
+
 #### `QuestionRepository.update(question)`
 
 **Problem.** Save every editable column of a question.
 
-**Solution.**
+**Solution.** Paste in `langame/database/repositories.py`, inside class `QuestionRepository` (indented 4 spaces), in place of the skeleton's `def update`:
 
 ```python
 def update(self, question: Question) -> None:
@@ -2120,7 +2263,7 @@ def update(self, question: Question) -> None:
 
 **Problem.** Delete a question by id.
 
-**Solution.**
+**Solution.** Paste in `langame/database/repositories.py`, inside class `QuestionRepository` (indented 4 spaces), in place of the skeleton's `def delete`:
 
 ```python
 def delete(self, question_id: int) -> None:
@@ -2134,7 +2277,7 @@ def delete(self, question_id: int) -> None:
 
 **Problem.** All questions (optionally of one category) for the admin table.
 
-**Solution.**
+**Solution.** Paste in `langame/database/repositories.py`, inside class `QuestionRepository` (indented 4 spaces), in place of the skeleton's `def list_all`:
 
 ```python
 def list_all(self, category: Optional[str] = None) -> List[Question]:
@@ -2151,7 +2294,7 @@ def list_all(self, category: Optional[str] = None) -> List[Question]:
 
 **Problem.** The distinct categories, sorted.
 
-**Solution.**
+**Solution.** Paste in `langame/database/repositories.py`, inside class `QuestionRepository` (indented 4 spaces), in place of the skeleton's `def categories`:
 
 ```python
 def categories(self) -> List[str]:
@@ -2165,7 +2308,7 @@ def categories(self) -> List[str]:
 
 **Problem.** Save a finished game in one transaction: the game, then every player (remember each new player id), then every answer with its player id. If anything fails, nothing is written.
 
-**Solution.**
+**Solution.** Paste in `langame/database/repositories.py`, inside class `GameRepository` (indented 4 spaces), in place of the skeleton's `def save_game`:
 
 ```python
 def save_game(self, started_at: datetime, ended_at: datetime, questions_count: int,
@@ -2196,7 +2339,7 @@ def save_game(self, started_at: datetime, ended_at: datetime, questions_count: i
 
 **Problem.** The newest games with their winner and number of players (JOIN + GROUP BY).
 
-**Solution.**
+**Solution.** Paste in `langame/database/repositories.py`, inside class `GameRepository` (indented 4 spaces), in place of the skeleton's `def list_recent`:
 
 ```python
 def list_recent(self, limit: int = 20) -> List[dict]:
@@ -2212,11 +2355,13 @@ def list_recent(self, limit: int = 20) -> List[dict]:
 
 ### `langame/server/game_engine.py`
 
+Open `LanGame/langame/server/game_engine.py`.
+
 #### `GameEngine.end_game()`
 
 **Problem.** Broadcast GAME_OVER with the winner and the final table, save the game, and go back to a lobby with the players who are still connected.
 
-**Solution.**
+**Solution.** Paste in `langame/server/game_engine.py`, inside class `GameEngine` (indented 4 spaces), in place of the skeleton's `def end_game`:
 
 ```python
 def end_game(self) -> None:
@@ -2244,11 +2389,13 @@ def end_game(self) -> None:
 
 ### `langame/database/repositories.py`
 
+Open `LanGame/langame/database/repositories.py`.
+
 #### `GameRepository.question_stats()`
 
 **Problem.** For each question: how many times it was asked, the share of correct answers and the average answer time - the hardest questions first.
 
-**Solution.**
+**Solution.** Paste in `langame/database/repositories.py`, inside class `GameRepository` (indented 4 spaces), in place of the skeleton's `def question_stats`:
 
 ```python
 def question_stats(self) -> List[dict]:

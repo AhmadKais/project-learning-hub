@@ -8,6 +8,36 @@ Every function you write in this project (61 of them), in the order of `TASKS.md
 
 Try each function yourself first, then compare. Run the check after every function, not at the end.
 
+## Where the code goes
+
+Every path below starts in your project folder `PhishGuard/` (the folder with `TASKS.md`). For each file:
+
+1. **Imports** — if the file section lists imports, add the lines that are missing to the top of the file, next to the other `import` lines.
+2. **Helper code** — paste it once, where the section says: *in the file* means below the imports and above the first class; *inside class X* means inside that class, next to its other methods (indented like them).
+3. **Each function** — in your skeleton, find the `def` with the same name. Delete the whole function — the `def` line, the TODO text and `raise NotImplementedError` — and paste the solution in its place. Inside a class, every line moves 4 spaces to the right, so the `def` lines up with the other methods.
+4. **New files** — at the end, under *Files the solution adds*: create the file at that path and paste the whole code.
+
+Before and after, for a method inside a class:
+
+```python
+class Example:
+
+    def total(self, items):          # BEFORE - the skeleton
+        """
+        TODO stage 3: add up the prices.
+        """
+        raise NotImplementedError
+```
+
+```python
+class Example:
+
+    def total(self, items):          # AFTER - the solution pasted in its place
+        return sum(item.price for item in items)
+```
+
+Then run the **Check** command from the project folder.
+
 ## Contents
 
 - [Stage 1 — URL parsing and features (the heart of the project)](#stage-1--url-parsing-and-features-the-heart-of-the-project) (4 functions)
@@ -23,11 +53,13 @@ Try each function yourself first, then compare. Run the check after every functi
 
 ### `phishguard/features/extractor.py`
 
+Open `PhishGuard/phishguard/features/extractor.py`.
+
 #### `shannon_entropy(text)`
 
 **Problem.** Measure how random a string looks: H = -sum(p * log2(p)) over its characters, where p is how often each character appears divided by the length. "aaaa" gives 0, a random string like "x7f9q2" gives a high value. An empty string gives 0.
 
-**Solution.**
+**Solution.** Paste in `phishguard/features/extractor.py`, at the top level of the file, in place of the skeleton's `def shannon_entropy`:
 
 ```python
 def shannon_entropy(text: str) -> float:
@@ -43,7 +75,7 @@ def shannon_entropy(text: str) -> float:
 
 **Problem.** Turn one URL into the 20 numbers listed in FEATURE_NAMES (lengths, counts of dots and hyphens, yes/no flags as 1.0/0.0, entropy, and so on). Return them as a FeatureVector. Check at the end that you produced exactly the 20 names, so a missing feature fails at once instead of shifting the columns.
 
-**Solution.**
+**Solution.** Paste in `phishguard/features/extractor.py`, inside class `URLFeatureExtractor` (indented 4 spaces), in place of the skeleton's `def extract`:
 
 ```python
 def extract(self, url: str) -> FeatureVector:
@@ -86,11 +118,13 @@ def extract(self, url: str) -> FeatureVector:
 
 ### `phishguard/features/url_parser.py`
 
+Open `PhishGuard/phishguard/features/url_parser.py`.
+
 #### `URLParser.parse(url)`
 
 **Problem.** Split a URL into scheme, host, subdomains, domain, TLD, port, path and query. People often paste a URL without "http://", so add it before parsing but remember the scheme was empty. The last label of the host is the TLD (two labels for "co.il"-style endings), the one before it is the domain, the rest are subdomains: "mail.paypal.com.secure-login.xyz" gives subdomains ["mail", "paypal", "com"], domain "secure-login", TLD "xyz". Garbage input must not crash: return empty fields instead.
 
-**Solution.**
+**Solution.** Paste in `phishguard/features/url_parser.py`, inside class `URLParser` (indented 4 spaces), in place of the skeleton's `def parse`:
 
 ```python
 def parse(self, url: str) -> ParsedURL:
@@ -131,11 +165,19 @@ def parse(self, url: str) -> ParsedURL:
 
 ### `phishguard/models/entities.py`
 
+Open `PhishGuard/phishguard/models/entities.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import config
+```
+
 #### `FeatureVector.as_list(feature_names)`
 
 **Problem.** Return the feature values as a list in the order of `feature_names`. Loop over the names, not over the dict: the model expects the numbers in exactly the order it was trained on, and a wrong order gives wrong predictions with no error.
 
-**Solution.**
+**Solution.** Paste in `phishguard/models/entities.py`, inside class `FeatureVector` (indented 4 spaces), in place of the skeleton's `def as_list`:
 
 ```python
 def as_list(self, feature_names: List[str]) -> List[float]:
@@ -149,11 +191,13 @@ def as_list(self, feature_names: List[str]) -> List[float]:
 
 ### `phishguard/features/extractor.py`
 
+Open `PhishGuard/phishguard/features/extractor.py`.
+
 #### `URLFeatureExtractor.extract_many(urls)`
 
 **Problem.** Run `extract` on a list of URLs and return the list of value lists - the matrix X the model trains on.
 
-**Solution.**
+**Solution.** Paste in `phishguard/features/extractor.py`, inside class `URLFeatureExtractor` (indented 4 spaces), in place of the skeleton's `def extract_many`:
 
 ```python
 def extract_many(self, urls: List[str]) -> List[List[float]]:
@@ -164,11 +208,19 @@ def extract_many(self, urls: List[str]) -> List[List[float]]:
 
 ### `phishguard/ml/dataset.py`
 
+Open `PhishGuard/phishguard/ml/dataset.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from sklearn.model_selection import train_test_split
+```
+
 #### `DatasetLoader.read()`
 
 **Problem.** Read the CSV, keep the URL and label columns, drop empty rows, clean every URL (strip spaces, lower-case) and drop duplicates. Return a table with columns "url" and "label", where label is 1 for phishing ("bad") and 0 for legitimate.
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/dataset.py`, inside class `DatasetLoader` (indented 4 spaces), in place of the skeleton's `def read`:
 
 ```python
 def read(self) -> pd.DataFrame:
@@ -186,7 +238,7 @@ def read(self) -> pd.DataFrame:
 
 **Problem.** Take the same number of rows from each class (at most `per_class`), with the fixed seed, and shuffle them. A balanced sample stops the model from learning "always say legitimate".
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/dataset.py`, inside class `DatasetLoader` (indented 4 spaces), in place of the skeleton's `def balance`:
 
 ```python
 def balance(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -206,7 +258,7 @@ def balance(self, df: pd.DataFrame) -> pd.DataFrame:
 
 **Problem.** Build the whole dataset: read, balance, turn every URL into features, then split 70/15/15 into train, validation and test. Use `stratify` so each part has the same share of phishing, and the fixed seed so every run gets the same rows. Split the URL text together with the numbers, so every part keeps its URLs - the n-gram model reads them, and the test URLs show the mistakes later.
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/dataset.py`, inside class `DatasetLoader` (indented 4 spaces), in place of the skeleton's `def load`:
 
 ```python
 def load(self) -> DatasetSplit:
@@ -230,7 +282,7 @@ def load(self) -> DatasetSplit:
 
 **Problem.** Return a table of all 20 features plus the label for the given rows. With `groupby("label").mean()` you can see which features differ between phishing and legitimate before training anything.
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/dataset.py`, inside class `DatasetLoader` (indented 4 spaces), in place of the skeleton's `def feature_table`:
 
 ```python
 def feature_table(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -247,11 +299,13 @@ def feature_table(self, df: pd.DataFrame) -> pd.DataFrame:
 
 ### `phishguard/ml/bundle.py`
 
+Open `PhishGuard/phishguard/ml/bundle.py`.
+
 #### `ModelBundle.from_trained(trained, feature_names, report_entry)`
 
 **Problem.** Collect everything prediction needs into one bundle: the fitted pipeline, the model name, a copy of the feature names, the threshold (0.5 if the report has none) and the metrics.
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/bundle.py`, inside class `ModelBundle` (indented 4 spaces), in place of the skeleton's `def from_trained`:
 
 ```python
 @classmethod
@@ -270,7 +324,7 @@ def from_trained(cls, trained, feature_names, report_entry) -> "ModelBundle":
 
 **Problem.** Set the version string ("<model>-<trained_at>") and save the whole bundle with joblib. Set the version first, otherwise the saved file has an empty version.
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/bundle.py`, inside class `ModelBundle` (indented 4 spaces), in place of the skeleton's `def save`:
 
 ```python
 def save(self, path: str) -> None:
@@ -284,7 +338,7 @@ def save(self, path: str) -> None:
 
 **Problem.** Load a bundle and check that its feature names are exactly FEATURE_NAMES. If they differ, raise a RuntimeError telling the user to retrain - a model fed different features gives wrong answers silently.
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/bundle.py`, inside class `ModelBundle` (indented 4 spaces), in place of the skeleton's `def load`:
 
 ```python
 @classmethod
@@ -300,9 +354,23 @@ def load(cls, path: str) -> "ModelBundle":
 
 ### `phishguard/ml/trainer.py`
 
+Open `PhishGuard/phishguard/ml/trainer.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import time
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import GridSearchCV
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`GRIDS`
+`GRIDS` — paste in the file, below the imports:
 
 ```python
 GRIDS = {
@@ -316,7 +384,7 @@ GRIDS = {
 
 **Problem.** Return a Pipeline of a StandardScaler followed by a LogisticRegression (max_iter=1000, balanced class weights). The scaler lives inside the pipeline so it is saved and reused with the model.
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/trainer.py`, inside class `ModelTrainer` (indented 4 spaces), in place of the skeleton's `def build_logistic`:
 
 ```python
 def build_logistic(self):
@@ -330,7 +398,7 @@ def build_logistic(self):
 
 **Problem.** Build and fit the requested models ("logistic", "forest", "ngram" or "all") with their parameter grids and return a dict {name: TrainedModel}.
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/trainer.py`, inside class `ModelTrainer` (indented 4 spaces), in place of the skeleton's `def train`:
 
 ```python
 def train(self, models: str = "all") -> Dict[str, TrainedModel]:
@@ -343,11 +411,24 @@ def train(self, models: str = "all") -> Dict[str, TrainedModel]:
 
 ### `train.py`
 
+Open `PhishGuard/train.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from phishguard.database.db import Database
+from phishguard.database.repositories import ModelRepository
+from phishguard.ml.bundle import ModelBundle
+from phishguard.ml.dataset import DatasetLoader
+from phishguard.ml.evaluator import ModelEvaluator
+from phishguard.ml.trainer import ModelTrainer
+```
+
 #### `main()`
 
 **Problem.** The training script: load the data, train the models, compare them on the test split, save the reports and the best model's bundle, register it in the database and print a summary table with the worst mistakes.
 
-**Solution.**
+**Solution.** Paste in `train.py`, at the top level of the file, in place of the skeleton's `def main`:
 
 ```python
 def main():
@@ -403,11 +484,20 @@ def main():
 
 ### `phishguard/ml/evaluator.py`
 
+Open `PhishGuard/phishguard/ml/evaluator.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from sklearn.metrics import (accuracy_score, confusion_matrix, f1_score, precision_score, recall_score,
+                             roc_auc_score, roc_curve)
+```
+
 #### `ModelEvaluator.metrics(pipeline, X, y, threshold)`
 
 **Problem.** Score a model at a given threshold: a URL is phishing when its probability is at least the threshold. Return accuracy, precision, recall, F1 (for the phishing class), AUC, the threshold and the confusion matrix [[tn, fp], [fn, tp]].
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/evaluator.py`, inside class `ModelEvaluator` (indented 4 spaces), in place of the skeleton's `def metrics`:
 
 ```python
 def metrics(self, pipeline, X, y, threshold: float = config.DEFAULT_THRESHOLD) -> dict:
@@ -431,7 +521,7 @@ def metrics(self, pipeline, X, y, threshold: float = config.DEFAULT_THRESHOLD) -
 
 **Problem.** On the validation split, try thresholds from 0.05 to 0.95 and return the highest one whose recall is still at least the target (0.95). Highest means fewest false alarms while still catching 95% of phishing. Never use the test split here.
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/evaluator.py`, inside class `ModelEvaluator` (indented 4 spaces), in place of the skeleton's `def choose_threshold`:
 
 ```python
 def choose_threshold(self, pipeline, target_recall: float = config.TARGET_RECALL) -> float:
@@ -450,7 +540,7 @@ def choose_threshold(self, pipeline, target_recall: float = config.TARGET_RECALL
 
 **Problem.** For every trained model: choose its threshold on validation, measure it on test (each model with its own kind of input), add its feature importances and worst mistakes. Return the best model's name (highest F1, then recall) and the full report.
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/evaluator.py`, inside class `ModelEvaluator` (indented 4 spaces), in place of the skeleton's `def compare`:
 
 ```python
 def compare(self, trained: Dict[str, "TrainedModel"]) -> Tuple[str, dict]:   # noqa: F821
@@ -476,7 +566,7 @@ def compare(self, trained: Dict[str, "TrainedModel"]) -> Tuple[str, dict]:   # n
 
 **Problem.** Return how much each feature matters, as {name: value}: the signed weights for logistic regression, the feature importances for the random forest, and the 20 strongest pieces of text for the n-gram model.
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/evaluator.py`, inside class `ModelEvaluator` (indented 4 spaces), in place of the skeleton's `def importances`:
 
 ```python
 def importances(self, pipeline) -> Dict[str, float]:
@@ -495,7 +585,7 @@ def importances(self, pipeline) -> Dict[str, float]:
 
 **Problem.** Find real URLs the model got wrong on the test split: the legitimate ones with the highest phishing probability and the phishing ones with the lowest. They show the model's limits better than any number.
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/evaluator.py`, inside class `ModelEvaluator` (indented 4 spaces), in place of the skeleton's `def worst_mistakes`:
 
 ```python
 def worst_mistakes(self, pipeline, threshold: float, n: int = 10) -> Dict[str, list]:
@@ -518,7 +608,7 @@ def worst_mistakes(self, pipeline, threshold: float, n: int = 10) -> Dict[str, l
 
 **Problem.** Write metrics.json and three charts into the reports folder: a confusion matrix per model, both ROC curves on one plot, and the feature importances of the best model.
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/evaluator.py`, inside class `ModelEvaluator` (indented 4 spaces), in place of the skeleton's `def save_reports`:
 
 ```python
 def save_reports(self, report: dict, directory: str) -> None:
@@ -581,11 +671,13 @@ def save_reports(self, report: dict, directory: str) -> None:
 
 ### `phishguard/ml/trainer.py`
 
+Open `PhishGuard/phishguard/ml/trainer.py`.
+
 #### `ModelTrainer.build_forest()`
 
 **Problem.** Return a Pipeline of a StandardScaler and a RandomForestClassifier (config.RANDOM_FOREST_TREES trees, balanced class weights, fixed seed). Trees do not need scaling, but the same pipeline shape keeps the rest of the code identical for both models.
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/trainer.py`, inside class `ModelTrainer` (indented 4 spaces), in place of the skeleton's `def build_forest`:
 
 ```python
 def build_forest(self):
@@ -601,7 +693,7 @@ def build_forest(self):
 
 **Problem.** A third model that reads the URL text itself: a TfidfVectorizer turns every 3-5 character piece ("pay", "ogin", ".xyz") into a feature, and a logistic regression weighs them. The 20 hand-made numbers reach precision of only about 0.76 at recall 0.95 on the Kaggle data; this model reaches about 0.96. Name the text step "tfidf" - the rest of the code looks for it.
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/trainer.py`, inside class `ModelTrainer` (indented 4 spaces), in place of the skeleton's `def build_ngram`:
 
 ```python
 def build_ngram(self):
@@ -617,7 +709,7 @@ def build_ngram(self):
 
 **Problem.** Run a GridSearchCV over the parameter grid (5 folds, scored by F1) on the training split - the URL text for the n-gram model, the 20 numbers for the others - time it, and return the best model, its parameters, its cross-validated F1 and the seconds it took.
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/trainer.py`, inside class `ModelTrainer` (indented 4 spaces), in place of the skeleton's `def fit_with_search`:
 
 ```python
 def fit_with_search(self, name: str, pipeline, param_grid: dict) -> TrainedModel:
@@ -636,11 +728,22 @@ def fit_with_search(self, name: str, pipeline, param_grid: dict) -> TrainedModel
 
 ### `evaluate.py`
 
+Open `PhishGuard/evaluate.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import os
+from phishguard.ml.bundle import ModelBundle
+from phishguard.ml.dataset import DatasetLoader
+from phishguard.ml.evaluator import ModelEvaluator
+```
+
 #### `main()`
 
 **Problem.** With --url or --file: scan each URL and print the verdict, probability and reasons. Without them: rebuild the same split, load the saved model and print its metrics on the test split.
 
-**Solution.**
+**Solution.** Paste in `evaluate.py`, at the top level of the file, in place of the skeleton's `def main`:
 
 ```python
 def main():
@@ -682,11 +785,20 @@ def main():
 
 ### `phishguard/ml/explainer.py`
 
+Open `PhishGuard/phishguard/ml/explainer.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import numpy as np
+from phishguard.models.entities import Explanation, ScanResult, Verdict
+```
+
 #### `Explainer.ngram_contributions(result)`
 
 **Problem.** The reasons for the n-gram model: for every piece of text found in the URL, weight x its value, with the sentence 'Contains "pay"'. Very short pieces are skipped.
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/explainer.py`, inside class `Explainer` (indented 4 spaces), in place of the skeleton's `def ngram_contributions`:
 
 ```python
 def ngram_contributions(self, result: ScanResult) -> List[Explanation]:
@@ -710,7 +822,7 @@ def ngram_contributions(self, result: ScanResult) -> List[Explanation]:
 
 **Problem.** Work out how much each feature pushed this URL toward phishing. For the n-gram model use ngram_contributions. For logistic regression it is weight x scaled value (exact); for the forest, importance x the sign of the scaled value (an approximation). Give each one a readable sentence; for a yes/no feature that is 0 use the "when zero" sentence.
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/explainer.py`, inside class `Explainer` (indented 4 spaces), in place of the skeleton's `def contributions`:
 
 ```python
 def contributions(self, result: ScanResult) -> List[Explanation]:
@@ -742,7 +854,7 @@ def contributions(self, result: ScanResult) -> List[Explanation]:
 
 **Problem.** Keep the contributions that point the same way as the verdict, take the `top` strongest, store them on the result and return them. These are the three reasons the user sees.
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/explainer.py`, inside class `Explainer` (indented 4 spaces), in place of the skeleton's `def explain`:
 
 ```python
 def explain(self, result: ScanResult, top: int = 3) -> List[Explanation]:
@@ -757,11 +869,19 @@ def explain(self, result: ScanResult, top: int = 3) -> List[Explanation]:
 
 ### `phishguard/ml/predictor.py`
 
+Open `PhishGuard/phishguard/ml/predictor.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import os
+```
+
 #### `Predictor.load()`
 
 **Problem.** Load the model bundle if the file exists and mark the predictor ready. If there is no file, stay "not ready" instead of crashing - the app must still open and tell the user to train.
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/predictor.py`, inside class `Predictor` (indented 4 spaces), in place of the skeleton's `def load`:
 
 ```python
 def load(self) -> None:
@@ -779,7 +899,7 @@ def load(self) -> None:
 
 **Problem.** Scan one URL: clean it exactly like the training data (strip, lower-case), extract the features, get the phishing probability (the n-gram model gets the URL text, the others the 20 numbers) and compare it with the bundle's threshold. Return a ScanResult.
 
-**Solution.**
+**Solution.** Paste in `phishguard/ml/predictor.py`, inside class `Predictor` (indented 4 spaces), in place of the skeleton's `def predict`:
 
 ```python
 def predict(self, url: str) -> ScanResult:
@@ -803,26 +923,39 @@ def predict(self, url: str) -> ScanResult:
 
 ### `phishguard/controllers/app_controller.py`
 
+Open `PhishGuard/phishguard/controllers/app_controller.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from phishguard.database.repositories import ModelRepository, ScanRepository
+from phishguard.ml.explainer import Explainer
+from phishguard.ml.predictor import Predictor
+from phishguard.models.entities import Verdict
+from phishguard.utils.exporter import ReportExporter
+from phishguard.views.main_window import MainWindow
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`MAX_URL_LENGTH`
+`MAX_URL_LENGTH` — paste in the file, below the imports:
 
 ```python
 MAX_URL_LENGTH = 2048
 ```
 
-`AppController._on_tab_changed`
+`AppController._on_tab_changed` — paste inside class `AppController`:
 
 ```python
 def _on_tab_changed(self) -> None:
-        self.refresh_stats()
+    self.refresh_stats()
 ```
 
 #### `AppController.__init__(root)`
 
 **Problem.** Create the predictor, the explainer (only when a model is loaded), the two repositories and the main window, and hand the window the four callbacks.
 
-**Solution.**
+**Solution.** Paste in `phishguard/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, root: tk.Tk):
@@ -842,7 +975,7 @@ def __init__(self, root: tk.Tk):
 
 **Problem.** Show the scan tab, fill the history and statistics, and warn the user (with the train command) when there is no model.
 
-**Solution.**
+**Solution.** Paste in `phishguard/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def start`:
 
 ```python
 def start(self) -> None:
@@ -863,7 +996,7 @@ def start(self) -> None:
 
 **Problem.** Check the URL (not empty, not too long), scan and explain it, save it, and show the result. Any error becomes a message box - a bad URL must never crash the app.
 
-**Solution.**
+**Solution.** Paste in `phishguard/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def on_scan`:
 
 ```python
 def on_scan(self, url: str) -> None:
@@ -895,7 +1028,7 @@ def on_scan(self, url: str) -> None:
 
 **Problem.** Read the scans that match the chosen verdict and search text and show them in the history table.
 
-**Solution.**
+**Solution.** Paste in `phishguard/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def on_filter`:
 
 ```python
 def on_filter(self, verdict, search: str) -> None:
@@ -910,7 +1043,7 @@ def on_filter(self, verdict, search: str) -> None:
 
 **Problem.** Save "correct"/"wrong" for the selected scan and refresh the table; ask the user to select a row first if none is selected.
 
-**Solution.**
+**Solution.** Paste in `phishguard/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def on_feedback`:
 
 ```python
 def on_feedback(self, scan_id: int, feedback: str) -> None:
@@ -927,7 +1060,7 @@ def on_feedback(self, scan_id: int, feedback: str) -> None:
 
 **Problem.** Export the history to CSV and tell the user where the file is.
 
-**Solution.**
+**Solution.** Paste in `phishguard/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def on_export`:
 
 ```python
 def on_export(self) -> None:
@@ -945,7 +1078,7 @@ def on_export(self) -> None:
 
 **Problem.** Give the statistics tab the counts per verdict and the list of registered models.
 
-**Solution.**
+**Solution.** Paste in `phishguard/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def refresh_stats`:
 
 ```python
 def refresh_stats(self) -> None:
@@ -956,11 +1089,13 @@ def refresh_stats(self) -> None:
 
 ### `phishguard/database/db.py`
 
+Open `PhishGuard/phishguard/database/db.py`.
+
 #### `Database.get_connection()`
 
 **Problem.** Open the SQLite file with rows that behave like dicts and foreign keys switched on (they are off by default in SQLite).
 
-**Solution.**
+**Solution.** Paste in `phishguard/database/db.py`, inside class `Database` (indented 4 spaces), in place of the skeleton's `def get_connection`:
 
 ```python
 def get_connection(self) -> sqlite3.Connection:
@@ -976,7 +1111,7 @@ def get_connection(self) -> sqlite3.Connection:
 
 **Problem.** A context manager around a connection: commit when the block succeeds, roll back when it raises, and always close.
 
-**Solution.**
+**Solution.** Paste in `phishguard/database/db.py`, inside class `Database` (indented 4 spaces), in place of the skeleton's `def connection`:
 
 ```python
 @contextmanager
@@ -998,7 +1133,7 @@ def connection(self):
 
 **Problem.** Create the tables by running the SCHEMA script.
 
-**Solution.**
+**Solution.** Paste in `phishguard/database/db.py`, inside class `Database` (indented 4 spaces), in place of the skeleton's `def initialize_schema`:
 
 ```python
 def initialize_schema(self) -> None:
@@ -1010,9 +1145,11 @@ def initialize_schema(self) -> None:
 
 ### `phishguard/database/repositories.py`
 
+Open `PhishGuard/phishguard/database/repositories.py`.
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`_row_to_result`
+`_row_to_result` — paste in the file, below the imports:
 
 ```python
 def _row_to_result(r) -> ScanResult:
@@ -1029,7 +1166,7 @@ def _row_to_result(r) -> ScanResult:
 
 **Problem.** Insert one scan and return its new id. Store the time as ISO text, the verdict as its value and the features as JSON, and always use ? placeholders - the URL comes from outside.
 
-**Solution.**
+**Solution.** Paste in `phishguard/database/repositories.py`, inside class `ScanRepository` (indented 4 spaces), in place of the skeleton's `def add`:
 
 ```python
 def add(self, result: ScanResult) -> int:
@@ -1048,7 +1185,7 @@ def add(self, result: ScanResult) -> int:
 
 **Problem.** Read one scan by id and turn the row back into a ScanResult, or return None.
 
-**Solution.**
+**Solution.** Paste in `phishguard/database/repositories.py`, inside class `ScanRepository` (indented 4 spaces), in place of the skeleton's `def get`:
 
 ```python
 def get(self, scan_id: int) -> Optional[ScanResult]:
@@ -1063,7 +1200,7 @@ def get(self, scan_id: int) -> Optional[ScanResult]:
 
 **Problem.** Return the newest scans first, optionally only one verdict and/or URLs containing a search text. Build the WHERE part from a list of conditions and pass every value as a parameter.
 
-**Solution.**
+**Solution.** Paste in `phishguard/database/repositories.py`, inside class `ScanRepository` (indented 4 spaces), in place of the skeleton's `def list_recent`:
 
 ```python
 def list_recent(self, limit: int = 50, verdict: Optional[Verdict] = None,
@@ -1088,7 +1225,7 @@ def list_recent(self, limit: int = 50, verdict: Optional[Verdict] = None,
 
 **Problem.** Store the user's feedback ("correct" or "wrong") on one scan.
 
-**Solution.**
+**Solution.** Paste in `phishguard/database/repositories.py`, inside class `ScanRepository` (indented 4 spaces), in place of the skeleton's `def set_feedback`:
 
 ```python
 def set_feedback(self, scan_id: int, feedback: str) -> None:
@@ -1104,7 +1241,7 @@ def set_feedback(self, scan_id: int, feedback: str) -> None:
 
 **Problem.** Count the scans per verdict with GROUP BY and return {Verdict: count}, with 0 for a verdict that has no scans.
 
-**Solution.**
+**Solution.** Paste in `phishguard/database/repositories.py`, inside class `ScanRepository` (indented 4 spaces), in place of the skeleton's `def counts_by_verdict`:
 
 ```python
 def counts_by_verdict(self) -> dict:
@@ -1121,7 +1258,7 @@ def counts_by_verdict(self) -> dict:
 
 **Problem.** Save a trained model's version, name, date, training size, metrics and threshold. INSERT OR REPLACE, so registering the same version twice keeps one row.
 
-**Solution.**
+**Solution.** Paste in `phishguard/database/repositories.py`, inside class `ModelRepository` (indented 4 spaces), in place of the skeleton's `def register`:
 
 ```python
 def register(self, version: str, model_name: str, trained_at: str, train_rows: int,
@@ -1141,7 +1278,7 @@ def register(self, version: str, model_name: str, trained_at: str, train_rows: i
 
 **Problem.** Return every registered model, newest first, as dicts - the experiments table.
 
-**Solution.**
+**Solution.** Paste in `phishguard/database/repositories.py`, inside class `ModelRepository` (indented 4 spaces), in place of the skeleton's `def list_all`:
 
 ```python
 def list_all(self) -> List[dict]:
@@ -1154,11 +1291,13 @@ def list_all(self) -> List[dict]:
 
 ### `phishguard/models/entities.py`
 
+Open `PhishGuard/phishguard/models/entities.py`.
+
 #### `ScanResult.risk_level`
 
 **Problem.** Turn the probability into "low", "medium" or "high" using the two limits in config. This only picks the colour; the verdict itself comes from the threshold.
 
-**Solution.**
+**Solution.** Paste in `phishguard/models/entities.py`, inside class `ScanResult` (indented 4 spaces), in place of the skeleton's `def risk_level`:
 
 ```python
 @property
@@ -1174,11 +1313,21 @@ def risk_level(self) -> str:
 
 ### `phishguard/utils/exporter.py`
 
+Open `PhishGuard/phishguard/utils/exporter.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import csv
+import os
+from datetime import datetime
+```
+
 #### `ReportExporter.export_history(directory)`
 
 **Problem.** Write all scans to exports/history_<time>.csv with a header row. Use the "utf-8-sig" encoding so Excel opens it correctly. Return the file path.
 
-**Solution.**
+**Solution.** Paste in `phishguard/utils/exporter.py`, inside class `ReportExporter` (indented 4 spaces), in place of the skeleton's `def export_history`:
 
 ```python
 def export_history(self, directory: str = config.EXPORTS_DIR) -> str:
@@ -1198,35 +1347,43 @@ def export_history(self, directory: str = config.EXPORTS_DIR) -> str:
 
 ### `phishguard/views/history_view.py`
 
+Open `PhishGuard/phishguard/views/history_view.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import tkinter as tk
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`COLUMNS`
+`COLUMNS` — paste in the file, below the imports:
 
 ```python
 COLUMNS = (("time", "Time", 150), ("url", "URL", 420), ("probability", "Probability", 90),
            ("verdict", "Verdict", 90), ("feedback", "Feedback", 80))
 ```
 
-`HistoryView.current_filter`
+`HistoryView.current_filter` — paste inside class `HistoryView`:
 
 ```python
 def current_filter(self):
-        verdict = self.verdict_var.get()
-        return (None if verdict == "all" else verdict), self.search_var.get()
+    verdict = self.verdict_var.get()
+    return (None if verdict == "all" else verdict), self.search_var.get()
 ```
 
-`HistoryView._apply`
+`HistoryView._apply` — paste inside class `HistoryView`:
 
 ```python
 def _apply(self) -> None:
-        self.on_filter(*self.current_filter())
+    self.on_filter(*self.current_filter())
 ```
 
 #### `HistoryView.__init__(parent, on_filter, on_feedback, on_export)`
 
 **Problem.** Build the history tab: a verdict filter and search box, a table of scans (the scan id is the row's iid), and buttons for "Mark correct", "Mark wrong" and "Export CSV".
 
-**Solution.**
+**Solution.** Paste in `phishguard/views/history_view.py`, inside class `HistoryView` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, parent, on_filter, on_feedback, on_export):
@@ -1274,7 +1431,7 @@ def __init__(self, parent, on_filter, on_feedback, on_export):
 
 **Problem.** Clear the table and insert one row per scan.
 
-**Solution.**
+**Solution.** Paste in `phishguard/views/history_view.py`, inside class `HistoryView` (indented 4 spaces), in place of the skeleton's `def show_rows`:
 
 ```python
 def show_rows(self, rows) -> None:
@@ -1291,7 +1448,7 @@ def show_rows(self, rows) -> None:
 
 **Problem.** Return the id of the selected row as an int, or None when nothing is selected.
 
-**Solution.**
+**Solution.** Paste in `phishguard/views/history_view.py`, inside class `HistoryView` (indented 4 spaces), in place of the skeleton's `def selected_id`:
 
 ```python
 def selected_id(self):
@@ -1303,21 +1460,32 @@ def selected_id(self):
 
 ### `phishguard/views/main_window.py`
 
+Open `PhishGuard/phishguard/views/main_window.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from tkinter import messagebox, ttk
+from phishguard.views.history_view import HistoryView
+from phishguard.views.scan_view import ScanView
+from phishguard.views.stats_view import StatsView
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`MainWindow._tab_changed`
+`MainWindow._tab_changed` — paste inside class `MainWindow`:
 
 ```python
 def _tab_changed(self, _event) -> None:
-        if self.on_tab_changed and self.notebook.select() == str(self.stats):
-            self.on_tab_changed()
+    if self.on_tab_changed and self.notebook.select() == str(self.stats):
+        self.on_tab_changed()
 ```
 
 #### `MainWindow.__init__(root, on_scan, on_filter, on_feedback, on_export)`
 
 **Problem.** Build a Notebook with three tabs - Scan, History, Statistics - and keep each tab as an attribute so the controller can reach it.
 
-**Solution.**
+**Solution.** Paste in `phishguard/views/main_window.py`, inside class `MainWindow` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, root: tk.Tk, on_scan, on_filter, on_feedback, on_export):
@@ -1341,7 +1509,7 @@ def __init__(self, root: tk.Tk, on_scan, on_filter, on_feedback, on_export):
 
 **Problem.** Show an error message box.
 
-**Solution.**
+**Solution.** Paste in `phishguard/views/main_window.py`, inside class `MainWindow` (indented 4 spaces), in place of the skeleton's `def show_error`:
 
 ```python
 def show_error(self, text: str) -> None:
@@ -1354,7 +1522,7 @@ def show_error(self, text: str) -> None:
 
 **Problem.** Show an information message box.
 
-**Solution.**
+**Solution.** Paste in `phishguard/views/main_window.py`, inside class `MainWindow` (indented 4 spaces), in place of the skeleton's `def show_info`:
 
 ```python
 def show_info(self, text: str) -> None:
@@ -1365,33 +1533,41 @@ def show_info(self, text: str) -> None:
 
 ### `phishguard/views/scan_view.py`
 
+Open `PhishGuard/phishguard/views/scan_view.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import tkinter as tk
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`RISK_COLORS`
+`RISK_COLORS` — paste in the file, below the imports:
 
 ```python
 RISK_COLORS = {"low": "#1e8449", "medium": "#d68910", "high": "#c0392b"}
 ```
 
-`ScanView._scan`
+`ScanView._scan` — paste inside class `ScanView`:
 
 ```python
 def _scan(self) -> None:
-        self.on_scan(self.url_var.get())
+    self.on_scan(self.url_var.get())
 ```
 
-`ScanView.set_status`
+`ScanView.set_status` — paste inside class `ScanView`:
 
 ```python
 def set_status(self, text: str, error: bool = False) -> None:
-        self.status.configure(text=text, foreground="#c0392b" if error else "#555")
+    self.status.configure(text=text, foreground="#c0392b" if error else "#555")
 ```
 
 #### `ScanView.__init__(parent, on_scan)`
 
 **Problem.** Build the scan tab: a URL entry (Enter also scans), Scan and Clear buttons, a big verdict label, a progress bar used as a risk meter, a probability line and a list for the reasons.
 
-**Solution.**
+**Solution.** Paste in `phishguard/views/scan_view.py`, inside class `ScanView` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, parent, on_scan):
@@ -1435,7 +1611,7 @@ def __init__(self, parent, on_scan):
 
 **Problem.** Show the verdict in the colour of its risk level, fill the meter with the probability, and list the reasons with an arrow showing which way each one pushes.
 
-**Solution.**
+**Solution.** Paste in `phishguard/views/scan_view.py`, inside class `ScanView` (indented 4 spaces), in place of the skeleton's `def show_result`:
 
 ```python
 def show_result(self, result) -> None:
@@ -1460,7 +1636,7 @@ def show_result(self, result) -> None:
 
 **Problem.** Empty the entry, the verdict, the meter and the reasons.
 
-**Solution.**
+**Solution.** Paste in `phishguard/views/scan_view.py`, inside class `ScanView` (indented 4 spaces), in place of the skeleton's `def clear`:
 
 ```python
 def clear(self) -> None:
@@ -1476,9 +1652,18 @@ def clear(self) -> None:
 
 ### `phishguard/views/stats_view.py`
 
+Open `PhishGuard/phishguard/views/stats_view.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`MODEL_COLUMNS`
+`MODEL_COLUMNS` — paste in the file, below the imports:
 
 ```python
 MODEL_COLUMNS = (("version", "Version", 230), ("model_name", "Model", 80), ("trained_at", "Trained", 150),
@@ -1490,7 +1675,7 @@ MODEL_COLUMNS = (("version", "Version", 230), ("model_name", "Model", 80), ("tra
 
 **Problem.** Build the statistics tab: a matplotlib bar chart embedded in Tk and a table of registered models.
 
-**Solution.**
+**Solution.** Paste in `phishguard/views/stats_view.py`, inside class `StatsView` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, parent):
@@ -1515,7 +1700,7 @@ def __init__(self, parent):
 
 **Problem.** Redraw the bar chart with the counts per verdict and refill the models table.
 
-**Solution.**
+**Solution.** Paste in `phishguard/views/stats_view.py`, inside class `StatsView` (indented 4 spaces), in place of the skeleton's `def show`:
 
 ```python
 def show(self, counts: dict, models: list) -> None:
@@ -1546,11 +1731,13 @@ def show(self, counts: dict, models: list) -> None:
 
 ### `phishguard/database/repositories.py`
 
+Open `PhishGuard/phishguard/database/repositories.py`.
+
 #### `ScanRepository.wrong_feedback()`
 
 **Problem.** Return the scans the user marked "wrong" - the candidates for retraining.
 
-**Solution.**
+**Solution.** Paste in `phishguard/database/repositories.py`, inside class `ScanRepository` (indented 4 spaces), in place of the skeleton's `def wrong_feedback`:
 
 ```python
 def wrong_feedback(self) -> List[ScanResult]:

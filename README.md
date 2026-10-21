@@ -68,6 +68,7 @@ wrote and understood.
 | `python tools/make_resume_data.py` | regenerates the synthetic CVs for ResumeMatch |
 | `python tools/make_checklists.py` | regenerates every `06_solve/CHECKLIST.md` from the students' skeletons (run after a skeleton changes) |
 | `python tools/make_walkthroughs.py` | regenerates every `06_solve/WALKTHROUGH.md` from the skeletons, the teacher solutions and `tools/walkthrough_problems/` (run after either changes) |
+| `python tools/check_walkthroughs.py` | proves the walkthroughs are complete: pastes everything they show into a clean copy of each skeleton and runs its tests; also flags ready-made skeleton code that differs from the solution |
 | `EXERCISES=solutions pytest <project>/03_exercises` | checks that the solutions pass their own tests |
 
 Data sources and licences are listed in each project's `data/README.md`.

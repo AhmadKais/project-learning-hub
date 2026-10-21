@@ -131,17 +131,38 @@ def added_code(solution_dir: Path, skeleton_dir: Path, rel: str) -> list:
         kind, name = key
         if kind not in ("class", "const", None) and kind in new_classes:
             continue                                   # shown with its whole class
-        segment = ast.get_source_segment(sol_src, node, padded=False)
-        if segment and getattr(node, "decorator_list", None):
-            start = node.decorator_list[0].lineno - 1
-            segment = "\n".join(sol_src.splitlines()[start:node.end_lineno])
+        start = (node.decorator_list[0].lineno if getattr(node, "decorator_list", None) else node.lineno) - 1
+        segment = "\n".join(sol_src.splitlines()[start:node.end_lineno])     # whole lines, so dedent works
         if kind not in ("class", "const", None):
             segment = textwrap.dedent(segment)
-            label = f"`{kind}.{name}`"
+            label, where = f"`{kind}.{name}`", kind
         else:
-            label = f"`{name}`"
-        blocks.append((node.lineno, label, segment))
-    return [(label, code) for _, label, code in sorted(blocks)]
+            label, where = f"`{name}`", None
+        blocks.append((node.lineno, label, segment, where))
+    return [(label, code, where) for _, label, code, where in sorted(blocks)]
+
+
+def _bound(node) -> set:
+    return {(a.asname or a.name).split(".")[0] for a in node.names}
+
+
+def missing_imports(solution_dir: Path, skeleton_dir: Path, rel: str) -> list:
+    """Import lines of the solution file whose names the skeleton file does not import yet."""
+    sol = solution_dir / rel
+    if not sol.exists():
+        return []
+    sol_src = sol.read_text(encoding="utf-8")
+    skel = skeleton_dir / rel
+    have = set()
+    if skel.exists():
+        for node in ast.parse(skel.read_text(encoding="utf-8")).body:
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                have |= _bound(node)
+    out = []
+    for node in ast.parse(sol_src).body:
+        if isinstance(node, (ast.Import, ast.ImportFrom)) and not _bound(node) <= have:
+            out.append(ast.get_source_segment(sol_src, node))
+    return out
 
 
 def new_files(solution_dir: Path, skeleton_dir: Path) -> list:
@@ -222,6 +243,41 @@ def build(project: str, skeleton: str) -> None:
         "",
         "Try each function yourself first, then compare. Run the check after every function, not at the end.",
         "",
+        "## Where the code goes",
+        "",
+        f"Every path below starts in your project folder `{name}/` (the folder with `TASKS.md`). For each file:",
+        "",
+        "1. **Imports** — if the file section lists imports, add the lines that are missing to the top of the file, "
+        "next to the other `import` lines.",
+        "2. **Helper code** — paste it once, where the section says: *in the file* means below the imports and above "
+        "the first class; *inside class X* means inside that class, next to its other methods (indented like them).",
+        "3. **Each function** — in your skeleton, find the `def` with the same name. Delete the whole function — "
+        "the `def` line, the TODO text and `raise NotImplementedError` — and paste the solution in its place. "
+        "Inside a class, every line moves 4 spaces to the right, so the `def` lines up with the other methods.",
+        "4. **New files** — at the end, under *Files the solution adds*: create the file at that path and paste "
+        "the whole code.",
+        "",
+        "Before and after, for a method inside a class:",
+        "",
+        "```python",
+        "class Example:",
+        "",
+        "    def total(self, items):          # BEFORE - the skeleton",
+        "        \"\"\"",
+        "        TODO stage 3: add up the prices.",
+        "        \"\"\"",
+        "        raise NotImplementedError",
+        "```",
+        "",
+        "```python",
+        "class Example:",
+        "",
+        "    def total(self, items):          # AFTER - the solution pasted in its place",
+        "        return sum(item.price for item in items)",
+        "```",
+        "",
+        "Then run the **Check** command from the project folder.",
+        "",
         "## Contents",
         "",
     ]
@@ -241,14 +297,19 @@ def build(project: str, skeleton: str) -> None:
         for it in by_stage[stage]:
             if it["file"] != current:
                 current = it["file"]
-                lines += [f"### `{current}`", ""]
+                lines += [f"### `{current}`", "", f"Open `{name}/{current}`.", ""]
                 if current not in shown_files:
                     shown_files.add(current)
+                    imports = missing_imports(solution_dir, skeleton_dir, current)
+                    if imports:
+                        lines += ["**Imports** — add these at the top of the file:", "",
+                                  "```python", *imports, "```", ""]
                     extra = added_code(solution_dir, skeleton_dir, current)
                     if extra:
                         lines += ["**Helper code in this file** (used by the functions below, not a TODO in your skeleton):", ""]
-                        for label, code in extra:
-                            lines += [f"{label}", "", "```python", code, "```", ""]
+                        for label, code, where in extra:
+                            place = f"inside class `{where}`" if where else "in the file, below the imports"
+                            lines += [f"{label} — paste {place}:", "", "```python", code, "```", ""]
             owner = f"{it['cls']}." if it["cls"] else ""
             lines += [f"#### `{owner}{mc.signature(it['fn'])}`", ""]
             key = f"{it['file']}::{owner}{it['fn'].name}"
@@ -259,7 +320,9 @@ def build(project: str, skeleton: str) -> None:
             lines += [f"**Problem.** {problem}", ""]
             code = solution_source(solution_dir, it)
             if code:
-                lines += ["**Solution.**", "", "```python", code, "```", ""]
+                where = (f"inside class `{it['cls']}` (indented 4 spaces)" if it["cls"] else "at the top level of the file")
+                lines += [f"**Solution.** Paste in `{it['file']}`, {where}, in place of the skeleton's "
+                          f"`def {it['fn'].name}`:", "", "```python", code, "```", ""]
             else:
                 missing += 1
             hits = test_names(it, skeleton_dir / "tests")
@@ -280,9 +343,10 @@ def build(project: str, skeleton: str) -> None:
     extra_files = new_files(solution_dir, skeleton_dir)
     if extra_files:
         lines += ["## Files the solution adds", "",
-                  "These files are not in your skeleton; the finished project needs them.", ""]
+                  "These files are not in your skeleton; the finished project needs them. "
+                  "Create each one at the path shown and paste the whole code.", ""]
         for rel, code in extra_files:
-            lines += [f"### `{rel}`", "", "```python", code, "```", ""]
+            lines += [f"### `{rel}`", "", f"Create `{name}/{rel}`:", "", "```python", code, "```", ""]
     lines += run_section(project, solution_dir)
     out = ROOT / project / "06_solve" / "WALKTHROUGH.md"
     out.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")

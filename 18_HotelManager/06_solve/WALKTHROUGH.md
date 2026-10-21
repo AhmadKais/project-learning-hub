@@ -8,6 +8,36 @@ Every function you write in this project (113 of them), in the order of `TASKS.m
 
 Try each function yourself first, then compare. Run the check after every function, not at the end.
 
+## Where the code goes
+
+Every path below starts in your project folder `HotelManager/` (the folder with `TASKS.md`). For each file:
+
+1. **Imports** — if the file section lists imports, add the lines that are missing to the top of the file, next to the other `import` lines.
+2. **Helper code** — paste it once, where the section says: *in the file* means below the imports and above the first class; *inside class X* means inside that class, next to its other methods (indented like them).
+3. **Each function** — in your skeleton, find the `def` with the same name. Delete the whole function — the `def` line, the TODO text and `raise NotImplementedError` — and paste the solution in its place. Inside a class, every line moves 4 spaces to the right, so the `def` lines up with the other methods.
+4. **New files** — at the end, under *Files the solution adds*: create the file at that path and paste the whole code.
+
+Before and after, for a method inside a class:
+
+```python
+class Example:
+
+    def total(self, items):          # BEFORE - the skeleton
+        """
+        TODO stage 3: add up the prices.
+        """
+        raise NotImplementedError
+```
+
+```python
+class Example:
+
+    def total(self, items):          # AFTER - the solution pasted in its place
+        return sum(item.price for item in items)
+```
+
+Then run the **Check** command from the project folder.
+
 ## Contents
 
 - [Stage 1 — The interval algorithm (the heart)](#stage-1--the-interval-algorithm-the-heart) (7 functions)
@@ -23,11 +53,13 @@ Try each function yourself first, then compare. Run the check after every functi
 
 ### `hotelmanager/models/date_range.py`
 
+Open `HotelManager/hotelmanager/models/date_range.py`.
+
 #### `DateRange.__post_init__()`
 
 **Problem.** Refuse impossible stays the moment a DateRange is created: check-out must be after check-in, and a stay may not be longer than config.MAX_NIGHTS. Because the class is frozen, an invalid stay can then never exist anywhere in the program.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/models/date_range.py`, inside class `DateRange` (indented 4 spaces), in place of the skeleton's `def __post_init__`:
 
 ```python
 def __post_init__(self):
@@ -43,7 +75,7 @@ def __post_init__(self):
 
 **Problem.** Return how many nights the guest sleeps: check-out minus check-in, in days. 3 March to 7 March is 4 nights - there is no "+1" because the check-out day is not a night.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/models/date_range.py`, inside class `DateRange` (indented 4 spaces), in place of the skeleton's `def nights`:
 
 ```python
 @property
@@ -57,7 +89,7 @@ def nights(self) -> int:
 
 **Problem.** Return True when two stays share at least one night. Two half-open ranges [a, b) and [c, d) overlap exactly when a < d and c < b. A guest leaving on the 7th and another arriving on the 7th do NOT overlap - the room is re-let the same day.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/models/date_range.py`, inside class `DateRange` (indented 4 spaces), in place of the skeleton's `def overlaps`:
 
 ```python
 def overlaps(self, other: "DateRange") -> bool:
@@ -70,7 +102,7 @@ def overlaps(self, other: "DateRange") -> bool:
 
 **Problem.** Return True when `day` is one of the nights of the stay: check-in counts, check-out does not.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/models/date_range.py`, inside class `DateRange` (indented 4 spaces), in place of the skeleton's `def contains`:
 
 ```python
 def contains(self, day: date) -> bool:
@@ -83,7 +115,7 @@ def contains(self, day: date) -> bool:
 
 **Problem.** Give the nights of the stay one by one, from check-in up to the day before check-out. [3 March, 7 March) gives 3, 4, 5, 6 March - one price per night is built from this list.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/models/date_range.py`, inside class `DateRange` (indented 4 spaces), in place of the skeleton's `def nights_list`:
 
 ```python
 def nights_list(self) -> Iterator[date]:
@@ -97,11 +129,13 @@ def nights_list(self) -> Iterator[date]:
 
 ### `hotelmanager/models/entities.py`
 
+Open `HotelManager/hotelmanager/models/entities.py`.
+
 #### `Room.fits(guests)`
 
 **Problem.** Return True when the room is active and has at least `guests` beds. A double room (capacity 2) fits exactly 2 guests.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/models/entities.py`, inside class `Room` (indented 4 spaces), in place of the skeleton's `def fits`:
 
 ```python
 def fits(self, guests: int) -> bool:
@@ -114,7 +148,7 @@ def fits(self, guests: int) -> bool:
 
 **Problem.** Return True when this booking holds the room on `day`: the booking still blocks the room (confirmed or checked in) and the day is one of its nights. A cancelled booking frees the room automatically.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/models/entities.py`, inside class `Booking` (indented 4 spaces), in place of the skeleton's `def occupies`:
 
 ```python
 def occupies(self, day: date) -> bool:
@@ -128,11 +162,13 @@ def occupies(self, day: date) -> bool:
 
 ### `hotelmanager/database/db.py`
 
+Open `HotelManager/hotelmanager/database/db.py`.
+
 #### `Database.get_connection()`
 
 **Problem.** Open the SQLite file with rows that behave like dicts and foreign keys switched on (they are off by default in SQLite).
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/db.py`, inside class `Database` (indented 4 spaces), in place of the skeleton's `def get_connection`:
 
 ```python
 def get_connection(self) -> sqlite3.Connection:
@@ -148,7 +184,7 @@ def get_connection(self) -> sqlite3.Connection:
 
 **Problem.** A context manager around a connection: commit when the block succeeds, roll back when it raises, and always close.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/db.py`, inside class `Database` (indented 4 spaces), in place of the skeleton's `def connection`:
 
 ```python
 @contextmanager
@@ -170,7 +206,7 @@ def connection(self):
 
 **Problem.** Create the tables by running the SCHEMA script.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/db.py`, inside class `Database` (indented 4 spaces), in place of the skeleton's `def initialize_schema`:
 
 ```python
 def initialize_schema(self) -> None:
@@ -182,9 +218,11 @@ def initialize_schema(self) -> None:
 
 ### `hotelmanager/database/repositories.py`
 
+Open `HotelManager/hotelmanager/database/repositories.py`.
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`_row_to_room`
+`_row_to_room` — paste in the file, below the imports:
 
 ```python
 def _row_to_room(r):
@@ -192,7 +230,7 @@ def _row_to_room(r):
                 view=r["view"], base_rate=r["base_rate"], active=bool(r["active"]))
 ```
 
-`_row_to_guest`
+`_row_to_guest` — paste in the file, below the imports:
 
 ```python
 def _row_to_guest(r):
@@ -204,7 +242,7 @@ def _row_to_guest(r):
 
 **Problem.** Insert a room and return its new id. Store `active` as 0/1 - SQLite has no boolean type.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `RoomRepository` (indented 4 spaces), in place of the skeleton's `def add`:
 
 ```python
 def add(self, room: Room) -> int:
@@ -220,7 +258,7 @@ def add(self, room: Room) -> int:
 
 **Problem.** Save every column of an existing room. The id goes last in the parameters because WHERE id = ? comes last in the SQL.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `RoomRepository` (indented 4 spaces), in place of the skeleton's `def update`:
 
 ```python
 def update(self, room: Room) -> None:
@@ -235,7 +273,7 @@ def update(self, room: Room) -> None:
 
 **Problem.** Delete a room by id. A room that has bookings is refused by the database itself (foreign key) - let that error reach the caller.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `RoomRepository` (indented 4 spaces), in place of the skeleton's `def delete`:
 
 ```python
 def delete(self, room_id: int) -> None:
@@ -249,7 +287,7 @@ def delete(self, room_id: int) -> None:
 
 **Problem.** Read one room by id and turn the row into a Room, or return None.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `RoomRepository` (indented 4 spaces), in place of the skeleton's `def get`:
 
 ```python
 def get(self, room_id: int) -> Optional[Room]:
@@ -264,7 +302,7 @@ def get(self, room_id: int) -> Optional[Room]:
 
 **Problem.** Return all rooms (or only active ones) sorted by number as a number, so 9 comes before 10.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `RoomRepository` (indented 4 spaces), in place of the skeleton's `def list_all`:
 
 ```python
 def list_all(self, only_active: bool = False) -> List[Room]:
@@ -283,7 +321,7 @@ def list_all(self, only_active: bool = False) -> List[Room]:
 
 **Problem.** Insert a guest and return the new id. A second guest with the same e-mail is refused by the database (UNIQUE).
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `GuestRepository` (indented 4 spaces), in place of the skeleton's `def add`:
 
 ```python
 def add(self, guest: Guest) -> int:
@@ -299,7 +337,7 @@ def add(self, guest: Guest) -> int:
 
 **Problem.** Save every column of an existing guest, id last.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `GuestRepository` (indented 4 spaces), in place of the skeleton's `def update`:
 
 ```python
 def update(self, guest: Guest) -> None:
@@ -314,7 +352,7 @@ def update(self, guest: Guest) -> None:
 
 **Problem.** Delete a guest by id; a guest with bookings is refused by the database.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `GuestRepository` (indented 4 spaces), in place of the skeleton's `def delete`:
 
 ```python
 def delete(self, guest_id: int) -> None:
@@ -328,7 +366,7 @@ def delete(self, guest_id: int) -> None:
 
 **Problem.** Read one guest by id, or return None. Empty phone, ID and notes come back as "".
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `GuestRepository` (indented 4 spaces), in place of the skeleton's `def get`:
 
 ```python
 def get(self, guest_id: int) -> Optional[Guest]:
@@ -343,7 +381,7 @@ def get(self, guest_id: int) -> Optional[Guest]:
 
 **Problem.** Find guests whose name, e-mail or ID number contains the text (all guests when the text is empty), sorted by name. Build "%text%" in Python and pass it as a parameter.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `GuestRepository` (indented 4 spaces), in place of the skeleton's `def search`:
 
 ```python
 def search(self, text: str = "") -> List[Guest]:
@@ -364,7 +402,7 @@ def search(self, text: str = "") -> List[Guest]:
 
 **Problem.** Turn a database row into a Booking: dates back from ISO text, the status back to the enum, the extras back to a list, and the room number and guest name for display.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `BookingRepository` (indented 4 spaces), in place of the skeleton's `def _row`:
 
 ```python
 @staticmethod
@@ -385,7 +423,7 @@ def _row(r) -> Booking:
 
 **Problem.** Insert a booking and return its id. Convert dates and times to ISO text, the status to its value and the extras list to "a,b,c".
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `BookingRepository` (indented 4 spaces), in place of the skeleton's `def add`:
 
 ```python
 def add(self, booking: Booking) -> int:
@@ -402,7 +440,7 @@ def add(self, booking: Booking) -> int:
 
 **Problem.** Save the changeable columns of a booking (dates, guests, status, price, extras, check-in/out times). Times that are still None stay NULL.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `BookingRepository` (indented 4 spaces), in place of the skeleton's `def update`:
 
 ```python
 def update(self, booking: Booking) -> None:
@@ -419,7 +457,7 @@ def update(self, booking: Booking) -> None:
 
 **Problem.** Read one booking with its room number and guest name (the JOIN in self.SELECT), or None.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `BookingRepository` (indented 4 spaces), in place of the skeleton's `def get`:
 
 ```python
 def get(self, booking_id: int) -> Optional[Booking]:
@@ -434,7 +472,7 @@ def get(self, booking_id: int) -> Optional[Booking]:
 
 **Problem.** Return bookings newest check-in first, optionally only one status and/or matching a guest name or room number.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `BookingRepository` (indented 4 spaces), in place of the skeleton's `def list_all`:
 
 ```python
 def list_all(self, status: Optional[BookingStatus] = None, search: str = "") -> List[Booking]:
@@ -457,7 +495,7 @@ def list_all(self, status: Optional[BookingStatus] = None, search: str = "") -> 
 
 **Problem.** Return only the bookings that overlap [start, end) - the same two comparisons as DateRange.overlaps, done in SQL.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `BookingRepository` (indented 4 spaces), in place of the skeleton's `def in_period`:
 
 ```python
 def in_period(self, start: date, end: date) -> List[Booking]:
@@ -473,7 +511,7 @@ def in_period(self, start: date, end: date) -> List[Booking]:
 
 **Problem.** Count the bookings per status: {"confirmed": 3, "cancelled": 1, ...}.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `BookingRepository` (indented 4 spaces), in place of the skeleton's `def count_by_status`:
 
 ```python
 def count_by_status(self) -> Dict[str, int]:
@@ -489,11 +527,13 @@ def count_by_status(self) -> Dict[str, int]:
 
 ### `hotelmanager/booking/allocation.py`
 
+Open `HotelManager/hotelmanager/booking/allocation.py`.
+
 #### `FirstFreeStrategy.choose(candidates, guests, preferences)`
 
 **Problem.** Pick the free room with the lowest number, or None when the list is empty. Compare the numbers as ints, so room 9 comes before room 10.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/allocation.py`, inside class `FirstFreeStrategy` (indented 4 spaces), in place of the skeleton's `def choose`:
 
 ```python
 def choose(self, candidates, guests, preferences):
@@ -508,7 +548,7 @@ def choose(self, candidates, guests, preferences):
 
 **Problem.** Pick the smallest room that still fits (then the cheaper, then the lower number), or None. Giving a couple the family room would leave the next family without a room.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/allocation.py`, inside class `BestFitStrategy` (indented 4 spaces), in place of the skeleton's `def choose`:
 
 ```python
 def choose(self, candidates, guests, preferences):
@@ -523,7 +563,7 @@ def choose(self, candidates, guests, preferences):
 
 **Problem.** Score one room against the guest's wishes: +3 for the wanted view, +2 for the wanted floor, +1 for the wanted type, and -1 for every unused bed. Use preferences.get(...) because a wish may be missing.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/allocation.py`, inside class `PreferenceStrategy` (indented 4 spaces), in place of the skeleton's `def score`:
 
 ```python
 def score(self, room: Room, guests: int, preferences: dict) -> int:
@@ -544,7 +584,7 @@ def score(self, room: Room, guests: int, preferences: dict) -> int:
 
 **Problem.** Pick the room with the highest score; on a tie take the lower room number. Return None when there are no rooms.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/allocation.py`, inside class `PreferenceStrategy` (indented 4 spaces), in place of the skeleton's `def choose`:
 
 ```python
 def choose(self, candidates, guests, preferences):
@@ -559,7 +599,7 @@ def choose(self, candidates, guests, preferences):
 
 **Problem.** Turn a strategy name from the config into a strategy object ("first_free", "best_fit" or "preference"). An unknown name raises ValueError that lists the valid names.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/allocation.py`, at the top level of the file, in place of the skeleton's `def create`:
 
 ```python
 def create(name: str = None) -> AllocationStrategy:
@@ -573,11 +613,19 @@ def create(name: str = None) -> AllocationStrategy:
 
 ### `hotelmanager/booking/availability.py`
 
+Open `HotelManager/hotelmanager/booking/availability.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from hotelmanager.models.entities import Booking, BookingStatus, Room
+```
+
 #### `is_room_free(room_id, stay, bookings, ignore_booking_id)`
 
 **Problem.** Return True when no booking blocks this room during `stay`. Skip bookings of other rooms, cancelled or checked-out bookings, and the booking being edited (`ignore_booking_id`); any other booking that overlaps makes the room busy.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/availability.py`, at the top level of the file, in place of the skeleton's `def is_room_free`:
 
 ```python
 def is_room_free(room_id: int, stay: DateRange, bookings: List[Booking], ignore_booking_id: Optional[int] = None) -> bool:
@@ -595,7 +643,7 @@ def is_room_free(room_id: int, stay: DateRange, bookings: List[Booking], ignore_
 
 **Problem.** Return every room that fits the guests, has the requested type (if one is given) and is free for the whole stay.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/availability.py`, at the top level of the file, in place of the skeleton's `def free_rooms`:
 
 ```python
 def free_rooms(rooms: List[Room], bookings: List[Booking], stay: DateRange, guests: int,
@@ -613,11 +661,13 @@ def free_rooms(rooms: List[Room], bookings: List[Booking], stay: DateRange, gues
 
 ### `hotelmanager/models/entities.py`
 
+Open `HotelManager/hotelmanager/models/entities.py`.
+
 #### `Quote.subtotal`
 
 **Problem.** Add up every line except the VAT line, rounded to 2 decimals.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/models/entities.py`, inside class `Quote` (indented 4 spaces), in place of the skeleton's `def subtotal`:
 
 ```python
 @property
@@ -632,7 +682,7 @@ def subtotal(self) -> float:
 
 **Problem.** Add up every line, VAT and discounts included, rounded to 2 decimals - what the guest pays.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/models/entities.py`, inside class `Quote` (indented 4 spaces), in place of the skeleton's `def total`:
 
 ```python
 @property
@@ -644,11 +694,13 @@ def total(self) -> float:
 
 ### `hotelmanager/pricing/engine.py`
 
+Open `HotelManager/hotelmanager/pricing/engine.py`.
+
 #### `PricingEngine.quote(context)`
 
 **Problem.** Run the rules in order, giving each one the lines added so far, and return a Quote with all the lines.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/pricing/engine.py`, inside class `PricingEngine` (indented 4 spaces), in place of the skeleton's `def quote`:
 
 ```python
 def quote(self, context: PricingContext) -> Quote:
@@ -662,11 +714,13 @@ def quote(self, context: PricingContext) -> Quote:
 
 ### `hotelmanager/pricing/rules.py`
 
+Open `HotelManager/hotelmanager/pricing/rules.py`.
+
 #### `Season.contains(day)`
 
 **Problem.** Return True when `day` falls in the season, start and end included (a season is a calendar period, not a stay).
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/pricing/rules.py`, inside class `Season` (indented 4 spaces), in place of the skeleton's `def contains`:
 
 ```python
 def contains(self, day: date) -> bool:
@@ -679,7 +733,7 @@ def contains(self, day: date) -> bool:
 
 **Problem.** Return the first season that contains `day`, or None.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/pricing/rules.py`, inside class `PricingContext` (indented 4 spaces), in place of the skeleton's `def season_for`:
 
 ```python
 def season_for(self, day: date) -> Optional[Season]:
@@ -692,7 +746,7 @@ def season_for(self, day: date) -> Optional[Season]:
 
 **Problem.** Price the room night by night: the room rate times the season multiplier of that night. Group nights with the same price into one invoice line, for example "4 night(s) x double @ 450.00".
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/pricing/rules.py`, inside class `BaseRateRule` (indented 4 spaces), in place of the skeleton's `def lines`:
 
 ```python
 def lines(self, context, current_lines):
@@ -710,7 +764,7 @@ def lines(self, context, current_lines):
 
 **Problem.** Add one line for the Friday and Saturday nights: each costs an extra 20% of that night's price (season included). No weekend nights - no line.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/pricing/rules.py`, inside class `WeekendSurchargeRule` (indented 4 spaces), in place of the skeleton's `def lines`:
 
 ```python
 def lines(self, context, current_lines):
@@ -732,7 +786,7 @@ def lines(self, context, current_lines):
 
 **Problem.** From 7 nights on, take 10% off the room part (the lines added so far). The discount is a line with a negative price, so the total is still just the sum of the lines.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/pricing/rules.py`, inside class `LongStayDiscountRule` (indented 4 spaces), in place of the skeleton's `def lines`:
 
 ```python
 def lines(self, context, current_lines):
@@ -748,7 +802,7 @@ def lines(self, context, current_lines):
 
 **Problem.** Add one line per extra the guest chose: breakfast is charged per guest per night, the other extras per night. Unknown extras are ignored.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/pricing/rules.py`, inside class `ExtrasRule` (indented 4 spaces), in place of the skeleton's `def lines`:
 
 ```python
 def lines(self, context, current_lines):
@@ -767,7 +821,7 @@ def lines(self, context, current_lines):
 
 **Problem.** Add one "VAT 18%" line on everything above. It must be the last rule.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/pricing/rules.py`, inside class `VatRule` (indented 4 spaces), in place of the skeleton's `def lines`:
 
 ```python
 def lines(self, context, current_lines):
@@ -781,9 +835,19 @@ def lines(self, context, current_lines):
 
 ### `hotelmanager/booking/hotel_service.py`
 
+Open `HotelManager/hotelmanager/booking/hotel_service.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import sqlite3
+from datetime import date, datetime, timedelta
+from hotelmanager.models.entities import InvoiceLine
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`_month_bounds`
+`_month_bounds` — paste in the file, below the imports:
 
 ```python
 def _month_bounds(year: int, month: int) -> Tuple[date, date]:
@@ -792,61 +856,61 @@ def _month_bounds(year: int, month: int) -> Tuple[date, date]:
     return first, nxt
 ```
 
-`HotelService._get_booking`
+`HotelService._get_booking` — paste inside class `HotelService`:
 
 ```python
 def _get_booking(self, booking_id: int) -> Booking:
-        booking = self.bookings.get(booking_id)
-        if booking is None:
-            raise HotelError("Booking not found")
-        return booking
+    booking = self.bookings.get(booking_id)
+    if booking is None:
+        raise HotelError("Booking not found")
+    return booking
 ```
 
-`HotelService.update_room`
+`HotelService.update_room` — paste inside class `HotelService`:
 
 ```python
 def update_room(self, room: Room) -> None:
-        if room.room_type not in config.ROOM_TYPES:
-            raise HotelError(f"Unknown room type '{room.room_type}'")
-        if room.capacity <= 0:
-            raise HotelError("Capacity must be at least 1")
-        if not str(room.number).strip():
-            raise HotelError("Room number cannot be empty")
-        if any(r.number == room.number and r.id != room.id for r in self.rooms.list_all()):
-            raise HotelError(f"Room {room.number} already exists")
-        self.rooms.update(room)
+    if room.room_type not in config.ROOM_TYPES:
+        raise HotelError(f"Unknown room type '{room.room_type}'")
+    if room.capacity <= 0:
+        raise HotelError("Capacity must be at least 1")
+    if not str(room.number).strip():
+        raise HotelError("Room number cannot be empty")
+    if any(r.number == room.number and r.id != room.id for r in self.rooms.list_all()):
+        raise HotelError(f"Room {room.number} already exists")
+    self.rooms.update(room)
 ```
 
-`HotelService.delete_room`
+`HotelService.delete_room` — paste inside class `HotelService`:
 
 ```python
 def delete_room(self, room_id: int) -> None:
-        try:
-            self.rooms.delete(room_id)
-        except sqlite3.IntegrityError:
-            raise HotelError("This room has bookings and cannot be deleted - mark it inactive instead") from None
+    try:
+        self.rooms.delete(room_id)
+    except sqlite3.IntegrityError:
+        raise HotelError("This room has bookings and cannot be deleted - mark it inactive instead") from None
 ```
 
-`HotelService.update_guest`
+`HotelService.update_guest` — paste inside class `HotelService`:
 
 ```python
 def update_guest(self, guest: Guest) -> None:
-        if not guest.name.strip():
-            raise HotelError("guest name cannot be empty")
-        email = guest.email.strip()
-        if "@" not in email or "." not in email.split("@")[-1]:
-            raise HotelError("that does not look like an e-mail address")
-        try:
-            self.guests.update(guest)
-        except sqlite3.IntegrityError:
-            raise HotelError(f"A guest with the e-mail {email} already exists") from None
+    if not guest.name.strip():
+        raise HotelError("guest name cannot be empty")
+    email = guest.email.strip()
+    if "@" not in email or "." not in email.split("@")[-1]:
+        raise HotelError("that does not look like an e-mail address")
+    try:
+        self.guests.update(guest)
+    except sqlite3.IntegrityError:
+        raise HotelError(f"A guest with the e-mail {email} already exists") from None
 ```
 
 #### `HotelService.add_room(room)`
 
 **Problem.** Check a new room before saving: a number, a known type, a known view, at least 1 bed, no negative rate, and a number that is not taken. A broken rule raises HotelError with a clear message.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/hotel_service.py`, inside class `HotelService` (indented 4 spaces), in place of the skeleton's `def add_room`:
 
 ```python
 def add_room(self, room: Room) -> int:
@@ -872,7 +936,7 @@ def add_room(self, room: Room) -> int:
 
 **Problem.** Check a new guest before saving: a real name (not just spaces) and an e-mail that looks like one. A duplicate e-mail becomes a readable HotelError.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/hotel_service.py`, inside class `HotelService` (indented 4 spaces), in place of the skeleton's `def add_guest`:
 
 ```python
 def add_guest(self, guest: Guest) -> int:
@@ -894,7 +958,7 @@ def add_guest(self, guest: Guest) -> int:
 
 **Problem.** Price a stay: collect the room, stay, guests, extras and the current seasons into a PricingContext and let the pricing engine build the quote.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/hotel_service.py`, inside class `HotelService` (indented 4 spaces), in place of the skeleton's `def quote_for`:
 
 ```python
 def quote_for(self, room: Room, stay: DateRange, guests: int, extras: List[str]) -> Quote:
@@ -908,7 +972,7 @@ def quote_for(self, room: Room, stay: DateRange, guests: int, extras: List[str])
 
 **Problem.** Return the rooms free for the stay, reading only the bookings that overlap it (not the whole table).
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/hotel_service.py`, inside class `HotelService` (indented 4 spaces), in place of the skeleton's `def find_free_rooms`:
 
 ```python
 def find_free_rooms(self, stay: DateRange, guests: int, room_type: Optional[str] = None) -> List[Room]:
@@ -923,7 +987,7 @@ def find_free_rooms(self, stay: DateRange, guests: int, room_type: Optional[str]
 
 **Problem.** The central method. Check the guest exists, the number of guests and nights, and the extras. If a room was chosen, check it fits and is free; otherwise find free rooms and let the allocation strategy pick one. Price it, save the booking and return it. Every broken rule is a HotelError.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/hotel_service.py`, inside class `HotelService` (indented 4 spaces), in place of the skeleton's `def create_booking`:
 
 ```python
 def create_booking(self, guest_id: int, stay: DateRange, guests: int, extras: List[str] = None,
@@ -970,7 +1034,7 @@ def create_booking(self, guest_id: int, stay: DateRange, guests: int, extras: Li
 
 **Problem.** Check a guest in: only a confirmed booking, and not before its check-in date. Set the status and the check-in time and save.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/hotel_service.py`, inside class `HotelService` (indented 4 spaces), in place of the skeleton's `def check_in`:
 
 ```python
 def check_in(self, booking_id: int, today: Optional[date] = None) -> Booking:
@@ -992,7 +1056,7 @@ def check_in(self, booking_id: int, today: Optional[date] = None) -> Booking:
 
 **Problem.** Check a guest out: only after check-in. Build the invoice from the quote lines (the guest pays the price agreed at booking - a difference gets its own line), save it, set the status and time, and return the booking and invoice.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/hotel_service.py`, inside class `HotelService` (indented 4 spaces), in place of the skeleton's `def check_out`:
 
 ```python
 def check_out(self, booking_id: int) -> Tuple[Booking, Invoice]:
@@ -1022,7 +1086,7 @@ def check_out(self, booking_id: int) -> Tuple[Booking, Invoice]:
 
 **Problem.** Cancel a booking that has not started. Cancelling more than 48 hours before check-in is free; later it costs one night. Return the booking and the fee.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/hotel_service.py`, inside class `HotelService` (indented 4 spaces), in place of the skeleton's `def cancel`:
 
 ```python
 def cancel(self, booking_id: int, when: Optional[datetime] = None) -> Tuple[Booking, float]:
@@ -1044,11 +1108,13 @@ def cancel(self, booking_id: int, when: Optional[datetime] = None) -> Tuple[Book
 
 ### `hotelmanager/database/repositories.py`
 
+Open `HotelManager/hotelmanager/database/repositories.py`.
+
 #### `SeasonRepository.add(season)`
 
 **Problem.** Insert a season (name, start, end, multiplier) and return its id.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `SeasonRepository` (indented 4 spaces), in place of the skeleton's `def add`:
 
 ```python
 def add(self, season: Season) -> int:
@@ -1064,7 +1130,7 @@ def add(self, season: Season) -> int:
 
 **Problem.** Return all seasons sorted by start date, dates converted back from text.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `SeasonRepository` (indented 4 spaces), in place of the skeleton's `def list_all`:
 
 ```python
 def list_all(self) -> List[Season]:
@@ -1079,7 +1145,7 @@ def list_all(self) -> List[Season]:
 
 **Problem.** Delete a season by id.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `SeasonRepository` (indented 4 spaces), in place of the skeleton's `def delete`:
 
 ```python
 def delete(self, season_id: int) -> None:
@@ -1093,7 +1159,7 @@ def delete(self, season_id: int) -> None:
 
 **Problem.** Insert an invoice and all its lines in one transaction and return the invoice id. If one line fails, nothing is written.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `InvoiceRepository` (indented 4 spaces), in place of the skeleton's `def add`:
 
 ```python
 def add(self, invoice: Invoice) -> int:
@@ -1112,7 +1178,7 @@ def add(self, invoice: Invoice) -> int:
 
 **Problem.** Read the invoice of a booking with its lines in their original order, or None.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `InvoiceRepository` (indented 4 spaces), in place of the skeleton's `def get_for_booking`:
 
 ```python
 def get_for_booking(self, booking_id: int) -> Optional[Invoice]:
@@ -1132,7 +1198,7 @@ def get_for_booking(self, booking_id: int) -> Optional[Invoice]:
 
 **Problem.** Mark an invoice as paid.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `InvoiceRepository` (indented 4 spaces), in place of the skeleton's `def mark_paid`:
 
 ```python
 def mark_paid(self, invoice_id: int) -> None:
@@ -1144,11 +1210,13 @@ def mark_paid(self, invoice_id: int) -> None:
 
 ### `hotelmanager/pricing/engine.py`
 
+Open `HotelManager/hotelmanager/pricing/engine.py`.
+
 #### `PricingEngine.cancellation_fee(quote, hours_before_checkin)`
 
 **Problem.** Cancelling at least 48 hours before check-in is free (0.0); later the fee is one night - the unit price of the first room line.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/pricing/engine.py`, inside class `PricingEngine` (indented 4 spaces), in place of the skeleton's `def cancellation_fee`:
 
 ```python
 def cancellation_fee(self, quote: Quote, hours_before_checkin: float) -> float:
@@ -1164,11 +1232,13 @@ def cancellation_fee(self, quote: Quote, hours_before_checkin: float) -> float:
 
 ### `hotelmanager/booking/availability.py`
 
+Open `HotelManager/hotelmanager/booking/availability.py`.
+
 #### `occupancy_on(day, rooms, bookings)`
 
 **Problem.** For each room, which booking holds it on `day` (or None) - what one calendar column shows.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/availability.py`, at the top level of the file, in place of the skeleton's `def occupancy_on`:
 
 ```python
 def occupancy_on(day: date, rooms: List[Room], bookings: List[Booking]) -> dict:
@@ -1182,11 +1252,13 @@ def occupancy_on(day: date, rooms: List[Room], bookings: List[Booking]) -> dict:
 
 ### `hotelmanager/booking/hotel_service.py`
 
+Open `HotelManager/hotelmanager/booking/hotel_service.py`.
+
 #### `HotelService.calendar_matrix(year, month)`
 
 **Problem.** Build what the calendar draws for one month: the days, the rooms, and for every (room, day) the booking that occupies it or None.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/hotel_service.py`, inside class `HotelService` (indented 4 spaces), in place of the skeleton's `def calendar_matrix`:
 
 ```python
 def calendar_matrix(self, year: int, month: int) -> Dict:
@@ -1208,9 +1280,17 @@ def calendar_matrix(self, year: int, month: int) -> Dict:
 
 ### `hotelmanager/booking/importer.py`
 
+Open `HotelManager/hotelmanager/booking/importer.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from datetime import date
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`_import`
+`_import` — paste in the file, below the imports:
 
 ```python
 def _import(path, make, add) -> Tuple[int, List[str]]:
@@ -1229,7 +1309,7 @@ def _import(path, make, add) -> Tuple[int, List[str]]:
 
 **Problem.** Read the rooms CSV and add each row through the service. Count the rooms added and collect "line N: reason" for the rows that were refused.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/importer.py`, at the top level of the file, in place of the skeleton's `def import_rooms`:
 
 ```python
 def import_rooms(service, path: str = config.SAMPLE_ROOMS_CSV) -> Tuple[int, List[str]]:
@@ -1246,7 +1326,7 @@ def import_rooms(service, path: str = config.SAMPLE_ROOMS_CSV) -> Tuple[int, Lis
 
 **Problem.** The same for the guests CSV (name, email, phone, document_id).
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/importer.py`, at the top level of the file, in place of the skeleton's `def import_guests`:
 
 ```python
 def import_guests(service, path: str = config.SAMPLE_GUESTS_CSV) -> Tuple[int, List[str]]:
@@ -1260,70 +1340,78 @@ def import_guests(service, path: str = config.SAMPLE_GUESTS_CSV) -> Tuple[int, L
 
 ### `hotelmanager/controllers/app_controller.py`
 
+Open `HotelManager/hotelmanager/controllers/app_controller.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import sqlite3
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`AppController.refresh_dashboard`
+`AppController.refresh_dashboard` — paste inside class `AppController`:
 
 ```python
 def refresh_dashboard(self) -> None:
-        self.view.show_dashboard(self.service.dashboard())
+    self.view.show_dashboard(self.service.dashboard())
 ```
 
-`AppController.select_booking`
+`AppController.select_booking` — paste inside class `AppController`:
 
 ```python
 def select_booking(self, booking_id: int) -> None:
-        self.refresh_bookings()
-        self.view.select_booking(booking_id)
+    self.refresh_bookings()
+    self.view.select_booking(booking_id)
 ```
 
-`AppController._room_from_fields`
+`AppController._room_from_fields` — paste inside class `AppController`:
 
 ```python
 def _room_from_fields(self, fields: dict) -> Room:
-        try:
-            return Room(number=fields.get("number", "").strip(), room_type=fields.get("room_type", ""),
-                        capacity=int(fields.get("capacity") or 0), floor=int(fields.get("floor") or 0),
-                        view=fields.get("view") or "city", base_rate=float(fields.get("base_rate") or 0))
-        except ValueError:
-            raise HotelError("Capacity and floor must be whole numbers, the rate a number") from None
+    try:
+        return Room(number=fields.get("number", "").strip(), room_type=fields.get("room_type", ""),
+                    capacity=int(fields.get("capacity") or 0), floor=int(fields.get("floor") or 0),
+                    view=fields.get("view") or "city", base_rate=float(fields.get("base_rate") or 0))
+    except ValueError:
+        raise HotelError("Capacity and floor must be whole numbers, the rate a number") from None
 ```
 
-`AppController._guest_from_fields`
+`AppController._guest_from_fields` — paste inside class `AppController`:
 
 ```python
 def _guest_from_fields(self, fields: dict) -> Guest:
-        return Guest(name=fields.get("name", "").strip(), email=fields.get("email", "").strip(),
-                     phone=fields.get("phone", "").strip(), document_id=fields.get("document_id", "").strip())
+    return Guest(name=fields.get("name", "").strip(), email=fields.get("email", "").strip(),
+                 phone=fields.get("phone", "").strip(), document_id=fields.get("document_id", "").strip())
 ```
 
-`AppController._guests_count`
+`AppController._guests_count` — paste inside class `AppController`:
 
 ```python
 def _guests_count(self, guests: str) -> int:
-        try:
-            n = int(guests)
-        except (TypeError, ValueError):
-            raise HotelError("Guests must be a whole number") from None
-        if n < 1:
-            raise HotelError("A booking needs at least one guest")
-        return n
+    try:
+        n = int(guests)
+    except (TypeError, ValueError):
+        raise HotelError("Guests must be a whole number") from None
+    if n < 1:
+        raise HotelError("A booking needs at least one guest")
+    return n
 ```
 
-`AppController._after_booking_change`
+`AppController._after_booking_change` — paste inside class `AppController`:
 
 ```python
 def _after_booking_change(self) -> None:
-        self.refresh_bookings(*self.view.bookings.current_filter())
-        self.calendar(*self.view.calendar.current_month())
-        self.refresh_dashboard()
+    self.refresh_bookings(*self.view.bookings.current_filter())
+    self.calendar(*self.view.calendar.current_month())
+    self.refresh_dashboard()
 ```
 
 #### `AppController.__init__(root)`
 
 **Problem.** Create the service and the main window, and give the window a dict of options (room types, extras...) and callbacks (on_add_room, on_book...).
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, root: tk.Tk):
@@ -1349,7 +1437,7 @@ def __init__(self, root: tk.Tk):
 
 **Problem.** Fill every tab (rooms, guests, bookings, calendar, reports) and the dashboard line.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def start`:
 
 ```python
 def start(self) -> None:
@@ -1368,7 +1456,7 @@ def start(self) -> None:
 
 **Problem.** Call a service function; if it raises HotelError, show the message and return None. Every button goes through this, so a broken rule is a polite message, never a crash.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def _guard`:
 
 ```python
 def _guard(self, fn, *args, **kwargs):
@@ -1387,7 +1475,7 @@ def _guard(self, fn, *args, **kwargs):
 
 **Problem.** Show the current list of rooms in the rooms table.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def refresh_rooms`:
 
 ```python
 def refresh_rooms(self) -> None:
@@ -1400,7 +1488,7 @@ def refresh_rooms(self) -> None:
 
 **Problem.** Turn the form strings into a Room (capacity and floor as ints, rate as a float), add it through the service and refresh. Text in a number field becomes a clear message.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def add_room`:
 
 ```python
 def add_room(self, fields: dict) -> None:
@@ -1419,7 +1507,7 @@ def add_room(self, fields: dict) -> None:
 
 **Problem.** Save the edited form for the selected room (same checks as add) and refresh.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def update_room`:
 
 ```python
 def update_room(self, room_id: int, fields: dict) -> None:
@@ -1445,7 +1533,7 @@ def update_room(self, room_id: int, fields: dict) -> None:
 
 **Problem.** Ask for confirmation and delete the selected room; a room with bookings shows a message instead.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def delete_room`:
 
 ```python
 def delete_room(self, room_id: int) -> None:
@@ -1467,7 +1555,7 @@ def delete_room(self, room_id: int) -> None:
 
 **Problem.** Show the guests that match the search text, and give the booking screen the full guest list.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def search_guests`:
 
 ```python
 def search_guests(self, text: str = "") -> None:
@@ -1482,7 +1570,7 @@ def search_guests(self, text: str = "") -> None:
 
 **Problem.** Build a Guest from the form, add it through the service and refresh the list.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def add_guest`:
 
 ```python
 def add_guest(self, fields: dict) -> None:
@@ -1497,7 +1585,7 @@ def add_guest(self, fields: dict) -> None:
 
 **Problem.** Save the edited form for the selected guest and refresh.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def update_guest`:
 
 ```python
 def update_guest(self, guest_id: int, fields: dict) -> None:
@@ -1518,7 +1606,7 @@ def update_guest(self, guest_id: int, fields: dict) -> None:
 
 **Problem.** Turn two "YYYY-MM-DD" strings into a DateRange. A wrong format or an impossible range becomes a HotelError with a readable message.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def _parse_stay`:
 
 ```python
 def _parse_stay(self, check_in: str, check_out: str) -> DateRange:
@@ -1539,7 +1627,7 @@ def _parse_stay(self, check_in: str, check_out: str) -> DateRange:
 
 **Problem.** Read the dates and guest count, find the free rooms and show each one with its price for the stay.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def search_free_rooms`:
 
 ```python
 def search_free_rooms(self, check_in: str, check_out: str, guests: str, room_type: str) -> None:
@@ -1561,7 +1649,7 @@ def search_free_rooms(self, check_in: str, check_out: str, guests: str, room_typ
 
 **Problem.** Price the chosen room for the stay and extras and show every quote line - the "why" of the price.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def preview_quote`:
 
 ```python
 def preview_quote(self, room_id: int, check_in: str, check_out: str, guests: str, extras: list) -> None:
@@ -1582,7 +1670,7 @@ def preview_quote(self, room_id: int, check_in: str, check_out: str, guests: str
 
 **Problem.** Create the booking (chosen room or automatic), show "Booking #7 created - room 204, ..." and refresh the bookings, calendar and dashboard.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def create_booking`:
 
 ```python
 def create_booking(self, guest_id: int, room_id: int, check_in: str, check_out: str, guests: str,
@@ -1607,7 +1695,7 @@ def create_booking(self, guest_id: int, room_id: int, check_in: str, check_out: 
 
 **Problem.** Show the bookings that match the status filter and search text.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def refresh_bookings`:
 
 ```python
 def refresh_bookings(self, status: str = "", search: str = "") -> None:
@@ -1620,7 +1708,7 @@ def refresh_bookings(self, status: str = "", search: str = "") -> None:
 
 **Problem.** Check in the selected booking and refresh.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def check_in`:
 
 ```python
 def check_in(self, booking_id: int) -> None:
@@ -1639,7 +1727,7 @@ def check_in(self, booking_id: int) -> None:
 
 **Problem.** Check out the selected booking, show the invoice and, if the user wants, save it as CSV.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def check_out`:
 
 ```python
 def check_out(self, booking_id: int) -> None:
@@ -1665,7 +1753,7 @@ def check_out(self, booking_id: int) -> None:
 
 **Problem.** Ask for confirmation, cancel the selected booking and tell the user the fee.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def cancel`:
 
 ```python
 def cancel(self, booking_id: int) -> None:
@@ -1690,7 +1778,7 @@ def cancel(self, booking_id: int) -> None:
 
 **Problem.** Draw the calendar for the chosen month.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def calendar`:
 
 ```python
 def calendar(self, year: int, month: int) -> None:
@@ -1703,7 +1791,7 @@ def calendar(self, year: int, month: int) -> None:
 
 **Problem.** Import the sample rooms and guests, refresh, and tell the user how many were added and which rows were skipped.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def import_sample`:
 
 ```python
 def import_sample(self) -> None:
@@ -1724,75 +1812,83 @@ def import_sample(self) -> None:
 
 ### `hotelmanager/views/bookings_view.py`
 
+Open `HotelManager/hotelmanager/views/bookings_view.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from datetime import date, timedelta
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`BookingsView.set_guests`
+`BookingsView.set_guests` — paste inside class `BookingsView`:
 
 ```python
 def set_guests(self, guests) -> None:
-        self.guest_ids = {f"{g.name} <{g.email}>": g.id for g in guests}
-        self.guest_combo.configure(values=list(self.guest_ids))
+    self.guest_ids = {f"{g.name} <{g.email}>": g.id for g in guests}
+    self.guest_combo.configure(values=list(self.guest_ids))
 ```
 
-`BookingsView.current_filter`
+`BookingsView.current_filter` — paste inside class `BookingsView`:
 
 ```python
 def current_filter(self):
-        return self.status_var.get(), self.search_var.get()
+    return self.status_var.get(), self.search_var.get()
 ```
 
-`BookingsView._extras`
+`BookingsView._extras` — paste inside class `BookingsView`:
 
 ```python
 def _extras(self):
-        return [name for name, var in self.extra_vars.items() if var.get()]
+    return [name for name, var in self.extra_vars.items() if var.get()]
 ```
 
-`BookingsView._search`
+`BookingsView._search` — paste inside class `BookingsView`:
 
 ```python
 def _search(self):
-        v = self.vars
-        self.cb["on_search_rooms"](v["check_in"].get(), v["check_out"].get(), v["guests"].get(), v["room_type"].get())
+    v = self.vars
+    self.cb["on_search_rooms"](v["check_in"].get(), v["check_out"].get(), v["guests"].get(), v["room_type"].get())
 ```
 
-`BookingsView._quote`
+`BookingsView._quote` — paste inside class `BookingsView`:
 
 ```python
 def _quote(self):
-        v = self.vars
-        self.cb["on_quote"](self.free_table.selected_id(), v["check_in"].get(), v["check_out"].get(),
-                            v["guests"].get(), self._extras())
+    v = self.vars
+    self.cb["on_quote"](self.free_table.selected_id(), v["check_in"].get(), v["check_out"].get(),
+                        v["guests"].get(), self._extras())
 ```
 
-`BookingsView._book`
+`BookingsView._book` — paste inside class `BookingsView`:
 
 ```python
 def _book(self, auto: bool):
-        v = self.vars
-        room_id = None if auto else self.free_table.selected_id()
-        if not auto and room_id is None:
-            self.cb["on_quote"](None, "", "", "", [])        # lets the controller show "pick a room"
-            return
-        self.cb["on_book"](self.guest_ids.get(v["guest"].get()), room_id, v["check_in"].get(),
-                           v["check_out"].get(), v["guests"].get(), self._extras(), v["strategy"].get())
+    v = self.vars
+    room_id = None if auto else self.free_table.selected_id()
+    if not auto and room_id is None:
+        self.cb["on_quote"](None, "", "", "", [])        # lets the controller show "pick a room"
+        return
+    self.cb["on_book"](self.guest_ids.get(v["guest"].get()), room_id, v["check_in"].get(),
+                       v["check_out"].get(), v["guests"].get(), self._extras(), v["strategy"].get())
 ```
 
-`BookingsView.select`
+`BookingsView.select` — paste inside class `BookingsView`:
 
 ```python
 def select(self, booking_id: int) -> None:
-        iid = str(booking_id)
-        if self.table.tree.exists(iid):
-            self.table.tree.selection_set(iid)
-            self.table.tree.see(iid)
+    iid = str(booking_id)
+    if self.table.tree.exists(iid):
+        self.table.tree.selection_set(iid)
+        self.table.tree.see(iid)
 ```
 
 #### `BookingsView.__init__(parent, cb)`
 
 **Problem.** Build the bookings tab. Top: dates, guests, type, allocation and extras, with Search / Preview quote / Book buttons, a free-rooms table and a quote table. Bottom: the bookings table with a status filter and Check in / Check out / Cancel.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/bookings_view.py`, inside class `BookingsView` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, parent, cb):
@@ -1892,7 +1988,7 @@ def __init__(self, parent, cb):
 
 **Problem.** Fill the free-rooms table with each room and its price for the stay.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/bookings_view.py`, inside class `BookingsView` (indented 4 spaces), in place of the skeleton's `def show_free_rooms`:
 
 ```python
 def show_free_rooms(self, rooms_with_prices) -> None:
@@ -1908,7 +2004,7 @@ def show_free_rooms(self, rooms_with_prices) -> None:
 
 **Problem.** Show one row per quote line (description, quantity, unit price, amount) and the total.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/bookings_view.py`, inside class `BookingsView` (indented 4 spaces), in place of the skeleton's `def show_quote`:
 
 ```python
 def show_quote(self, lines, total) -> None:
@@ -1923,7 +2019,7 @@ def show_quote(self, lines, total) -> None:
 
 **Problem.** Fill the bookings table and colour each row by its status (checked in green, checked out grey, cancelled red).
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/bookings_view.py`, inside class `BookingsView` (indented 4 spaces), in place of the skeleton's `def show_rows`:
 
 ```python
 def show_rows(self, bookings) -> None:
@@ -1939,7 +2035,7 @@ def show_rows(self, bookings) -> None:
 
 **Problem.** Return the id of the selected booking, or None.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/bookings_view.py`, inside class `BookingsView` (indented 4 spaces), in place of the skeleton's `def selected_booking_id`:
 
 ```python
 def selected_booking_id(self):
@@ -1950,37 +2046,45 @@ def selected_booking_id(self):
 
 ### `hotelmanager/views/calendar_view.py`
 
+Open `HotelManager/hotelmanager/views/calendar_view.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from datetime import date
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`COLORS`
+`COLORS` — paste in the file, below the imports:
 
 ```python
 COLORS = {None: "white", "confirmed": "#90caf9", "checked_in": "#a5d6a7", "checked_out": "#e0e0e0"}
 ```
 
-`CalendarView.current_month`
+`CalendarView.current_month` — paste inside class `CalendarView`:
 
 ```python
 def current_month(self):
-        return int(self.year_var.get()), int(self.month_var.get())
+    return int(self.year_var.get()), int(self.month_var.get())
 ```
 
-`CalendarView._on_click`
+`CalendarView._on_click` — paste inside class `CalendarView`:
 
 ```python
 def _on_click(self, _event) -> None:
-        item = self.canvas.find_withtag("current")
-        tags = self.canvas.gettags(item[0]) if item else ()
-        booking_tag = next((t for t in tags if t.startswith("b")), None)
-        if booking_tag:
-            self.cb["on_calendar_select"](int(booking_tag[1:]))
+    item = self.canvas.find_withtag("current")
+    tags = self.canvas.gettags(item[0]) if item else ()
+    booking_tag = next((t for t in tags if t.startswith("b")), None)
+    if booking_tag:
+        self.cb["on_calendar_select"](int(booking_tag[1:]))
 ```
 
 #### `CalendarView.__init__(parent, cb)`
 
 **Problem.** Build the calendar tab: month and year choosers with a Show button, a Canvas, and a legend for the colours.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/calendar_view.py`, inside class `CalendarView` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, parent, cb):
@@ -2025,7 +2129,7 @@ def __init__(self, parent, cb):
 
 **Problem.** Draw the month as rectangles on the canvas: rooms down the side, days across, each cell coloured by the booking's status. Clicking a booked cell opens that booking.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/calendar_view.py`, inside class `CalendarView` (indented 4 spaces), in place of the skeleton's `def draw`:
 
 ```python
 def draw(self, matrix: dict) -> None:
@@ -2062,31 +2166,39 @@ def draw(self, matrix: dict) -> None:
 
 ### `hotelmanager/views/guests_view.py`
 
+Open `HotelManager/hotelmanager/views/guests_view.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+import tkinter as tk
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`GuestsView._fields`
+`GuestsView._fields` — paste inside class `GuestsView`:
 
 ```python
 def _fields(self) -> dict:
-        return {key: var.get() for key, var in self.form.items()}
+    return {key: var.get() for key, var in self.form.items()}
 ```
 
-`GuestsView._on_select`
+`GuestsView._on_select` — paste inside class `GuestsView`:
 
 ```python
 def _on_select(self, _event=None) -> None:
-        guest = self.guests.get(self.table.selected_id())
-        if guest is None:
-            return
-        for key in ("name", "email", "phone", "document_id"):
-            self.form[key].set(getattr(guest, key))
+    guest = self.guests.get(self.table.selected_id())
+    if guest is None:
+        return
+    for key in ("name", "email", "phone", "document_id"):
+        self.form[key].set(getattr(guest, key))
 ```
 
 #### `GuestsView.__init__(parent, cb)`
 
 **Problem.** Build the guests tab: a search box, the guests table, a form and Add / Update buttons.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/guests_view.py`, inside class `GuestsView` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, parent, cb):
@@ -2130,7 +2242,7 @@ def __init__(self, parent, cb):
 
 **Problem.** Fill the table with the guests and keep {id: Guest} for the form.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/guests_view.py`, inside class `GuestsView` (indented 4 spaces), in place of the skeleton's `def show_rows`:
 
 ```python
 def show_rows(self, guests) -> None:
@@ -2144,7 +2256,7 @@ def show_rows(self, guests) -> None:
 
 **Problem.** Empty every field of the form.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/guests_view.py`, inside class `GuestsView` (indented 4 spaces), in place of the skeleton's `def clear_form`:
 
 ```python
 def clear_form(self) -> None:
@@ -2156,34 +2268,46 @@ def clear_form(self) -> None:
 
 ### `hotelmanager/views/main_window.py`
 
+Open `HotelManager/hotelmanager/views/main_window.py`.
+
+**Imports** — add these at the top of the file:
+
+```python
+from hotelmanager.views.bookings_view import BookingsView
+from hotelmanager.views.calendar_view import CalendarView
+from hotelmanager.views.guests_view import GuestsView
+from hotelmanager.views.reports_view import ReportsView
+from hotelmanager.views.rooms_view import RoomsView
+```
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`MainWindow.select_booking`
+`MainWindow.select_booking` — paste inside class `MainWindow`:
 
 ```python
 def select_booking(self, booking_id: int) -> None:
-        self.notebook.select(self.bookings)
-        self.bookings.select(booking_id)
+    self.notebook.select(self.bookings)
+    self.bookings.select(booking_id)
 ```
 
-`MainWindow.show_invoice`
+`MainWindow.show_invoice` — paste inside class `MainWindow`:
 
 ```python
 def show_invoice(self, invoice, booking) -> bool:
-        lines = [f"Invoice #{invoice.id} - booking #{booking.id}, room {booking.room_number}, {booking.guest_name}",
-                 f"{booking.stay}  ({booking.stay.nights} nights)", ""]
-        for line in invoice.lines:
-            lines.append(f"{line.description:<44}{line.amount:>12,.2f}")
-        lines += ["", f"{'Subtotal':<44}{invoice.subtotal:>12,.2f}", f"{'VAT':<44}{invoice.vat:>12,.2f}",
-                  f"{'Total':<44}{invoice.total:>12,.2f}", "", "Save the invoice as a CSV file?"]
-        return messagebox.askyesno("Check-out - invoice", "\n".join(lines), parent=self)
+    lines = [f"Invoice #{invoice.id} - booking #{booking.id}, room {booking.room_number}, {booking.guest_name}",
+             f"{booking.stay}  ({booking.stay.nights} nights)", ""]
+    for line in invoice.lines:
+        lines.append(f"{line.description:<44}{line.amount:>12,.2f}")
+    lines += ["", f"{'Subtotal':<44}{invoice.subtotal:>12,.2f}", f"{'VAT':<44}{invoice.vat:>12,.2f}",
+              f"{'Total':<44}{invoice.total:>12,.2f}", "", "Save the invoice as a CSV file?"]
+    return messagebox.askyesno("Check-out - invoice", "\n".join(lines), parent=self)
 ```
 
 #### `MainWindow.__init__(root, cb)`
 
 **Problem.** Build the window: a dashboard line on top and a notebook with the five tabs (Rooms, Guests, Bookings, Calendar, Reports).
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/main_window.py`, inside class `MainWindow` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, root: tk.Tk, cb: dict):
@@ -2209,7 +2333,7 @@ def __init__(self, root: tk.Tk, cb: dict):
 
 **Problem.** Show an error message box.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/main_window.py`, inside class `MainWindow` (indented 4 spaces), in place of the skeleton's `def show_error`:
 
 ```python
 def show_error(self, text: str) -> None:
@@ -2222,7 +2346,7 @@ def show_error(self, text: str) -> None:
 
 **Problem.** Show an information message box.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/main_window.py`, inside class `MainWindow` (indented 4 spaces), in place of the skeleton's `def show_info`:
 
 ```python
 def show_info(self, text: str) -> None:
@@ -2235,7 +2359,7 @@ def show_info(self, text: str) -> None:
 
 **Problem.** Ask a yes/no question and return True for yes.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/main_window.py`, inside class `MainWindow` (indented 4 spaces), in place of the skeleton's `def confirm`:
 
 ```python
 def confirm(self, text: str) -> bool:
@@ -2246,33 +2370,35 @@ def confirm(self, text: str) -> bool:
 
 ### `hotelmanager/views/rooms_view.py`
 
+Open `HotelManager/hotelmanager/views/rooms_view.py`.
+
 **Helper code in this file** (used by the functions below, not a TODO in your skeleton):
 
-`RoomsView._fields`
+`RoomsView._fields` — paste inside class `RoomsView`:
 
 ```python
 def _fields(self) -> dict:
-        return {key: var.get() for key, var in self.form.items()}
+    return {key: var.get() for key, var in self.form.items()}
 ```
 
-`RoomsView._on_select`
+`RoomsView._on_select` — paste inside class `RoomsView`:
 
 ```python
 def _on_select(self, _event=None) -> None:
-        room = self.rooms.get(self.table.selected_id())
-        if room is None:
-            return
-        for key, value in (("number", room.number), ("room_type", room.room_type), ("capacity", room.capacity),
-                           ("floor", room.floor), ("view", room.view), ("base_rate", f"{room.base_rate:g}"),
-                           ("active", "yes" if room.active else "no")):
-            self.form[key].set(value)
+    room = self.rooms.get(self.table.selected_id())
+    if room is None:
+        return
+    for key, value in (("number", room.number), ("room_type", room.room_type), ("capacity", room.capacity),
+                       ("floor", room.floor), ("view", room.view), ("base_rate", f"{room.base_rate:g}"),
+                       ("active", "yes" if room.active else "no")):
+        self.form[key].set(value)
 ```
 
 #### `RoomsView.__init__(parent, cb)`
 
 **Problem.** Build the rooms tab: the table on the left, a form on the right, and Add / Update / Delete buttons that call the controller callbacks. Clicking a row fills the form.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/rooms_view.py`, inside class `RoomsView` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, parent, cb):
@@ -2316,7 +2442,7 @@ def __init__(self, parent, cb):
 
 **Problem.** Turn Room objects into table rows (values in the same order as the columns) and keep {id: Room} so a clicked row can fill the form.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/rooms_view.py`, inside class `RoomsView` (indented 4 spaces), in place of the skeleton's `def show_rows`:
 
 ```python
 def show_rows(self, rooms) -> None:
@@ -2336,7 +2462,7 @@ def show_rows(self, rooms) -> None:
 
 **Problem.** Empty every field of the form.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/rooms_view.py`, inside class `RoomsView` (indented 4 spaces), in place of the skeleton's `def clear_form`:
 
 ```python
 def clear_form(self) -> None:
@@ -2348,11 +2474,13 @@ def clear_form(self) -> None:
 
 ### `hotelmanager/views/widgets.py`
 
+Open `HotelManager/hotelmanager/views/widgets.py`.
+
 #### `make_form(parent, fields)`
 
 **Problem.** Build a grid of labels with entries or comboboxes and return {key: tk variable}, so a tab can read and set every field by name.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/widgets.py`, at the top level of the file, in place of the skeleton's `def make_form`:
 
 ```python
 def make_form(parent, fields):
@@ -2375,7 +2503,7 @@ def make_form(parent, fields):
 
 **Problem.** A Treeview with a vertical scrollbar. Connect both directions: the bar scrolls the table and the table moves the bar.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/widgets.py`, inside class `TableFrame` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, parent, columns, widths, height=14):
@@ -2396,7 +2524,7 @@ def __init__(self, parent, columns, widths, height=14):
 
 **Problem.** Clear the table and insert the new rows, using the database id as each row's iid. Clearing first stops the list from growing on every refresh.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/widgets.py`, inside class `TableFrame` (indented 4 spaces), in place of the skeleton's `def fill`:
 
 ```python
 def fill(self, rows):
@@ -2412,7 +2540,7 @@ def fill(self, rows):
 
 **Problem.** Return the id of the selected row as an int, or None when nothing is selected.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/widgets.py`, inside class `TableFrame` (indented 4 spaces), in place of the skeleton's `def selected_id`:
 
 ```python
 def selected_id(self):
@@ -2427,11 +2555,13 @@ def selected_id(self):
 
 ### `hotelmanager/booking/availability.py`
 
+Open `HotelManager/hotelmanager/booking/availability.py`.
+
 #### `occupancy_rate(rooms, bookings, month_start, month_end)`
 
 **Problem.** Return the share of room-nights that were booked in a period: booked nights inside the period divided by (active rooms x nights in the period). Cancelled bookings do not count; 0 when there are no rooms.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/availability.py`, at the top level of the file, in place of the skeleton's `def occupancy_rate`:
 
 ```python
 def occupancy_rate(rooms: List[Room], bookings: List[Booking], month_start: date, month_end: date) -> float:
@@ -2449,11 +2579,13 @@ def occupancy_rate(rooms: List[Room], bookings: List[Booking], month_start: date
 
 ### `hotelmanager/booking/hotel_service.py`
 
+Open `HotelManager/hotelmanager/booking/hotel_service.py`.
+
 #### `HotelService.occupancy_for_month(year, month)`
 
 **Problem.** The occupancy rate of one month, from its first day up to the first day of the next month.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/hotel_service.py`, inside class `HotelService` (indented 4 spaces), in place of the skeleton's `def occupancy_for_month`:
 
 ```python
 def occupancy_for_month(self, year: int, month: int) -> float:
@@ -2467,7 +2599,7 @@ def occupancy_for_month(self, year: int, month: int) -> float:
 
 **Problem.** The numbers for the top line: arrivals today, departures today, guests in the hotel, free rooms today and this month's occupancy.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/hotel_service.py`, inside class `HotelService` (indented 4 spaces), in place of the skeleton's `def dashboard`:
 
 ```python
 def dashboard(self, today: Optional[date] = None) -> Dict:
@@ -2492,11 +2624,13 @@ def dashboard(self, today: Optional[date] = None) -> Dict:
 
 ### `hotelmanager/booking/importer.py`
 
+Open `HotelManager/hotelmanager/booking/importer.py`.
+
 #### `export_invoice(invoice, booking, guest, room, directory)`
 
 **Problem.** Write an invoice as CSV: a short header (guest, room, dates), one row per line, then subtotal, VAT and total. Use "utf-8-sig" so Excel opens it. Return the path.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/booking/importer.py`, at the top level of the file, in place of the skeleton's `def export_invoice`:
 
 ```python
 def export_invoice(invoice: Invoice, booking, guest, room, directory: str = config.EXPORTS_DIR) -> str:
@@ -2525,11 +2659,13 @@ def export_invoice(invoice: Invoice, booking, guest, room, directory: str = conf
 
 ### `hotelmanager/controllers/app_controller.py`
 
+Open `HotelManager/hotelmanager/controllers/app_controller.py`.
+
 #### `AppController.reports()`
 
 **Problem.** Collect the occupancy of the last 6 months, the revenue per month and the counts per status, and show them in the reports tab.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/controllers/app_controller.py`, inside class `AppController` (indented 4 spaces), in place of the skeleton's `def reports`:
 
 ```python
 def reports(self) -> None:
@@ -2548,11 +2684,13 @@ def reports(self) -> None:
 
 ### `hotelmanager/database/repositories.py`
 
+Open `HotelManager/hotelmanager/database/repositories.py`.
+
 #### `BookingRepository.revenue_by_month()`
 
 **Problem.** Sum the invoice totals per month: {"2026-03": 12345.0, ...}.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/database/repositories.py`, inside class `BookingRepository` (indented 4 spaces), in place of the skeleton's `def revenue_by_month`:
 
 ```python
 def revenue_by_month(self) -> Dict[str, float]:
@@ -2566,11 +2704,13 @@ def revenue_by_month(self) -> Dict[str, float]:
 
 ### `hotelmanager/views/main_window.py`
 
+Open `HotelManager/hotelmanager/views/main_window.py`.
+
 #### `MainWindow.show_dashboard(numbers)`
 
 **Problem.** Show the dashboard numbers in one line: arrivals, departures, in-house, free rooms, occupancy.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/main_window.py`, inside class `MainWindow` (indented 4 spaces), in place of the skeleton's `def show_dashboard`:
 
 ```python
 def show_dashboard(self, numbers: dict) -> None:
@@ -2584,11 +2724,13 @@ def show_dashboard(self, numbers: dict) -> None:
 
 ### `hotelmanager/views/reports_view.py`
 
+Open `HotelManager/hotelmanager/views/reports_view.py`.
+
 #### `ReportsView.__init__(parent, cb)`
 
 **Problem.** Build the reports tab: one figure with two bar charts (occupancy and revenue), a Refresh button and a small table of status counts.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/reports_view.py`, inside class `ReportsView` (indented 4 spaces), in place of the skeleton's `def __init__`:
 
 ```python
 def __init__(self, parent, cb):
@@ -2617,7 +2759,7 @@ def __init__(self, parent, cb):
 
 **Problem.** Redraw both charts and refill the status table. Create the figure once and only clear and redraw the axes here.
 
-**Solution.**
+**Solution.** Paste in `hotelmanager/views/reports_view.py`, inside class `ReportsView` (indented 4 spaces), in place of the skeleton's `def show`:
 
 ```python
 def show(self, occupancy: dict, revenue: dict, status_counts: dict) -> None:
