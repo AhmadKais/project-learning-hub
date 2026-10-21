@@ -372,7 +372,7 @@ training. The projects scale **inside** each fold: fit on that fold's training p
 |---|---|
 | WineGrader | `winegrader/ml/scaler.py` → `StandardScaler`, `MinMaxScaler` · scaled inside each fold in `tuning.prepare_folds` |
 | PhishGuard | `ModelTrainer.build_logistic` — `StandardScaler` inside the `Pipeline` |
-| Spam | `SVMClassifier.fit` — `StandardScaler` before the SVM |
+| Spam | `SVMClassifier.fit` — `MaxAbsScaler` before the SVM (keeps the TF-IDF zeros as zeros) |
 | FaceEmotion | pixels: `/255`, then `(x − 0.5013) / 0.2916` (Lesson 19) |
 
 ## 🎬 Watch & explore

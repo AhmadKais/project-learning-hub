@@ -93,7 +93,7 @@ C is chosen by cross-validation (Lesson 05), never on the test set.
 |---|---|---|
 | learns | how each class **writes**: which words, how often | only **where the fence is** |
 | training | counting, one pass | an optimisation that searches for the widest street |
-| needs scaling | no (it counts) | **yes** — `StandardScaler` first, or `message_length` (thousands) dominates every distance (Lesson 02) |
+| needs scaling | no (it counts) | **yes** — `MaxAbsScaler` first, or `message_length` (thousands) dominates every distance (Lesson 02) |
 | explanation | exact: each word's log-odds | only approximate |
 
 ## 4. Distance is not a probability — calibration
@@ -116,7 +116,7 @@ a message at distance +0.5   → σ(4.65) = 0.99
 In Laith's code:
 
 ```python
-base = make_pipeline(StandardScaler(), LinearSVC(C=self.c, random_state=config.RANDOM_SEED))
+base = make_pipeline(MaxAbsScaler(), LinearSVC(C=self.c, random_state=config.RANDOM_SEED))
 self._model = CalibratedClassifierCV(base, method="sigmoid", cv=5)    # sigmoid = Platt scaling
 ```
 

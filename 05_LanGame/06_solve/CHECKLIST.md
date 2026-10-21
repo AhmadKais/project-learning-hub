@@ -112,7 +112,7 @@ Generated from your skeleton by `tools/make_checklists.py` — do not edit by ha
 - [ ] `GameEngine.record_answer(name, question_id, choice)` — the most important validation in the project. reject (return ERROR) when: state != QUESTION ("not_accepting"), question_id != current ("stale_question"), choice not in 0..3 ("bad_choice"), name already in self.answers...
 - [ ] `GameEngine.close_question()` — called by the timer OR by record_answer. Must be safe to call twice (cancel the timer; ignore if state != QUESTION). state = SCORING self.scores.score_round(self.current_question, self.answers, self.players) history.e...  
   ✅ checked by `tests/test_game_engine.py`
-- [ ] `GameEngine.result_payload()` — correct_index + one entry per player (choice, is_correct, points).
+- [ ] `GameEngine.result_payload()` — {"question_id", "correct_index", "answers": {name: {"choice", "is_correct", "points"}}}.
 - [ ] `GameEngine.leaderboard_payload()` — {"entries": [asdict(e) for e in build_leaderboard(self.players)]}.
 
 **`langame/server/score_engine.py`**
@@ -131,9 +131,9 @@ Generated from your skeleton by `tools/make_checklists.py` — do not edit by ha
 - [ ] `ClientController.__init__(root, default_host, default_port)` — build the MainWindow and give it the callbacks: self.view = MainWindow(root, on_connect=self.on_connect, on_answer=self.on_answer, on_start=self.on_start, default_host=..., default_port=...) root.protocol("WM_DELETE_W...
 - [ ] `ClientController.start()` — two lines: self.view.show_connect() self.root.after(POLL_MS, self._poll_inbox)
 - [ ] `ClientController.on_connect(host, port, name)` — validate the name locally (non-empty, length), then net.connect(host, port) inside try/except -> view.show_error on failure; on success send join(name) and show the lobby screen (waiting state).
-- [ ] `ClientController.on_start()` — host only - send START_GAME.
+- [ ] `ClientController.on_start()` — host only - self.net.send(start_game()).
 - [ ] `ClientController.on_answer(choice)` — ignore if has_answered; send answer(current_question_id, choice); has_answered = True; view.question.lock_buttons(choice).
-- [ ] `ClientController.on_close()` — leave tidily when the window is closed: try: self.net.send(leave_message()) except Exception: pass # already disconnected - do not block exit self.net.close() self.root.destroy()
+- [ ] `ClientController.on_close()` — leave tidily when the window is closed: try: self.net.send(leave()) except Exception: pass # already disconnected - do not block exit self.net.close() self.root.destroy()
 - [ ] `ClientController._poll_inbox()` — THE BRIDGE BETWEEN THE NETWORK THREAD AND THE SCREEN. Read this carefully; it is the piece students get wrong most often.
 - [ ] `ClientController.handle_message(message)` — one branch per MessageType (a dict of handlers is cleaner than if/elif): WELCOME -> remember name/is_host; lobby.set_host_controls(is_host) LOBBY_UPDATE -> lobby.set_players(names, min_players) COUNTDOWN -> lobby.show...
 

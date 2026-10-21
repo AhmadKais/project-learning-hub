@@ -174,8 +174,9 @@ and the others pass, print your `P(w|c)` table next to `np.exp(reference.feature
 
 **Learn it in:** theory `05_svm_comparison` §5.4–5.6 · notebook `03_compare_and_threshold` §1–2
 
-- `SVMClassifier.fit`: `StandardScaler` → `LinearSVC`, wrapped in `CalibratedClassifierCV` (the docstring has the
-  code). Without the scaler, `message_length` (thousands) drowns the TF-IDF values (0 to 1).
+- `SVMClassifier.fit`: `MaxAbsScaler` → `LinearSVC`, wrapped in `CalibratedClassifierCV` (the docstring has the
+  code). Without the scaler, `message_length` (thousands) drowns the TF-IDF values (0 to 1). Not `StandardScaler`:
+  it makes every fit take minutes on the real corpus.
 - `cross_validate`: the full code is in `04_build/10_build.md`, stage 5. Pass the **class** as the factory:
   `cross_validate(NaiveBayesClassifier, texts, labels)` — every call gives a fresh, unfitted model.
 - `compare`: a gap smaller than the larger standard deviation is "no significant difference". Say it.
@@ -251,6 +252,6 @@ every time.
 | `test_matches_sklearn` off by a little | smoothing denominator: `total + alpha * |V|` with `|V|` = the vocabulary of **both** classes |
 | `predict_proba` returns `nan` or 0.0 on long mail | `exp` taken of a single score instead of the difference |
 | every message gets ≈ the same probability | the engineer was refitted at scan time, or the bundle's vocabulary differs from training |
-| `ConvergenceWarning` from `LinearSVC` | the `StandardScaler` is missing |
+| `ConvergenceWarning` / training takes many minutes | no scaler, or `StandardScaler` instead of `MaxAbsScaler` |
 | `URLTOKEN` missing from the tokens | `parse` lower-cased it to `urltoken` — put it back after `.lower()` |
 | `sqlite3.IntegrityError: FOREIGN KEY` | feedback for a scan id that does not exist |
