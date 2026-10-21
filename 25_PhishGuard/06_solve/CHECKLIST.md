@@ -1,6 +1,6 @@
 # PhishGuard — the full checklist
 
-Every function you still have to write in your skeleton: **59**, in the order of `TASKS.md`.
+Every function you still have to write in your skeleton: **61**, in the order of `TASKS.md`.
 Tick each box when its tests are green. The text after each name is the first line of its TODO —
 the full instructions are in the docstring in your code. `HINTS.md` (next to this file) helps with the hard ones.
 
@@ -37,7 +37,7 @@ Generated from your skeleton by `tools/make_checklists.py` — do not edit by ha
 - [ ] `DatasetLoader.read()` — df = pd.read_csv(self.path) keep the two columns; drop NaN; lower-case + strip the URL; drop duplicates y = (df[label] == config.POSITIVE_LABEL).astype(int) # 1 = phishing return a DataFrame with columns ["url", "label"]  
   ✅ checked by `tests/test_dataset.py`
 - [ ] `DatasetLoader.balance(df)` — sample min(per_class, available) rows from EACH class with random_state=self.seed, concatenate, shuffle (sample(frac=1)). Print how many of each class you ended up with.
-- [ ] `DatasetLoader.load()` — df = self.balance(self.read()) X = np.array(self.extractor.extract_many(df["url"].tolist())) # shape (n, 20) y = df["label"].to_numpy() two calls to sklearn.model_selection.train_test_split with stratify=y and random_...  
+- [ ] `DatasetLoader.load()` — df = self.balance(self.read()) X = np.array(self.extractor.extract_many(df["url"].tolist())) # shape (n, 20) y = df["label"].to_numpy() urls = df["url"].to_numpy() two calls to sklearn.model_selection.train_test_split...  
   ✅ checked by `tests/test_dataset.py`, `tests/test_pipeline.py`
 - [ ] `DatasetLoader.feature_table(df)` — (for the book): a DataFrame of all features + label, so you can do df.groupby("label").mean() and SEE which features differ between classes before training anything. Save it as reports/feature_means.csv.
 
@@ -57,7 +57,7 @@ Generated from your skeleton by `tools/make_checklists.py` — do not edit by ha
 **`phishguard/ml/trainer.py`**
 
 - [ ] `ModelTrainer.build_logistic()` — Pipeline(scaler + LogisticRegression(max_iter=1000, class_weight="balanced")).
-- [ ] `ModelTrainer.train(models)` — /4: build + fit the requested models; return {name: TrainedModel}.  
+- [ ] `ModelTrainer.train(models)` — /4: build + fit the requested models ("logistic", "forest", "ngram" or "all"); return {name: TrainedModel}.  
   ✅ checked by `tests/test_pipeline.py`
 
 **`train.py`**
@@ -72,17 +72,18 @@ Generated from your skeleton by `tools/make_checklists.py` — do not edit by ha
 
 - [ ] `ModelEvaluator.metrics(pipeline, X, y, threshold)` — probs = pipeline.predict_proba(X)[:, 1] preds = (probs >= threshold).astype(int) from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix return {"accuracy",...  
   ✅ checked by `tests/test_pipeline.py`
-- [ ] `ModelEvaluator.choose_threshold(pipeline, target_recall)` — on the VALIDATION split, sweep thresholds 0.05..0.95 and return the HIGHEST threshold whose recall >= target_recall (highest = fewest false alarms while still catching 95%). Fall back to DEFAULT_THRESHOLD if none. Nev...
-- [ ] `ModelEvaluator.compare(trained)` — for each model: threshold = choose_threshold(...); metrics on test at that threshold; feature importances (see importances()). Pick the best by F1 (tie -> higher recall). Return (best_name, {name: {...}}).  
+- [ ] `ModelEvaluator.choose_threshold(pipeline, target_recall)` — on the VALIDATION split (self.split.inputs(pipeline, "val") - the n-gram model reads URLs, the others numbers), sweep thresholds 0.05..0.95 and return the HIGHEST threshold whose recall >= target_recall (highest = few...
+- [ ] `ModelEvaluator.compare(trained)` — for each model: threshold = choose_threshold(...); metrics on test (self.split.inputs(pipeline, "test")) at that threshold; feature importances (see importances()). Pick the best by F1 (tie -> higher recall). Return (...  
   ✅ checked by `tests/test_pipeline.py`
-- [ ] `ModelEvaluator.importances(pipeline)` — logistic -> clf.coef_[0] (signed weights on SCALED features); forest -> clf.feature_importances_. Return {feature_name: value}.
+- [ ] `ModelEvaluator.importances(pipeline)` — logistic -> clf.coef_[0] (signed weights on SCALED features); forest -> clf.feature_importances_. Return {feature_name: value}. ngram -> the 20 text pieces with the largest |coef| (names from pipeline.named_steps["tfi...
 - [ ] `ModelEvaluator.worst_mistakes(pipeline, threshold, n)` — (for the book): the n false positives with the highest probability and the n false negatives with the lowest - real URLs the model got wrong, from split.urls_test. Nothing explains a model's limits better.
-- [ ] `ModelEvaluator.save_reports(report, directory)` — metrics.json (the whole report), confusion_matrix.png (one per model, 2x2 heat-map with numbers), roc_curve.png (both models on one axis, AUC in the legend), feature_importance.png (horizontal bars, best model).
+- [ ] `ModelEvaluator.save_reports(report, directory)` — metrics.json (the whole report), confusion_matrix.png (one per model, 2x2 heat-map with numbers), roc_curve.png (all models on one axis, AUC in the legend), feature_importance.png (horizontal bars, best model).
 
 **`phishguard/ml/trainer.py`**
 
 - [ ] `ModelTrainer.build_forest()` — Pipeline(scaler + RandomForestClassifier(n_estimators=config.RANDOM_FOREST_TREES, n_jobs=-1, random_state=config.RANDOM_SEED, class_weight="balanced")).
-- [ ] `ModelTrainer.fit_with_search(name, pipeline, param_grid)` — GridSearchCV(pipeline, param_grid, cv=config.CV_FOLDS, scoring="f1", n_jobs=-1) .fit(X_train, y_train). Time it. Return TrainedModel(name, search.best_estimator_, search.best_params_, search.best_score_, seconds). Gri...
+- [ ] `ModelTrainer.build_ngram()` — the third model - it reads the URL text itself, not the 20 numbers: Pipeline([("tfidf", TfidfVectorizer(analyzer="char_wb", ngram_range=(3, 5), min_df=2, sublinear_tf=True)), ("clf", LogisticRegression(max_iter=3000,...
+- [ ] `ModelTrainer.fit_with_search(name, pipeline, param_grid)` — GridSearchCV(pipeline, param_grid, cv=config.CV_FOLDS, scoring="f1", n_jobs=-1) .fit(self.split.inputs(pipeline, "train"), y_train). Time it. Return TrainedModel(name, search.best_estimator_, search.best_params_, sear...
 
 > **Exit condition:** `reports/metrics.json`, `confusion_matrix.png`, `roc_curve.png`, `feature_importance.png` exist; **recall ≥ 0.95 and precision ≥ 0.90** for phishing on the test split; you can explain why the chosen threshold is not 0.5; `worst_mistakes` printed 10 real URLs the model got wrong and you can say why for at least 5.
 
@@ -94,14 +95,16 @@ Generated from your skeleton by `tools/make_checklists.py` — do not edit by ha
 
 **`phishguard/ml/explainer.py`**
 
-- [ ] `Explainer.contributions(result)` — clf = self.bundle.pipeline.named_steps["clf"]; scaler = ...["scaler"] x = [result.features[n] for n in feature_names]; x_scaled = scaler.transform([x])[0] if the clf has coef_: contrib_i = coef_[0][i] * x_scaled[i] el...
-- [ ] `Explainer.explain(result, top)` — the `top` strongest contributions toward the VERDICT that was given (positive for phishing, negative for legitimate), sorted by |contribution|. Store them on result.explanations and return them.
+- [ ] `Explainer.ngram_contributions(result)` — the reasons for the n-gram model. row = tfidf.transform([result.url]); names = tfidf.get_feature_names_out() for each non-zero column c of row: contribution = clf.coef_[0][c] * value, text = f'Contains "{piece}"' (ski...
+- [ ] `Explainer.contributions(result)` — if "tfidf" is a step of the pipeline, return ngram_contributions(result). Otherwise: clf = self.bundle.pipeline.named_steps["clf"]; scaler = ...["scaler"] x = [result.features[n] for n in feature_names]; x_scaled = sc...
+- [ ] `Explainer.explain(result, top)` — the `top` strongest contributions toward the VERDICT that was given (positive for phishing, negative for legitimate), sorted by |contribution|. Store them on result.explanations and return them.  
+  ✅ checked by `tests/test_pipeline.py`
 
 **`phishguard/ml/predictor.py`**
 
 - [ ] `Predictor.load()` — if the file is missing -> is_ready False and return (the app must still open and say "train first"). Else self.bundle = ModelBundle.load(path).  
   ✅ checked by `tests/test_pipeline.py`
-- [ ] `Predictor.predict(url)` — url = url.strip().lower() # the SAME clean-up as DatasetLoader.read: train == serve features = self.extractor.extract(url) X = [features.as_list(self.bundle.feature_names)] probability = float(self.bundle.pipeline.pre...  
+- [ ] `Predictor.predict(url)` — url = url.strip().lower() # the SAME clean-up as DatasetLoader.read: train == serve features = self.extractor.extract(url) X = [url] if "tfidf" in self.bundle.pipeline.named_steps # n-gram model reads the text else [f...  
   ✅ checked by `tests/test_pipeline.py`
 
 > **Exit condition:** `pytest tests/test_pipeline.py -v` green. `python evaluate.py --url ...` on 20 URLs you collected yourself (10 real phishing from phishtank.org, 10 legitimate) — note how many are right; each verdict shows 3 explanations that make sense.

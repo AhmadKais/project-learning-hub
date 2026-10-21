@@ -1,6 +1,6 @@
 # PhishGuard — walkthrough
 
-Every function you write in this project (59 of them), in the order of `TASKS.md`. For each one:
+Every function you write in this project (61 of them), in the order of `TASKS.md`. For each one:
 
 - **Problem** — what the function has to do,
 - **Solution** — the finished code,
@@ -13,8 +13,8 @@ Try each function yourself first, then compare. Run the check after every functi
 - [Stage 1 — URL parsing and features (the heart of the project)](#stage-1--url-parsing-and-features-the-heart-of-the-project) (4 functions)
 - [Stage 2 — Data](#stage-2--data) (5 functions)
 - [Stage 3 — First model](#stage-3--first-model) (6 functions)
-- [Stage 4 — Compare, evaluate, choose the threshold](#stage-4--compare-evaluate-choose-the-threshold) (8 functions)
-- [Stage 5 — Live prediction and explanation](#stage-5--live-prediction-and-explanation) (5 functions)
+- [Stage 4 — Compare, evaluate, choose the threshold](#stage-4--compare-evaluate-choose-the-threshold) (9 functions)
+- [Stage 5 — Live prediction and explanation](#stage-5--live-prediction-and-explanation) (6 functions)
 - [Stage 6 — Database and UI](#stage-6--database-and-ui) (30 functions)
 - [Stage 7 — Experiments, drift test, documentation](#stage-7--experiments-drift-test-documentation) (1 functions)
 - [The finished project](#the-finished-project)
@@ -204,7 +204,7 @@ def balance(self, df: pd.DataFrame) -> pd.DataFrame:
 
 #### `DatasetLoader.load()`
 
-**Problem.** Build the whole dataset: read, balance, turn every URL into features, then split 70/15/15 into train, validation and test. Use `stratify` so each part has the same share of phishing, and the fixed seed so every run gets the same rows. Keep the test URLs so mistakes can be shown later.
+**Problem.** Build the whole dataset: read, balance, turn every URL into features, then split 70/15/15 into train, validation and test. Use `stratify` so each part has the same share of phishing, and the fixed seed so every run gets the same rows. Split the URL text together with the numbers, so every part keeps its URLs - the n-gram model reads them, and the test URLs show the mistakes later.
 
 **Solution.**
 
@@ -214,16 +214,17 @@ def load(self) -> DatasetSplit:
     X = np.array(self.extractor.extract_many(df["url"].tolist()))
     y = df["label"].to_numpy()
     urls = df["url"].to_numpy()
-    X_rest, X_test, y_rest, y_test, _, urls_test = train_test_split(
+    X_rest, X_test, y_rest, y_test, urls_rest, urls_test = train_test_split(
         X, y, urls, test_size=config.TEST_SIZE, stratify=y, random_state=self.seed)
-    X_train, X_val, y_train, y_val = train_test_split(
-        X_rest, y_rest, test_size=config.VALIDATION_SIZE / (1 - config.TEST_SIZE),
+    X_train, X_val, y_train, y_val, urls_train, urls_val = train_test_split(
+        X_rest, y_rest, urls_rest, test_size=config.VALIDATION_SIZE / (1 - config.TEST_SIZE),
         stratify=y_rest, random_state=self.seed)
     return DatasetSplit(X_train, y_train, X_val, y_val, X_test, y_test,
-                        feature_names=list(FEATURE_NAMES), urls_test=list(urls_test))
+                        feature_names=list(FEATURE_NAMES), urls_test=list(urls_test),
+                        urls_train=list(urls_train), urls_val=list(urls_val))
 ```
 
-**Check.** `pytest tests/test_dataset.py -k "test_split_shapes_and_no_overlap or test_split_is_reproducible"` and `pytest tests/test_pipeline.py -k "test_train_bundle_predict or test_bundle_refuses_wrong_features"`
+**Check.** `pytest tests/test_dataset.py -k "test_split_shapes_and_no_overlap or test_split_is_reproducible"` and `pytest tests/test_pipeline.py -k "test_train_bundle_predict or test_bundle_refuses_wrong_features or test_ngram_model_reads_the_url_text"`
 
 #### `DatasetLoader.feature_table(df)`
 
@@ -263,7 +264,7 @@ def from_trained(cls, trained, feature_names, report_entry) -> "ModelBundle":
         metrics=report_entry)
 ```
 
-**Check.** `pytest tests/test_pipeline.py::test_train_bundle_predict`
+**Check.** `pytest tests/test_pipeline.py -k "test_train_bundle_predict or test_ngram_model_reads_the_url_text"`
 
 #### `ModelBundle.save(path)`
 
@@ -277,7 +278,7 @@ def save(self, path: str) -> None:
     joblib.dump(self, path)
 ```
 
-**Check.** `pytest tests/test_pipeline.py::test_train_bundle_predict`
+**Check.** `pytest tests/test_pipeline.py -k "test_train_bundle_predict or test_ngram_model_reads_the_url_text"`
 
 #### `ModelBundle.load(path)`
 
@@ -295,7 +296,7 @@ def load(cls, path: str) -> "ModelBundle":
     return bundle
 ```
 
-**Check.** `pytest tests/test_dataset.py -k "test_split_shapes_and_no_overlap or test_split_is_reproducible"` and `pytest tests/test_pipeline.py -k "test_train_bundle_predict or test_bundle_refuses_wrong_features"`
+**Check.** `pytest tests/test_dataset.py -k "test_split_shapes_and_no_overlap or test_split_is_reproducible"` and `pytest tests/test_pipeline.py -k "test_train_bundle_predict or test_bundle_refuses_wrong_features or test_ngram_model_reads_the_url_text"`
 
 ### `phishguard/ml/trainer.py`
 
@@ -307,6 +308,7 @@ def load(cls, path: str) -> "ModelBundle":
 GRIDS = {
     "logistic": {"clf__C": [0.01, 0.1, 1, 10]},
     "forest": {"clf__max_depth": [None, 10, 20], "clf__min_samples_leaf": [1, 3]},
+    "ngram": {"clf__C": [3, 10, 30]},
 }
 ```
 
@@ -326,18 +328,18 @@ def build_logistic(self):
 
 #### `ModelTrainer.train(models)`
 
-**Problem.** Build and fit the requested models ("logistic", "forest" or "both") with their parameter grids and return a dict {name: TrainedModel}.
+**Problem.** Build and fit the requested models ("logistic", "forest", "ngram" or "all") with their parameter grids and return a dict {name: TrainedModel}.
 
 **Solution.**
 
 ```python
-def train(self, models: str = "both") -> Dict[str, TrainedModel]:
-    builders = {"logistic": self.build_logistic, "forest": self.build_forest}
-    names = list(builders) if models == "both" else [models]
+def train(self, models: str = "all") -> Dict[str, TrainedModel]:
+    builders = {"logistic": self.build_logistic, "forest": self.build_forest, "ngram": self.build_ngram}
+    names = list(builders) if models in ("all", "both") else [models]
     return {name: self.fit_with_search(name, builders[name](), GRIDS[name]) for name in names}
 ```
 
-**Check.** `pytest tests/test_extractor.py::test_same_url_same_features` and `pytest tests/test_pipeline.py::test_train_bundle_predict`
+**Check.** `pytest tests/test_extractor.py::test_same_url_same_features` and `pytest tests/test_pipeline.py -k "test_train_bundle_predict or test_ngram_model_reads_the_url_text"`
 
 ### `train.py`
 
@@ -433,7 +435,7 @@ def metrics(self, pipeline, X, y, threshold: float = config.DEFAULT_THRESHOLD) -
 
 ```python
 def choose_threshold(self, pipeline, target_recall: float = config.TARGET_RECALL) -> float:
-    probs = pipeline.predict_proba(self.split.X_val)[:, 1]
+    probs = pipeline.predict_proba(self.split.inputs(pipeline, "val"))[:, 1]
     best = None
     for t in np.round(np.arange(0.05, 0.951, 0.01), 2):
         preds = (probs >= t).astype(int)
@@ -446,7 +448,7 @@ def choose_threshold(self, pipeline, target_recall: float = config.TARGET_RECALL
 
 #### `ModelEvaluator.compare(trained)`
 
-**Problem.** For every trained model: choose its threshold on validation, measure it on test, add its feature importances and worst mistakes. Return the best model's name (highest F1, then recall) and the full report.
+**Problem.** For every trained model: choose its threshold on validation, measure it on test (each model with its own kind of input), add its feature importances and worst mistakes. Return the best model's name (highest F1, then recall) and the full report.
 
 **Solution.**
 
@@ -455,7 +457,7 @@ def compare(self, trained: Dict[str, "TrainedModel"]) -> Tuple[str, dict]:   # n
     report = {}
     for name, model in trained.items():
         threshold = self.choose_threshold(model.pipeline)
-        entry = self.metrics(model.pipeline, self.split.X_test, self.split.y_test, threshold)
+        entry = self.metrics(model.pipeline, self.split.inputs(model.pipeline, "test"), self.split.y_test, threshold)
         entry["importances"] = self.importances(model.pipeline)
         entry["best_params"] = {k: v for k, v in model.best_params.items()}
         entry["cv_f1"] = model.cv_score
@@ -468,17 +470,21 @@ def compare(self, trained: Dict[str, "TrainedModel"]) -> Tuple[str, dict]:   # n
     return best, report
 ```
 
-**Check.** `pytest tests/test_pipeline.py::test_train_bundle_predict`
+**Check.** `pytest tests/test_pipeline.py -k "test_train_bundle_predict or test_ngram_model_reads_the_url_text"`
 
 #### `ModelEvaluator.importances(pipeline)`
 
-**Problem.** Return how much each feature matters, as {name: value}: the signed weights for logistic regression, the feature importances for the random forest.
+**Problem.** Return how much each feature matters, as {name: value}: the signed weights for logistic regression, the feature importances for the random forest, and the 20 strongest pieces of text for the n-gram model.
 
 **Solution.**
 
 ```python
 def importances(self, pipeline) -> Dict[str, float]:
     clf = pipeline.named_steps["clf"]
+    if "tfidf" in pipeline.named_steps:            # n-gram model: the 20 strongest pieces of text
+        names = pipeline.named_steps["tfidf"].get_feature_names_out()
+        top = np.argsort(-np.abs(clf.coef_[0]))[:20]
+        return {repr(str(names[i])): float(clf.coef_[0][i]) for i in top}
     values = clf.coef_[0] if hasattr(clf, "coef_") else clf.feature_importances_
     return {name: float(v) for name, v in zip(self.split.feature_names, values)}
 ```
@@ -493,7 +499,7 @@ def importances(self, pipeline) -> Dict[str, float]:
 
 ```python
 def worst_mistakes(self, pipeline, threshold: float, n: int = 10) -> Dict[str, list]:
-    probs = pipeline.predict_proba(self.split.X_test)[:, 1]
+    probs = pipeline.predict_proba(self.split.inputs(pipeline, "test"))[:, 1]
     y = self.split.y_test
     urls = self.split.urls_test
     fp = [i for i in range(len(y)) if y[i] == 0 and probs[i] >= threshold]
@@ -546,7 +552,7 @@ def save_reports(self, report: dict, directory: str) -> None:
         pipeline = self._pipelines.get(name)
         if pipeline is None:
             continue
-        probs = pipeline.predict_proba(self.split.X_test)[:, 1]
+        probs = pipeline.predict_proba(self.split.inputs(pipeline, "test"))[:, 1]
         fpr, tpr, _ = roc_curve(self.split.y_test, probs)
         ax.plot(fpr, tpr, label=f"{name} (AUC = {report[name]['auc']:.3f})")
     ax.plot([0, 1], [0, 1], "k--", linewidth=0.8, label="random guess")
@@ -591,9 +597,25 @@ def build_forest(self):
 
 **Check.** No unit test - run the program and look (see the stage's exit condition in `TASKS.md`).
 
+#### `ModelTrainer.build_ngram()`
+
+**Problem.** A third model that reads the URL text itself: a TfidfVectorizer turns every 3-5 character piece ("pay", "ogin", ".xyz") into a feature, and a logistic regression weighs them. The 20 hand-made numbers reach precision of only about 0.76 at recall 0.95 on the Kaggle data; this model reaches about 0.96. Name the text step "tfidf" - the rest of the code looks for it.
+
+**Solution.**
+
+```python
+def build_ngram(self):
+    # reads the URL text itself: every 3 to 5 letter piece of it becomes a feature
+    return Pipeline([("tfidf", TfidfVectorizer(analyzer="char_wb", ngram_range=(3, 5), min_df=2,
+                                               sublinear_tf=True)),
+                     ("clf", LogisticRegression(max_iter=3000, class_weight="balanced"))])
+```
+
+**Check.** No unit test - run the program and look (see the stage's exit condition in `TASKS.md`).
+
 #### `ModelTrainer.fit_with_search(name, pipeline, param_grid)`
 
-**Problem.** Run a GridSearchCV over the parameter grid (5 folds, scored by F1) on the training split, time it, and return the best model, its parameters, its cross-validated F1 and the seconds it took.
+**Problem.** Run a GridSearchCV over the parameter grid (5 folds, scored by F1) on the training split - the URL text for the n-gram model, the 20 numbers for the others - time it, and return the best model, its parameters, its cross-validated F1 and the seconds it took.
 
 **Solution.**
 
@@ -601,7 +623,7 @@ def build_forest(self):
 def fit_with_search(self, name: str, pipeline, param_grid: dict) -> TrainedModel:
     start = time.time()
     search = GridSearchCV(pipeline, param_grid, cv=config.CV_FOLDS, scoring="f1", n_jobs=-1)
-    search.fit(self.split.X_train, self.split.y_train)
+    search.fit(self.split.inputs(pipeline, "train"), self.split.y_train)
     seconds = time.time() - start
     print(f"  {name}: best {search.best_params_}  cv F1 = {search.best_score_:.4f}  ({seconds:.1f} s)")
     return TrainedModel(name, search.best_estimator_, search.best_params_, float(search.best_score_), seconds)
@@ -648,7 +670,7 @@ def main():
         raise SystemExit("no trained model - run: python train.py")
     bundle = ModelBundle.load(config.BEST_MODEL_PATH)
     split = DatasetLoader(path, per_class=args.per_class).load()      # same seed + size as train.py -> same test rows
-    m = ModelEvaluator(split).metrics(bundle.pipeline, split.X_test, split.y_test, bundle.threshold)
+    m = ModelEvaluator(split).metrics(bundle.pipeline, split.inputs(bundle.pipeline, "test"), split.y_test, bundle.threshold)
     print(f"model {bundle.version}  (threshold {bundle.threshold:.2f})  on {len(split.y_test)} test URLs")
     for key in ("accuracy", "precision", "recall", "f1", "auc"):
         print(f"  {key:<10}{m[key]:.4f}")
@@ -660,14 +682,40 @@ def main():
 
 ### `phishguard/ml/explainer.py`
 
+#### `Explainer.ngram_contributions(result)`
+
+**Problem.** The reasons for the n-gram model: for every piece of text found in the URL, weight x its value, with the sentence 'Contains "pay"'. Very short pieces are skipped.
+
+**Solution.**
+
+```python
+def ngram_contributions(self, result: ScanResult) -> List[Explanation]:
+    tfidf = self.bundle.pipeline.named_steps["tfidf"]
+    clf = self.bundle.pipeline.named_steps["clf"]
+    row = tfidf.transform([result.url])
+    names = tfidf.get_feature_names_out()
+    out = []
+    for col, value in zip(row.indices, row.data):
+        piece = str(names[col]).strip()
+        if len(piece) < 3:
+            continue
+        out.append(Explanation(feature=piece, value=float(value), contribution=float(clf.coef_[0][col] * value),
+                               text=f'Contains "{piece}"'))
+    return out
+```
+
+**Check.** No unit test - run the program and look (see the stage's exit condition in `TASKS.md`).
+
 #### `Explainer.contributions(result)`
 
-**Problem.** Work out how much each feature pushed this URL toward phishing. For logistic regression it is weight x scaled value (exact); for the forest, importance x the sign of the scaled value (an approximation). Give each one a readable sentence; for a yes/no feature that is 0 use the "when zero" sentence.
+**Problem.** Work out how much each feature pushed this URL toward phishing. For the n-gram model use ngram_contributions. For logistic regression it is weight x scaled value (exact); for the forest, importance x the sign of the scaled value (an approximation). Give each one a readable sentence; for a yes/no feature that is 0 use the "when zero" sentence.
 
 **Solution.**
 
 ```python
 def contributions(self, result: ScanResult) -> List[Explanation]:
+    if "tfidf" in self.bundle.pipeline.named_steps:
+        return self.ngram_contributions(result)
     names = self.bundle.feature_names
     clf = self.bundle.pipeline.named_steps["clf"]
     scaler = self.bundle.pipeline.named_steps["scaler"]
@@ -705,7 +753,7 @@ def explain(self, result: ScanResult, top: int = 3) -> List[Explanation]:
     return result.explanations
 ```
 
-**Check.** No unit test - run the program and look (see the stage's exit condition in `TASKS.md`).
+**Check.** `pytest tests/test_pipeline.py::test_ngram_model_reads_the_url_text`
 
 ### `phishguard/ml/predictor.py`
 
@@ -725,11 +773,11 @@ def load(self) -> None:
     self.is_ready = True
 ```
 
-**Check.** `pytest tests/test_dataset.py -k "test_split_shapes_and_no_overlap or test_split_is_reproducible"` and `pytest tests/test_pipeline.py -k "test_train_bundle_predict or test_bundle_refuses_wrong_features"`
+**Check.** `pytest tests/test_dataset.py -k "test_split_shapes_and_no_overlap or test_split_is_reproducible"` and `pytest tests/test_pipeline.py -k "test_train_bundle_predict or test_bundle_refuses_wrong_features or test_ngram_model_reads_the_url_text"`
 
 #### `Predictor.predict(url)`
 
-**Problem.** Scan one URL: clean it exactly like the training data (strip, lower-case), extract the features, get the phishing probability and compare it with the bundle's threshold. Return a ScanResult.
+**Problem.** Scan one URL: clean it exactly like the training data (strip, lower-case), extract the features, get the phishing probability (the n-gram model gets the URL text, the others the 20 numbers) and compare it with the bundle's threshold. Return a ScanResult.
 
 **Solution.**
 
@@ -739,13 +787,16 @@ def predict(self, url: str) -> ScanResult:
         raise RuntimeError("no trained model - run: python train.py")
     url = url.strip().lower()
     features = self.extractor.extract(url)
-    X = [features.as_list(self.bundle.feature_names)]
+    if "tfidf" in self.bundle.pipeline.named_steps:
+        X = [url]                                  # the n-gram model reads the text itself
+    else:
+        X = [features.as_list(self.bundle.feature_names)]
     probability = float(self.bundle.pipeline.predict_proba(X)[0][1])
     verdict = Verdict.PHISHING if probability >= self.bundle.threshold else Verdict.LEGITIMATE
     return ScanResult(url, probability, verdict, self.bundle.threshold, features.values, self.bundle.version)
 ```
 
-**Check.** `pytest tests/test_pipeline.py::test_train_bundle_predict`
+**Check.** `pytest tests/test_pipeline.py -k "test_train_bundle_predict or test_ngram_model_reads_the_url_text"`
 
 
 ## Stage 6 — Database and UI
@@ -1518,16 +1569,18 @@ Run it from the project folder:
 ```
 pytest -q                     # 26 passed
 python train.py --sample      # quick check on the 60-row sample
-python train.py               # the real training, about 35 seconds
+python train.py               # the real training, about 6 minutes
 python evaluate.py            # metrics on the test split
 python evaluate.py --url "http://paypal.com.secure-login.xyz/verify"
 python run.py                 # the app
 ```
 
-What the finished project does on the dataset in `data/` (11,430 URLs, half phishing):
+What the finished project does on the Kaggle file in `data/` (549,346 URLs; 30,000 of each class are used):
 
-- the random forest wins; its threshold is chosen on validation (0.22) so recall stays at 0.95
-- on the test split: accuracy 0.81, precision 0.74, recall 0.95, F1 0.83, AUC 0.94
+- three models are compared: logistic regression and random forest on the 20 features, and the n-gram model on the URL text
+- the n-gram model wins; its threshold (0.40) is chosen on validation for recall 0.96
+- on the test split (9,000 URLs): precision 0.956, recall 0.957, F1 0.957, AUC 0.99 - both goals of stage 4 are met
+- the 20 features alone reach precision 0.75 at the same recall - keep that number for the "alternatives" chapter
 - `train.py` also prints the URLs the model got most wrong - read them, they show its limits
 - the app scans a URL, shows the verdict, a risk meter and three reasons, keeps a history with feedback and CSV export, and a statistics tab
 
