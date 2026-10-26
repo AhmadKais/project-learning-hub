@@ -2,6 +2,8 @@
 
 **Student:** Laith Halabi  ·  **Field:** machine learning  ·  **Core algorithm:** Multinomial Naive Bayes, written from scratch
 
+> **Your current mission:** [Mission 1](MISSION_01.md) - study, homework and a 10-minute talk in class (two weeks).
+
 ## The problem in one paragraph
 
 A desktop spam filter: a message comes in, your program says **spam or not — and why**. Text has to

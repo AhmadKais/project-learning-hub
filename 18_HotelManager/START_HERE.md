@@ -2,6 +2,8 @@
 
 **Student:** Eran Nijm  ·  **Field:** software engineering — algorithmic business logic  ·  **Core algorithms:** interval overlap, room allocation strategies, a rule-chain pricing engine, a booking state machine
 
+> **Your current mission:** [Mission 1](MISSION_01.md) - study, homework and a 10-minute talk in class (two weeks).
+
 ## The problem in one paragraph
 
 A hotel management system — but **not** a CRUD screen over a database. Four algorithms are the heart of it,

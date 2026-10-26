@@ -2,6 +2,8 @@
 
 **Student:** Ryan Raed  ·  **Field:** deep learning and computer vision  ·  **Core algorithms:** a convolutional network with residual blocks (EmotionNet), its training loop, Haar-cascade face detection, temporal smoothing
 
+> **Your current mission:** [Mission 1](MISSION_01.md) - study, homework and a 10-minute talk in class (two weeks).
+
 ## The problem in one paragraph
 
 The camera sees a face; your program says which of 7 emotions it shows — **live, at 15–25 frames per second**.

@@ -2,6 +2,8 @@
 
 **Student:** Seif Ferro  ·  **Field:** machine learning  ·  **Core algorithm:** k-nearest neighbours, written from scratch
 
+> **Your current mission:** [Mission 1](MISSION_01.md) - study, homework and a 10-minute talk in class (two weeks).
+
 ## The problem in one paragraph
 
 A wine laboratory measures 11 things about a wine (acidity, sugar, sulphur dioxide, alcohol…) and

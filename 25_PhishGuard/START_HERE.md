@@ -2,6 +2,8 @@
 
 **Student:** Dani Faris  ·  **Field:** machine learning  ·  **Core algorithms:** URL feature engineering, logistic regression and a random forest, threshold selection
 
+> **Your current mission:** [Mission 1](MISSION_01.md) - study, homework and a 10-minute talk in class (two weeks).
+
 ## The problem in one paragraph
 
 Someone pastes a link; your program says **phishing or not — and why**, without ever opening the page.

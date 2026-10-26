@@ -2,6 +2,8 @@
 
 **Student:** Liraz Dakseh  ·  **Field:** networks and concurrency  ·  **Core topics:** TCP sockets, message framing, a JSON protocol, threads and locks, a game state machine, time-based scoring
 
+> **Your current mission:** [Mission 1](MISSION_01.md) - study, homework and a 10-minute talk in class (two weeks).
+
 ## The problem in one paragraph
 
 A multiplayer trivia game for the classroom network: one computer runs the server, every player runs a
