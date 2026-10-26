@@ -7,7 +7,7 @@ examples done by hand, runnable example implementations, exercises with automati
 plan of where to start. Your project skeleton (the code you will hand in) is in your own package — this
 repo is where you **learn** what goes into it.
 
-**Next week:** every student gives a talk on the big picture of their project - topics in [`PRESENTATIONS.md`](PRESENTATIONS.md).
+**Next week:** every student teaches the class one algorithm from their project - the choices are in [`PRESENTATIONS.md`](PRESENTATIONS.md).
 
 ## Find your folder
 

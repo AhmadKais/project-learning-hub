@@ -1,9 +1,9 @@
 # Mission 1 - Judging a wine by its neighbours
 
-**Student:** Seif Ferro  ·  **Time:** two weeks  ·  **Ends with:** a 10-minute talk in class
+**Student:** Seif Ferro  ·  **Time:** two weeks  ·  **Ends with:** your paper task solved at the board
 
-You will explain the heart of your project to the class. To explain it you have to understand it, so the
-mission has three parts: study, homework, talk.
+The heart of your project, studied properly: read and run, write the exercises, solve a real example by
+hand, and show it at the board.
 
 ## Part 1 - Study (first week)
 
@@ -15,7 +15,7 @@ In this order. Keep a notebook: every new word and every formula goes in it.
 4. Notebook [`01_data_and_scaling.ipynb`](02_examples/01_data_and_scaling.ipynb): run every cell, then print the range of every column before and after scaling.
 5. Notebook [`02_knn_from_scratch.ipynb`](02_examples/02_knn_from_scratch.ipynb): run every cell, then change k from 1 to 25 and plot the accuracy.
 
-## Part 2 - Homework (hand in before your talk)
+## Part 2 - Homework (hand in at the end of the two weeks)
 
 **A. Exercises.** In `03_exercises/exercises.py` write `ex03`, `ex05`, `ex06`, `ex07`, `ex08`. Check them:
 
@@ -52,27 +52,17 @@ A new wine: alcohol 11.5, volatile acidity 0.45.
 1. Why must the features be scaled before k-NN? What would volatile acidity count for without scaling?
 2. k-NN is called a *lazy* learner. What does it do when it trains, and what does it pay for that later?
 
-## Part 3 - The talk (10 minutes + 5 minutes of questions)
+## Part 3 - At the board (5 minutes)
 
-Title: **Judging a wine by its neighbours**. Six slides at most, one idea each:
-
-1. The problem: grade a wine from its chemistry - the data
-2. Distance between two wines, and why scaling comes first
-3. Your paper example on the board: neighbours and the weighted vote
-4. Choosing k: too small, too big
-5. Measuring it honestly: the confusion matrix and macro-F1
-6. Live demo: notebook 02, accuracy against k
-
-Rules: no slide full of text, no code copied from the solution. Draw on the board where you can.
-After the talk I ask one question from [`17_exam.md`](05_defence/17_exam.md) and one about
-your paper task.
+In class you solve your paper task (part B) on the board, in front of everyone, explaining each step.
+Then I ask one question from [`17_exam.md`](05_defence/17_exam.md) and the class may ask one.
 
 ## How it is graded
 
 | Part | Points |
 |---|---|
-| A. exercises pass and you can explain them | 25 |
-| B. paper task correct, every step shown | 25 |
-| C. answers in your own words | 10 |
-| The talk: correct, clear, on time | 25 |
-| Answers to the questions | 15 |
+| A. exercises pass and you can explain them | 30 |
+| B. paper task correct, every step shown | 30 |
+| C. answers in your own words | 15 |
+| At the board: the paper task explained clearly | 15 |
+| Answer to the question | 10 |

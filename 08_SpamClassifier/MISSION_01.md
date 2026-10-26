@@ -1,9 +1,9 @@
 # Mission 1 - How a computer decides that a message is spam
 
-**Student:** Laith Halabi  ·  **Time:** two weeks  ·  **Ends with:** a 10-minute talk in class
+**Student:** Laith Halabi  ·  **Time:** two weeks  ·  **Ends with:** your paper task solved at the board
 
-You will explain the heart of your project to the class. To explain it you have to understand it, so the
-mission has three parts: study, homework, talk.
+The heart of your project, studied properly: read and run, write the exercises, solve a real example by
+hand, and show it at the board.
 
 ## Part 1 - Study (first week)
 
@@ -16,7 +16,7 @@ In this order. Keep a notebook: every new word and every formula goes in it.
 5. Notebook [`01_text_to_numbers.ipynb`](02_examples/01_text_to_numbers.ipynb): run every cell, then tokenize three real messages from the data and print the tokens.
 6. Notebook [`02_naive_bayes_from_scratch.ipynb`](02_examples/02_naive_bayes_from_scratch.ipynb): run every cell, then find the 10 words that push hardest toward spam.
 
-## Part 2 - Homework (hand in before your talk)
+## Part 2 - Homework (hand in at the end of the two weeks)
 
 **A. Exercises.** In `03_exercises/exercises.py` write `ex03`, `ex05`, `ex08`, `ex09`, `ex10`. Check them:
 
@@ -50,27 +50,17 @@ Train Naive Bayes by hand on four tiny messages (already tokenized), with Laplac
 1. Why is the method called *naive*? Give an example of two words where the naive idea is clearly false.
 2. What happens to "win now" if alpha = 0? Why do we add up logs instead of multiplying probabilities?
 
-## Part 3 - The talk (10 minutes + 5 minutes of questions)
+## Part 3 - At the board (5 minutes)
 
-Title: **How a computer decides that a message is spam**. Six slides at most, one idea each:
-
-1. The problem and the data: how many messages, how many spam
-2. From text to tokens to counts - one real message on the slide
-3. Bayes' rule in one picture, and the naive assumption
-4. Your paper example, worked on the board
-5. Laplace smoothing and logs - what breaks without them
-6. Live demo: notebook 02, the top spam words
-
-Rules: no slide full of text, no code copied from the solution. Draw on the board where you can.
-After the talk I ask one question from [`17_exam.md`](05_defence/17_exam.md) and one about
-your paper task.
+In class you solve your paper task (part B) on the board, in front of everyone, explaining each step.
+Then I ask one question from [`17_exam.md`](05_defence/17_exam.md) and the class may ask one.
 
 ## How it is graded
 
 | Part | Points |
 |---|---|
-| A. exercises pass and you can explain them | 25 |
-| B. paper task correct, every step shown | 25 |
-| C. answers in your own words | 10 |
-| The talk: correct, clear, on time | 25 |
-| Answers to the questions | 15 |
+| A. exercises pass and you can explain them | 30 |
+| B. paper task correct, every step shown | 30 |
+| C. answers in your own words | 15 |
+| At the board: the paper task explained clearly | 15 |
+| Answer to the question | 10 |

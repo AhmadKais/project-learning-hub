@@ -2,9 +2,9 @@
 
 **Student:** Ryan Raed  ·  **Field:** deep learning and computer vision  ·  **Core algorithms:** a convolutional network with residual blocks (EmotionNet), its training loop, Haar-cascade face detection, temporal smoothing
 
-> **Next week:** a talk in class - [Can a computer read emotions from a face?](PRESENTATION_01.md).
+> **Next week:** a talk in class - [one algorithm from your project](PRESENTATION_01.md).
 >
-> **Your current mission:** [Mission 1](MISSION_01.md) - study, homework and a 10-minute talk in class (two weeks).
+> **Your current mission:** [Mission 1](MISSION_01.md) - study, homework and a paper task at the board (two weeks).
 
 ## The problem in one paragraph
 

@@ -1,9 +1,9 @@
 # Mission 1 - How a network sees a face
 
-**Student:** Ryan Raed  ·  **Time:** two weeks  ·  **Ends with:** a 10-minute talk in class
+**Student:** Ryan Raed  ·  **Time:** two weeks  ·  **Ends with:** your paper task solved at the board
 
-You will explain the heart of your project to the class. To explain it you have to understand it, so the
-mission has three parts: study, homework, talk.
+The heart of your project, studied properly: read and run, write the exercises, solve a real example by
+hand, and show it at the board.
 
 ## Part 1 - Study (first week)
 
@@ -16,7 +16,7 @@ In this order. Keep a notebook: every new word and every formula goes in it.
 5. Notebook [`01_images_and_data.ipynb`](02_examples/01_images_and_data.ipynb): run every cell, then print the 48x48 numbers of one face and count the images of each emotion.
 6. Notebook [`02_neurons_to_resnet.ipynb`](02_examples/02_neurons_to_resnet.ipynb): run every cell, then run an edge filter over a face and show the result.
 
-## Part 2 - Homework (hand in before your talk)
+## Part 2 - Homework (hand in at the end of the two weeks)
 
 **A. Exercises.** In `03_exercises/exercises.py` write `ex01`, `ex04`, `ex05`, `ex06`. Check them:
 
@@ -55,27 +55,17 @@ bigger, and why does that make sense?
 1. Why use convolution instead of connecting every one of the 2304 pixels to every neuron?
 2. Why do we subtract the largest logit before computing softmax? Give logits where it matters.
 
-## Part 3 - The talk (10 minutes + 5 minutes of questions)
+## Part 3 - At the board (5 minutes)
 
-Title: **How a network sees a face**. Six slides at most, one idea each:
-
-1. An image is a grid of numbers: one real 48x48 face
-2. What a filter does: your paper convolution on the board
-3. ReLU and pooling - what they keep and what they throw away
-4. From the last layer to probabilities: softmax with your numbers
-5. The loss: why the wrong guess costs more
-6. Live demo: notebook 02, a filter over a face
-
-Rules: no slide full of text, no code copied from the solution. Draw on the board where you can.
-After the talk I ask one question from [`17_exam.md`](05_defence/17_exam.md) and one about
-your paper task.
+In class you solve your paper task (part B) on the board, in front of everyone, explaining each step.
+Then I ask one question from [`17_exam.md`](05_defence/17_exam.md) and the class may ask one.
 
 ## How it is graded
 
 | Part | Points |
 |---|---|
-| A. exercises pass and you can explain them | 25 |
-| B. paper task correct, every step shown | 25 |
-| C. answers in your own words | 10 |
-| The talk: correct, clear, on time | 25 |
-| Answers to the questions | 15 |
+| A. exercises pass and you can explain them | 30 |
+| B. paper task correct, every step shown | 30 |
+| C. answers in your own words | 15 |
+| At the board: the paper task explained clearly | 15 |
+| Answer to the question | 10 |

@@ -1,42 +1,45 @@
-# Talk for next week - How companies pick 10 CVs out of 500
+# Talk for next week - one algorithm from your project
 
-**Student:** Kosai Badreih  ·  **When:** next week's class  ·  **Length:** 8-10 minutes + questions
+**Student:** Kosai Badreih  ·  **When:** next week's class  ·  **Length:** 10 minutes + questions
 
-**The question your talk answers:** When hundreds of people apply for one job, how does software decide which CVs a human reads first?
+Choose **one** algorithm from the list below and teach it to the class. Send your choice to the teacher
+privately by the end of this week.
 
-This talk is the big picture: the real-world problem and what your app will do about it. No formulas and
-no code yet - those come in [Mission 1](MISSION_01.md). Talk to the class as if they have never heard of
-your project.
+## Choose one
 
-## What to cover
+### 1. TF-IDF and cosine similarity
 
-1. Applicant tracking systems: what happens to a CV after you press "send"
-2. Keyword matching and its problems: "Python developer" against "programmed in Python"
-3. The idea of TF-IDF in one sentence: a word that every CV has tells you nothing
-4. Search engines do the same thing: BM25 is the default ranking in Elasticsearch and Lucene
-5. Fairness and privacy: why ResumeMatch removes e-mails, phone numbers and ID numbers before matching
-6. Your app: one job, a ranked list, and the words that explain each score
+- Read: [lesson 07](../lessons/07_tfidf/LESSON.md), [lesson 08](../lessons/08_vectors_cosine/LESSON.md) and [`01_vectors.md`](01_theory/01_vectors.md), [`02_cosine.md`](01_theory/02_cosine.md)
+- An idea for the board: 3 tiny CVs and a job - IDF, the vectors, the cosine of each, the ranking
 
-## Get the class involved
+### 2. BM25
 
-Give the class a short job ad and 4 short CVs and let them rank the CVs - then compare with how keyword counting ranks them.
+- Read: [lesson 09](../lessons/09_bm25_inverted_index/LESSON.md) and [`03_bm25.md`](01_theory/03_bm25.md)
+- An idea for the board: one term in a short and a long CV, said once and three times - show how BM25 stops rewarding repeats
 
-## Where to read
+## What the talk must show
 
-- [Lesson 06 - text preprocessing](../lessons/06_text_preprocessing/LESSON.md)
-- [Lesson 07 - TF-IDF (the first half is enough)](../lessons/07_tfidf/LESSON.md)
-- [Theory 00 - the intro](01_theory/00_intro.md)
-- More sources, already checked: [`09_resources.md`](05_defence/09_resources.md)
-
-## Be ready for these questions
-
-- Can a candidate cheat the ranking by repeating keywords?
-- Should a computer be allowed to reject a CV without a human looking?
-- Why remove the phone number - it has nothing to do with skills?
+1. **The problem** the algorithm solves, with an everyday example
+2. **How it works**, step by step - in words and pictures, no code
+3. **A small example with numbers, worked on the board** (make up your own numbers or use the idea above)
+4. **Where it is in your project**: which file and class, and what it gives the app
+5. **One limit**: when does it work badly, or what does it get wrong?
 
 ## Rules
 
-- 6-8 slides. A picture or a drawing on each slide, not paragraphs.
+- 6-8 slides, with drawings and examples - not paragraphs of text.
 - Say it in your own words. If you read from the slide, you don't know it yet.
-- Any example (message, link, face, CV) you make up yourself - no real people's data, no faces from the dataset.
-- Practise once with a timer at home.
+- Practise once at home with a timer, including the board example.
+- After your talk the class and the teacher ask questions - be ready to redo one step of your example.
+
+## How it is graded
+
+| Part | Points |
+|---|---|
+| The idea explained correctly and clearly | 30 |
+| The board example: correct, every step shown | 30 |
+| The link to your project | 15 |
+| Answers to the questions | 15 |
+| Slides and time (10 minutes) | 10 |
+
+More checked sources are in your project's `05_defence/` folder.

@@ -2,9 +2,9 @@
 
 **Student:** Laith Halabi  ·  **Field:** machine learning  ·  **Core algorithm:** Multinomial Naive Bayes, written from scratch
 
-> **Next week:** a talk in class - [Spam: why it exists and how computers learned to catch it](PRESENTATION_01.md).
+> **Next week:** a talk in class - [one algorithm from your project](PRESENTATION_01.md).
 >
-> **Your current mission:** [Mission 1](MISSION_01.md) - study, homework and a 10-minute talk in class (two weeks).
+> **Your current mission:** [Mission 1](MISSION_01.md) - study, homework and a paper task at the board (two weeks).
 
 ## The problem in one paragraph
 

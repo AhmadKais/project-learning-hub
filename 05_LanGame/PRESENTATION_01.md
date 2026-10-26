@@ -1,42 +1,50 @@
-# Talk for next week - How a classroom quiz game works over a network
+# Talk for next week - one algorithm from your project
 
-**Student:** Liraz Dakseh  ·  **When:** next week's class  ·  **Length:** 8-10 minutes + questions
+**Student:** Liraz Dakseh  ·  **When:** next week's class  ·  **Length:** 10 minutes + questions
 
-**The question your talk answers:** When 8 phones answer a Kahoot-style question at the same moment, how does one computer know who was first?
+Choose **one** algorithm from the list below and teach it to the class. Send your choice to the teacher
+privately by the end of this week.
 
-This talk is the big picture: the real-world problem and what your app will do about it. No formulas and
-no code yet - those come in [Mission 1](MISSION_01.md). Talk to the class as if they have never heard of
-your project.
+## Choose one
 
-## What to cover
+### 1. Message framing in a TCP stream
 
-1. Client and server: who talks to whom, and why one computer must be the judge
-2. IP addresses and ports - find your own with `ipconfig` (Windows) or `ip a` (Linux) and show it
-3. TCP and UDP in plain words: a phone call against a postcard. Which one fits a quiz, which one fits a shooter game?
-4. Lag and fairness: if one player's network is slower, is time-based scoring still fair?
-5. What happens when a player's Wi-Fi drops in the middle of a game
-6. Your app: the screens of LanGame and what the server does in one round
+- Read: [lesson 31](../lessons/31_tcp_framing/LESSON.md) and [`03_sockets_protocol.md`](01_theory/03_sockets_protocol.md)
+- An idea for the board: two messages that arrive glued together and one that arrives cut in half - split them by hand
 
-## Get the class involved
+### 2. Threads and locks
 
-Ask two classmates to `ping` your computer and read the times out loud - that number is lag.
+- Read: [lesson 32](../lessons/32_threads_locks/LESSON.md) and [`04_threads.md`](01_theory/04_threads.md)
+- An idea for the board: two threads adding points to the same score - a table of steps that loses an update, then the lock
 
-## Where to read
+### 3. The game's state machine
 
-- [Lesson 31 - TCP and framing (the first half is enough)](../lessons/31_tcp_framing/LESSON.md)
-- [Theory 00 - the intro](01_theory/00_intro.md)
-- [Theory 02 - networks](01_theory/02_networks.md)
-- More sources, already checked: [`19_resources.md`](05_defence/19_resources.md)
+- Read: [lesson 30](../lessons/30_state_machines/LESSON.md) and [`05_state_machine_scoring.md`](01_theory/05_state_machine_scoring.md)
+- An idea for the board: draw the states of one game and walk one round through them, including a player who leaves
 
-## Be ready for these questions
+## What the talk must show
 
-- Why can't the clients just tell each other their own scores?
-- What is a port, and why does the server need a fixed one?
-- What would a cheater try, and how does the server stop it?
+1. **The problem** the algorithm solves, with an everyday example
+2. **How it works**, step by step - in words and pictures, no code
+3. **A small example with numbers, worked on the board** (make up your own numbers or use the idea above)
+4. **Where it is in your project**: which file and class, and what it gives the app
+5. **One limit**: when does it work badly, or what does it get wrong?
 
 ## Rules
 
-- 6-8 slides. A picture or a drawing on each slide, not paragraphs.
+- 6-8 slides, with drawings and examples - not paragraphs of text.
 - Say it in your own words. If you read from the slide, you don't know it yet.
-- Any example (message, link, face, CV) you make up yourself - no real people's data, no faces from the dataset.
-- Practise once with a timer at home.
+- Practise once at home with a timer, including the board example.
+- After your talk the class and the teacher ask questions - be ready to redo one step of your example.
+
+## How it is graded
+
+| Part | Points |
+|---|---|
+| The idea explained correctly and clearly | 30 |
+| The board example: correct, every step shown | 30 |
+| The link to your project | 15 |
+| Answers to the questions | 15 |
+| Slides and time (10 minutes) | 10 |
+
+More checked sources are in your project's `05_defence/` folder.

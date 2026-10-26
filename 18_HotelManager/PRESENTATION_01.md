@@ -1,42 +1,50 @@
-# Talk for next week - How hotels and airlines manage bookings
+# Talk for next week - one algorithm from your project
 
-**Student:** Eran Nijm  ·  **When:** next week's class  ·  **Length:** 8-10 minutes + questions
+**Student:** Eran Nijm  ·  **When:** next week's class  ·  **Length:** 10 minutes + questions
 
-**The question your talk answers:** How does a booking system make sure two guests never get the same room on the same night?
+Choose **one** algorithm from the list below and teach it to the class. Send your choice to the teacher
+privately by the end of this week.
 
-This talk is the big picture: the real-world problem and what your app will do about it. No formulas and
-no code yet - those come in [Mission 1](MISSION_01.md). Talk to the class as if they have never heard of
-your project.
+## Choose one
 
-## What to cover
+### 1. Checking two stays for overlap
 
-1. A day at the front desk: booking, check-in, check-out, cancellation
-2. Double booking: what it costs the hotel, and how it happens when two clerks book at the same second
-3. Overbooking on purpose: why airlines and hotels sell more seats or rooms than they have
-4. Prices that change: weekends, seasons, long stays - who decides and why
-5. Cancellation rules: free until 48 hours before, then one night - why that rule exists
-6. Your app: the screens of HotelManager - rooms, calendar, bookings, reports
+- Read: [lesson 27](../lessons/27_intervals_overlap/LESSON.md) and [`03_intervals.md`](01_theory/03_intervals.md)
+- An idea for the board: the four ways two stays can sit on a calendar - test each with the two comparisons
 
-## Get the class involved
+### 2. Room allocation: first-fit and best-fit
 
-Give the class 3 booking requests and a drawing of 4 rooms on the board and let them place the guests - then show where they clashed.
+- Read: [lesson 28](../lessons/28_allocation_strategies/LESSON.md) and [`04_allocation.md`](01_theory/04_allocation.md)
+- An idea for the board: 4 rooms and one request - which room each strategy picks, and why they differ
 
-## Where to read
+### 3. The booking state machine
 
-- [Lesson 27 - intervals and overlap](../lessons/27_intervals_overlap/LESSON.md)
-- [Lesson 30 - state machines](../lessons/30_state_machines/LESSON.md)
-- [Theory 00 - the intro](01_theory/00_intro.md)
-- More sources, already checked: [`21_resources.md`](05_defence/21_resources.md)
+- Read: [lesson 30](../lessons/30_state_machines/LESSON.md) and [`06_fsm.md`](01_theory/06_fsm.md)
+- An idea for the board: draw the states of a booking and show which events are allowed from each - and what a cancellation costs
 
-## Be ready for these questions
+## What the talk must show
 
-- If a guest checks out on Sunday, can the next guest check in on Sunday?
-- Is overbooking fair to the customer?
-- What should happen if the computer crashes in the middle of a booking?
+1. **The problem** the algorithm solves, with an everyday example
+2. **How it works**, step by step - in words and pictures, no code
+3. **A small example with numbers, worked on the board** (make up your own numbers or use the idea above)
+4. **Where it is in your project**: which file and class, and what it gives the app
+5. **One limit**: when does it work badly, or what does it get wrong?
 
 ## Rules
 
-- 6-8 slides. A picture or a drawing on each slide, not paragraphs.
+- 6-8 slides, with drawings and examples - not paragraphs of text.
 - Say it in your own words. If you read from the slide, you don't know it yet.
-- Any example (message, link, face, CV) you make up yourself - no real people's data, no faces from the dataset.
-- Practise once with a timer at home.
+- Practise once at home with a timer, including the board example.
+- After your talk the class and the teacher ask questions - be ready to redo one step of your example.
+
+## How it is graded
+
+| Part | Points |
+|---|---|
+| The idea explained correctly and clearly | 30 |
+| The board example: correct, every step shown | 30 |
+| The link to your project | 15 |
+| Answers to the questions | 15 |
+| Slides and time (10 minutes) | 10 |
+
+More checked sources are in your project's `05_defence/` folder.

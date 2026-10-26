@@ -1,42 +1,50 @@
-# Talk for next week - Can a computer taste wine?
+# Talk for next week - one algorithm from your project
 
-**Student:** Seif Ferro  ·  **When:** next week's class  ·  **Length:** 8-10 minutes + questions
+**Student:** Seif Ferro  ·  **When:** next week's class  ·  **Length:** 10 minutes + questions
 
-**The question your talk answers:** Wine experts grade wine by taste. Can a program predict the grade from a lab test alone?
+Choose **one** algorithm from the list below and teach it to the class. Send your choice to the teacher
+privately by the end of this week.
 
-This talk is the big picture: the real-world problem and what your app will do about it. No formulas and
-no code yet - those come in [Mission 1](MISSION_01.md). Talk to the class as if they have never heard of
-your project.
+## Choose one
 
-## What to cover
+### 1. k-nearest neighbours (k-NN)
 
-1. How wine is graded by human tasters, and why two experts can disagree
-2. The data: 6,497 Portuguese Vinho Verde wines (Cortez et al., 2009) - 11 lab measurements and a grade
-3. What a few of the measurements mean in plain words: alcohol, acidity, sugar, sulphates
-4. The idea of "neighbours": a new wine probably tastes like the wines most similar to it - the same idea recommends films and songs
-5. Why most wines are average and very few are great, and what that does to a predictor
-6. Your app: enter a wine's lab values, get a grade and the most similar wines
+- Read: [lesson 15](../lessons/15_knn/LESSON.md) and [`04_knn.md`](01_theory/04_knn.md)
+- An idea for the board: 5 wines with two features and a new one - distances, the 3 nearest, the weighted vote
 
-## Get the class involved
+### 2. The kd-tree
 
-Show the class 4 wines as two numbers (alcohol, acidity) and a fifth unknown one - let them guess its grade from its nearest neighbours.
+- Read: [lesson 16](../lessons/16_kdtree/LESSON.md) and [`05_kdtree.md`](01_theory/05_kdtree.md)
+- An idea for the board: 8 points on a grid - build the tree by splitting on x then y, then search for the nearest point
 
-## Where to read
+### 3. Scaling with z-scores
 
-- [Lesson 01 - what is machine learning](../lessons/01_what_is_learning/LESSON.md)
-- [Lesson 15 - k-nearest neighbours (the first half is enough)](../lessons/15_knn/LESSON.md)
-- [Theory 00 - the intro](01_theory/00_intro.md)
-- More sources, already checked: [`19_resources.md`](05_defence/19_resources.md)
+- Read: [lesson 02](../lessons/02_feature_scaling/LESSON.md) and [`03_data_scaling.md`](01_theory/03_data_scaling.md)
+- An idea for the board: two wines whose nearest neighbour changes after scaling - compute the distances before and after
 
-## Be ready for these questions
+## What the talk must show
 
-- Can the program be better than the tasters it learned from?
-- Why use grades low / medium / high instead of the score 0-10?
-- What does "similar" mean for two wines?
+1. **The problem** the algorithm solves, with an everyday example
+2. **How it works**, step by step - in words and pictures, no code
+3. **A small example with numbers, worked on the board** (make up your own numbers or use the idea above)
+4. **Where it is in your project**: which file and class, and what it gives the app
+5. **One limit**: when does it work badly, or what does it get wrong?
 
 ## Rules
 
-- 6-8 slides. A picture or a drawing on each slide, not paragraphs.
+- 6-8 slides, with drawings and examples - not paragraphs of text.
 - Say it in your own words. If you read from the slide, you don't know it yet.
-- Any example (message, link, face, CV) you make up yourself - no real people's data, no faces from the dataset.
-- Practise once with a timer at home.
+- Practise once at home with a timer, including the board example.
+- After your talk the class and the teacher ask questions - be ready to redo one step of your example.
+
+## How it is graded
+
+| Part | Points |
+|---|---|
+| The idea explained correctly and clearly | 30 |
+| The board example: correct, every step shown | 30 |
+| The link to your project | 15 |
+| Answers to the questions | 15 |
+| Slides and time (10 minutes) | 10 |
+
+More checked sources are in your project's `05_defence/` folder.

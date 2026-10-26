@@ -1,9 +1,9 @@
 # Mission 1 - From text to a ranking
 
-**Student:** Kosai Badreih  ·  **Time:** two weeks  ·  **Ends with:** a 10-minute talk in class
+**Student:** Kosai Badreih  ·  **Time:** two weeks  ·  **Ends with:** your paper task solved at the board
 
-You will explain the heart of your project to the class. To explain it you have to understand it, so the
-mission has three parts: study, homework, talk.
+The heart of your project, studied properly: read and run, write the exercises, solve a real example by
+hand, and show it at the board.
 
 ## Part 1 - Study (first week)
 
@@ -16,7 +16,7 @@ In this order. Keep a notebook: every new word and every formula goes in it.
 5. Notebook [`01_preprocessing.ipynb`](02_examples/01_preprocessing.ipynb): run every cell, then run one real CV through the pipeline and print every step.
 6. Notebook [`02_tfidf_cosine.ipynb`](02_examples/02_tfidf_cosine.ipynb): run every cell, then rank the CVs for one job and look at the top term of each.
 
-## Part 2 - Homework (hand in before your talk)
+## Part 2 - Homework (hand in at the end of the two weeks)
 
 **A. Exercises.** In `03_exercises/exercises.py` write `ex02`, `ex05`, `ex06`, `ex07`, `ex12`. Check them:
 
@@ -52,27 +52,17 @@ job: python sql
 1. Why does IDF make `python` count less than `django` here? When is that a good thing?
 2. Why are the vectors made unit length? What would long CVs do to the ranking otherwise?
 
-## Part 3 - The talk (10 minutes + 5 minutes of questions)
+## Part 3 - At the board (5 minutes)
 
-Title: **From text to a ranking**. Six slides at most, one idea each:
-
-1. The problem: 200 CVs, one job - who first?
-2. The pipeline: one CV, step by step (scrub, tokens, stopwords, stems)
-3. TF-IDF: why rare words weigh more - your IDF numbers
-4. Cosine: your ranking on the board
-5. BM25 in one sentence: repeats help less and less
-6. Live demo: notebook 02, the top CVs and their top terms
-
-Rules: no slide full of text, no code copied from the solution. Draw on the board where you can.
-After the talk I ask one question from [`08_exam.md`](05_defence/08_exam.md) and one about
-your paper task.
+In class you solve your paper task (part B) on the board, in front of everyone, explaining each step.
+Then I ask one question from [`08_exam.md`](05_defence/08_exam.md) and the class may ask one.
 
 ## How it is graded
 
 | Part | Points |
 |---|---|
-| A. exercises pass and you can explain them | 25 |
-| B. paper task correct, every step shown | 25 |
-| C. answers in your own words | 10 |
-| The talk: correct, clear, on time | 25 |
-| Answers to the questions | 15 |
+| A. exercises pass and you can explain them | 30 |
+| B. paper task correct, every step shown | 30 |
+| C. answers in your own words | 15 |
+| At the board: the paper task explained clearly | 15 |
+| Answer to the question | 10 |

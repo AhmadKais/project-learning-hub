@@ -1,42 +1,50 @@
-# Talk for next week - Spam: why it exists and how computers learned to catch it
+# Talk for next week - one algorithm from your project
 
-**Student:** Laith Halabi  ·  **When:** next week's class  ·  **Length:** 8-10 minutes + questions
+**Student:** Laith Halabi  ·  **When:** next week's class  ·  **Length:** 10 minutes + questions
 
-**The question your talk answers:** Why does spam still reach us, and how did filters go from hand-written rules to learning from examples?
+Choose **one** algorithm from the list below and teach it to the class. Send your choice to the teacher
+privately by the end of this week.
 
-This talk is the big picture: the real-world problem and what your app will do about it. No formulas and
-no code yet - those come in [Mission 1](MISSION_01.md). Talk to the class as if they have never heard of
-your project.
+## Choose one
 
-## What to cover
+### 1. Naive Bayes
 
-1. What spam and smishing (SMS phishing) are, with 2-3 real-looking examples (make them up, no real numbers)
-2. Why sending spam pays: it costs almost nothing to send a million messages
-3. Rule-based filters ("block every message with FREE!!!") and why spammers beat them in a week
-4. The learning idea: show the computer thousands of labelled messages - Paul Graham's "A Plan for Spam" (2002) made it famous
-5. The two mistakes: spam in the inbox against a real message in the spam folder - which one hurts more?
-6. Your data and your app: the SMS Spam Collection (5,574 messages, about 13% spam) and what SpamClassifier will show
+- Read: [lesson 11](../lessons/11_naive_bayes/LESSON.md) and [`04_naive_bayes.md`](01_theory/04_naive_bayes.md)
+- An idea for the board: train on 4 tiny messages and classify a new one, with Laplace smoothing
 
-## Get the class involved
+### 2. TF-IDF
 
-Show 6 messages and let the class vote spam or ham before you reveal the labels - then count how many the class got wrong.
+- Read: [lesson 07](../lessons/07_tfidf/LESSON.md) and [`03_features.md`](01_theory/03_features.md)
+- An idea for the board: 3 short messages - count the words, compute IDF, show which word gets the biggest weight
 
-## Where to read
+### 3. SVM
 
-- [Lesson 01 - what is machine learning](../lessons/01_what_is_learning/LESSON.md)
-- [Lesson 03 - the two kinds of mistakes](../lessons/03_confusion_matrix_metrics/LESSON.md)
-- [Theory 00 - the intro](01_theory/00_intro.md)
-- More sources, already checked: [`19_resources.md`](05_defence/19_resources.md)
+- Read: [lesson 14](../lessons/14_svm_calibration/LESSON.md) and [`05_svm_comparison.md`](01_theory/05_svm_comparison.md)
+- An idea for the board: points of two classes on a 2-D grid - draw the line with the widest margin and mark the support vectors
 
-## Be ready for these questions
+## What the talk must show
 
-- Why not just keep a list of bad words?
-- Your corpus is English. What would break with Hebrew or Arabic messages?
-- Who decides what counts as spam?
+1. **The problem** the algorithm solves, with an everyday example
+2. **How it works**, step by step - in words and pictures, no code
+3. **A small example with numbers, worked on the board** (make up your own numbers or use the idea above)
+4. **Where it is in your project**: which file and class, and what it gives the app
+5. **One limit**: when does it work badly, or what does it get wrong?
 
 ## Rules
 
-- 6-8 slides. A picture or a drawing on each slide, not paragraphs.
+- 6-8 slides, with drawings and examples - not paragraphs of text.
 - Say it in your own words. If you read from the slide, you don't know it yet.
-- Any example (message, link, face, CV) you make up yourself - no real people's data, no faces from the dataset.
-- Practise once with a timer at home.
+- Practise once at home with a timer, including the board example.
+- After your talk the class and the teacher ask questions - be ready to redo one step of your example.
+
+## How it is graded
+
+| Part | Points |
+|---|---|
+| The idea explained correctly and clearly | 30 |
+| The board example: correct, every step shown | 30 |
+| The link to your project | 15 |
+| Answers to the questions | 15 |
+| Slides and time (10 minutes) | 10 |
+
+More checked sources are in your project's `05_defence/` folder.

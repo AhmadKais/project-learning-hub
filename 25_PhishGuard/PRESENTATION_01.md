@@ -1,42 +1,50 @@
-# Talk for next week - Phishing: how a single link steals a password
+# Talk for next week - one algorithm from your project
 
-**Student:** Dani Faris  ·  **When:** next week's class  ·  **Length:** 8-10 minutes + questions
+**Student:** Dani Faris  ·  **When:** next week's class  ·  **Length:** 10 minutes + questions
 
-**The question your talk answers:** How do attackers make a fake link look real, and how can a program spot it without opening the page?
+Choose **one** algorithm from the list below and teach it to the class. Send your choice to the teacher
+privately by the end of this week.
 
-This talk is the big picture: the real-world problem and what your app will do about it. No formulas and
-no code yet - those come in [Mission 1](MISSION_01.md). Talk to the class as if they have never heard of
-your project.
+## Choose one
 
-## What to cover
+### 1. Logistic regression
 
-1. What phishing is: e-mail, SMS (smishing), fake login pages - one made-up example of each
-2. The tricks inside a link: a real brand in the subdomain, look-alike letters, `@`, an IP address instead of a name, link shorteners
-3. Reading a host from the right: who really owns `paypal.com.secure-login.xyz`?
-4. How browsers protect you today: block lists such as Google Safe Browsing - and why a brand-new link is not on the list yet
-5. The learning idea: learn what phishing links look like from about half a million labelled links
-6. Your app: paste a link into PhishGuard, get a verdict and three reasons
+- Read: [lesson 12](../lessons/12_logistic_regression/LESSON.md) and [`04_models.md`](01_theory/04_models.md)
+- An idea for the board: two features, made-up weights - compute the score, the sigmoid and the probability for one URL
 
-## Get the class involved
+### 2. Random forest
 
-Show 6 made-up links and let the class vote real or fake, then take them apart on the board.
+- Read: [lesson 13](../lessons/13_trees_forests/LESSON.md) and [`04_models.md`](01_theory/04_models.md)
+- An idea for the board: 8 URLs and 2 features - choose the best first split by Gini, then explain how many trees vote
 
-## Where to read
+### 3. Choosing the threshold and the ROC curve
 
-- [Lesson 18 - URL features](../lessons/18_url_features_entropy/LESSON.md)
-- [Lesson 01 - what is machine learning](../lessons/01_what_is_learning/LESSON.md)
-- [Theory 00 - the intro](01_theory/00_intro.md)
-- More sources, already checked: [`19_resources.md`](05_defence/19_resources.md)
+- Read: [lesson 04](../lessons/04_threshold_roc/LESSON.md) and [`05_evaluation.md`](01_theory/05_evaluation.md)
+- An idea for the board: 10 probabilities with their true labels - precision and recall at three thresholds, then pick one
 
-## Be ready for these questions
+## What the talk must show
 
-- Why not just open the page and look at it?
-- If your program says "safe", can the user stop being careful?
-- What would an attacker change after reading your project?
+1. **The problem** the algorithm solves, with an everyday example
+2. **How it works**, step by step - in words and pictures, no code
+3. **A small example with numbers, worked on the board** (make up your own numbers or use the idea above)
+4. **Where it is in your project**: which file and class, and what it gives the app
+5. **One limit**: when does it work badly, or what does it get wrong?
 
 ## Rules
 
-- 6-8 slides. A picture or a drawing on each slide, not paragraphs.
+- 6-8 slides, with drawings and examples - not paragraphs of text.
 - Say it in your own words. If you read from the slide, you don't know it yet.
-- Any example (message, link, face, CV) you make up yourself - no real people's data, no faces from the dataset.
-- Practise once with a timer at home.
+- Practise once at home with a timer, including the board example.
+- After your talk the class and the teacher ask questions - be ready to redo one step of your example.
+
+## How it is graded
+
+| Part | Points |
+|---|---|
+| The idea explained correctly and clearly | 30 |
+| The board example: correct, every step shown | 30 |
+| The link to your project | 15 |
+| Answers to the questions | 15 |
+| Slides and time (10 minutes) | 10 |
+
+More checked sources are in your project's `05_defence/` folder.

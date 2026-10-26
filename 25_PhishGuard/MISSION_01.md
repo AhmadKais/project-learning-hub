@@ -1,9 +1,9 @@
 # Mission 1 - Reading a URL like an attacker
 
-**Student:** Dani Faris  ·  **Time:** two weeks  ·  **Ends with:** a 10-minute talk in class
+**Student:** Dani Faris  ·  **Time:** two weeks  ·  **Ends with:** your paper task solved at the board
 
-You will explain the heart of your project to the class. To explain it you have to understand it, so the
-mission has three parts: study, homework, talk.
+The heart of your project, studied properly: read and run, write the exercises, solve a real example by
+hand, and show it at the board.
 
 ## Part 1 - Study (first week)
 
@@ -16,7 +16,7 @@ In this order. Keep a notebook: every new word and every formula goes in it.
 5. Notebook [`01_url_features.ipynb`](02_examples/01_url_features.ipynb): run every cell, then extract the features of 3 phishing and 3 real URLs and compare them.
 6. Notebook [`03_threshold_roc_mistakes.ipynb`](02_examples/03_threshold_roc_mistakes.ipynb): run every cell, then move the threshold and watch precision and recall change.
 
-## Part 2 - Homework (hand in before your talk)
+## Part 2 - Homework (hand in at the end of the two weeks)
 
 **A. Exercises.** In `03_exercises/exercises.py` write `ex01`, `ex03`, `ex10`, `ex11`. Check them:
 
@@ -52,27 +52,17 @@ c. The highest threshold that catches **every** phishing URL, and the precision 
 1. Why is the threshold chosen on the validation split and never on the test split?
 2. In PhishGuard, which mistake is worse - a missed phishing link or a false alarm? What does each one cost?
 
-## Part 3 - The talk (10 minutes + 5 minutes of questions)
+## Part 3 - At the board (5 minutes)
 
-Title: **Reading a URL like an attacker**. Six slides at most, one idea each:
-
-1. The problem: a link arrives - is it phishing? A real example
-2. Reading the host from the right: your paper example
-3. Five features and why each one catches attackers (entropy with your numbers)
-4. Precision and recall in one picture
-5. Choosing the threshold: your table on the board
-6. Live demo: notebook 01 on a URL from the class
-
-Rules: no slide full of text, no code copied from the solution. Draw on the board where you can.
-After the talk I ask one question from [`17_exam.md`](05_defence/17_exam.md) and one about
-your paper task.
+In class you solve your paper task (part B) on the board, in front of everyone, explaining each step.
+Then I ask one question from [`17_exam.md`](05_defence/17_exam.md) and the class may ask one.
 
 ## How it is graded
 
 | Part | Points |
 |---|---|
-| A. exercises pass and you can explain them | 25 |
-| B. paper task correct, every step shown | 25 |
-| C. answers in your own words | 10 |
-| The talk: correct, clear, on time | 25 |
-| Answers to the questions | 15 |
+| A. exercises pass and you can explain them | 30 |
+| B. paper task correct, every step shown | 30 |
+| C. answers in your own words | 15 |
+| At the board: the paper task explained clearly | 15 |
+| Answer to the question | 10 |

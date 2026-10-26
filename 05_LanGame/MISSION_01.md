@@ -1,9 +1,9 @@
 # Mission 1 - How 8 computers play one quiz
 
-**Student:** Liraz Dakseh  ·  **Time:** two weeks  ·  **Ends with:** a 10-minute talk in class
+**Student:** Liraz Dakseh  ·  **Time:** two weeks  ·  **Ends with:** your paper task solved at the board
 
-You will explain the heart of your project to the class. To explain it you have to understand it, so the
-mission has three parts: study, homework, talk.
+The heart of your project, studied properly: read and run, write the exercises, solve a real example by
+hand, and show it at the board.
 
 ## Part 1 - Study (first week)
 
@@ -16,7 +16,7 @@ In this order. Keep a notebook: every new word and every formula goes in it.
 5. Notebook [`01_tcp_stream_and_framing.ipynb`](02_examples/01_tcp_stream_and_framing.ipynb): run every cell, then send two messages in one `sendall` and watch them arrive glued together.
 6. Notebook [`02_threads_and_locks.ipynb`](02_examples/02_threads_and_locks.ipynb): run every cell, then remove the lock and run the counter cell five times.
 
-## Part 2 - Homework (hand in before your talk)
+## Part 2 - Homework (hand in at the end of the two weeks)
 
 **A. Exercises.** In `03_exercises/exercises.py` write `ex01`, `ex02`, `ex06`, `ex07`, `ex12`. Check them:
 
@@ -56,27 +56,17 @@ lock goes and why it fixes it.
 1. Why does the game use TCP and not UDP? Give one thing that would go wrong with UDP.
 2. Every client gets its own thread on the server. What would happen with one thread for everyone?
 
-## Part 3 - The talk (10 minutes + 5 minutes of questions)
+## Part 3 - At the board (5 minutes)
 
-Title: **How 8 computers play one quiz**. Six slides at most, one idea each:
-
-1. The game and the network: one server, up to 8 clients - a drawing
-2. TCP is a stream, not messages: your framing example from the paper
-3. The protocol: three message types with a real JSON example
-4. Threads: one per client, the lost update table, the lock
-5. The state machine drawing
-6. Live demo: notebook 01 (or 04 with two terminals)
-
-Rules: no slide full of text, no code copied from the solution. Draw on the board where you can.
-After the talk I ask one question from [`17_exam.md`](05_defence/17_exam.md) and one about
-your paper task.
+In class you solve your paper task (part B) on the board, in front of everyone, explaining each step.
+Then I ask one question from [`17_exam.md`](05_defence/17_exam.md) and the class may ask one.
 
 ## How it is graded
 
 | Part | Points |
 |---|---|
-| A. exercises pass and you can explain them | 25 |
-| B. paper task correct, every step shown | 25 |
-| C. answers in your own words | 10 |
-| The talk: correct, clear, on time | 25 |
-| Answers to the questions | 15 |
+| A. exercises pass and you can explain them | 30 |
+| B. paper task correct, every step shown | 30 |
+| C. answers in your own words | 15 |
+| At the board: the paper task explained clearly | 15 |
+| Answer to the question | 10 |
