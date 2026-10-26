@@ -2,6 +2,8 @@
 
 **Student:** Dani Faris  ·  **Field:** machine learning  ·  **Core algorithms:** URL feature engineering, logistic regression and a random forest, threshold selection
 
+> **Next week:** a talk in class - [Phishing: how a single link steals a password](PRESENTATION_01.md).
+>
 > **Your current mission:** [Mission 1](MISSION_01.md) - study, homework and a 10-minute talk in class (two weeks).
 
 ## The problem in one paragraph

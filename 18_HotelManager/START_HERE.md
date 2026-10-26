@@ -2,6 +2,8 @@
 
 **Student:** Eran Nijm  ·  **Field:** software engineering — algorithmic business logic  ·  **Core algorithms:** interval overlap, room allocation strategies, a rule-chain pricing engine, a booking state machine
 
+> **Next week:** a talk in class - [How hotels and airlines manage bookings](PRESENTATION_01.md).
+>
 > **Your current mission:** [Mission 1](MISSION_01.md) - study, homework and a 10-minute talk in class (two weeks).
 
 ## The problem in one paragraph

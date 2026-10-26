@@ -2,6 +2,8 @@
 
 **Student:** Seif Ferro  ·  **Field:** machine learning  ·  **Core algorithm:** k-nearest neighbours, written from scratch
 
+> **Next week:** a talk in class - [Can a computer taste wine?](PRESENTATION_01.md).
+>
 > **Your current mission:** [Mission 1](MISSION_01.md) - study, homework and a 10-minute talk in class (two weeks).
 
 ## The problem in one paragraph
